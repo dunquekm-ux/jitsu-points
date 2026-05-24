@@ -1,0 +1,68 @@
+.section {
+  padding: var(--space-4);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast),
+    transform var(--duration-fast) var(--ease-bounce);
+  font-family: var(--font-body);
+  position: relative;
+}
+
+.swatch:active {
+  transform: scale(0.96);
+}
+
+.swatchActive {
+  border-color: var(--swatch-color);
+  background: color-mix(in srgb, var(--swatch-color) 8%, var(--color-bg-card));
+}
+
+.swatchDot {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--swatch-color);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.swatchLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  flex: 1;
+}
+
+.check {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--swatch-color);
+  flex-shrink: 0;
+}

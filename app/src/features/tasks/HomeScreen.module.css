@@ -1,0 +1,153 @@
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.spinner {
+  margin: auto;
+  font-size: 64px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+  padding: calc(var(--safe-top) + var(--space-4)) var(--space-5) var(--space-4);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatarBtn {
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.greeting {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hi {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: #fff;
+}
+
+.levelBadge {
+  font-size: var(--font-size-xs);
+  color: rgba(255,255,255,0.8);
+}
+
+.pts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  backdrop-filter: blur(4px);
+}
+
+.ptsNum {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-secondary);
+}
+
+.ptsStar { font-size: 18px; }
+
+/* XP bar */
+.xpBar {
+  height: 6px;
+  background: rgba(255,255,255,0.25);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.xpFill {
+  height: 100%;
+  background: var(--color-secondary);
+  border-radius: var(--radius-full);
+  transition: width 0.6s var(--ease-smooth);
+}
+
+.xpLabel {
+  font-size: var(--font-size-xs);
+  color: rgba(255,255,255,0.7);
+  text-align: right;
+}
+
+/* Progress */
+.progress {
+  padding: var(--space-4) var(--space-5) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.progressText {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.progressBar {
+  height: 8px;
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  transition: width 0.5s var(--ease-smooth);
+}
+
+/* Tasks */
+.tasks {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+}
+
+.emptyIcon { font-size: 64px; }
+
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }

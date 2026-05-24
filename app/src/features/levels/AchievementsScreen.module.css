@@ -1,0 +1,188 @@
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(135deg, var(--color-info), var(--color-secondary));
+  padding: calc(var(--safe-top) + var(--space-5)) var(--space-5) var(--space-5);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-on-secondary);
+}
+
+.subtitle {
+  font-size: var(--font-size-sm);
+  color: rgba(255,255,255,0.8);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Level card */
+.levelCard {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-card);
+}
+
+.levelBadge {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.levelNum {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-on-secondary);
+}
+
+.levelInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.levelTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.xpText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.xpBarWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.xpBar {
+  height: 6px;
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.xpFill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.6s var(--ease-smooth);
+}
+
+.xpLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.maxLevel {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-secondary);
+}
+
+/* Summary bar */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.summaryText {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.summaryBar {
+  height: 8px;
+  background: color-mix(in srgb, var(--color-secondary) 20%, transparent);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.summaryFill {
+  height: 100%;
+  background: var(--color-secondary);
+  border-radius: var(--radius-full);
+  transition: width 0.6s var(--ease-smooth);
+}
+
+/* Achievement grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.tile {
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.tileUnlocked {
+  background: var(--color-bg-card);
+}
+
+.tileLocked {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  opacity: 0.6;
+}
+
+.tileIcon { font-size: 32px; }
+
+.tileTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.tileDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

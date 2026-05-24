@@ -1,0 +1,235 @@
+/**
+ * Jitsu Points — Design Tokens
+ * All CSS custom properties. Never use raw hex values in components.
+ * Source of truth: tokens.jsx from the prototype.
+ */
+
+/* ─────────────────────────────────────────
+   THEME: Candy (default)
+   ───────────────────────────────────────── */
+:root,
+[data-theme='candy'] {
+  /* Brand colours */
+  --color-primary: #ff4f8b;
+  --color-primary-light: #ff7aaa;
+  --color-primary-dark: #d93070;
+
+  --color-secondary: #ffd23f;
+  --color-secondary-light: #ffde70;
+  --color-secondary-dark: #e6b800;
+
+  --color-accent: #3bceac;
+  --color-accent-light: #63dbbf;
+  --color-accent-dark: #28a88b;
+
+  --color-info: #4da8ff;
+  --color-info-light: #79bfff;
+  --color-info-dark: #2585e0;
+
+  /* Backgrounds */
+  --color-bg: #fff6e8;
+  --color-bg-card: #ffffff;
+  --color-bg-overlay: rgba(0, 0, 0, 0.45);
+
+  /* Text */
+  --color-text: #2d2d2d;
+  --color-text-muted: #8a8a8a;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-secondary: #2d2d2d;
+
+  /* Task state colours */
+  --color-state-available: #3bceac;
+  --color-state-locked: #c8c8c8;
+  --color-state-completed: #4da8ff;
+  --color-state-missed: #ff8a65;
+
+  /* Points / XP */
+  --color-points: #ffd23f;
+  --color-xp: #a78bfa;
+}
+
+/* ─────────────────────────────────────────
+   THEME: Berry
+   ───────────────────────────────────────── */
+[data-theme='berry'] {
+  --color-primary: #9b5de5;
+  --color-primary-light: #b47ef0;
+  --color-primary-dark: #7a3cba;
+
+  --color-secondary: #f15bb5;
+  --color-secondary-light: #f580c8;
+  --color-secondary-dark: #cc3990;
+
+  --color-accent: #00bbf9;
+  --color-accent-light: #38cdff;
+  --color-accent-dark: #0094cc;
+
+  --color-info: #00f5d4;
+  --color-info-light: #40ffea;
+  --color-info-dark: #00c4aa;
+
+  --color-bg: #f5eeff;
+  --color-bg-card: #ffffff;
+  --color-bg-overlay: rgba(30, 0, 60, 0.50);
+
+  --color-text: #1e0040;
+  --color-text-muted: #7a6a90;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-secondary: #ffffff;
+}
+
+/* ─────────────────────────────────────────
+   THEME: Ocean
+   ───────────────────────────────────────── */
+[data-theme='ocean'] {
+  --color-primary: #0077b6;
+  --color-primary-light: #0096d6;
+  --color-primary-dark: #005580;
+
+  --color-secondary: #00b4d8;
+  --color-secondary-light: #48cae4;
+  --color-secondary-dark: #0090b0;
+
+  --color-accent: #90e0ef;
+  --color-accent-light: #ade8f4;
+  --color-accent-dark: #60c0d5;
+
+  --color-info: #caf0f8;
+  --color-info-light: #e8f9fd;
+  --color-info-dark: #90d8ea;
+
+  --color-bg: #e0f7ff;
+  --color-bg-card: #ffffff;
+  --color-bg-overlay: rgba(0, 20, 50, 0.50);
+
+  --color-text: #003049;
+  --color-text-muted: #4a7a90;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-secondary: #003049;
+}
+
+/* ─────────────────────────────────────────
+   THEME: Sunset
+   ───────────────────────────────────────── */
+[data-theme='sunset'] {
+  --color-primary: #ff6b35;
+  --color-primary-light: #ff8c5a;
+  --color-primary-dark: #d44a1a;
+
+  --color-secondary: #ffd166;
+  --color-secondary-light: #ffe099;
+  --color-secondary-dark: #e6b030;
+
+  --color-accent: #ef476f;
+  --color-accent-light: #f5738e;
+  --color-accent-dark: #c52a50;
+
+  --color-info: #06d6a0;
+  --color-info-light: #35e8b8;
+  --color-info-dark: #04aa7e;
+
+  --color-bg: #fff4e6;
+  --color-bg-card: #ffffff;
+  --color-bg-overlay: rgba(60, 20, 0, 0.50);
+
+  --color-text: #3c1400;
+  --color-text-muted: #9a6040;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-secondary: #3c1400;
+}
+
+/* ─────────────────────────────────────────
+   TYPOGRAPHY
+   ───────────────────────────────────────── */
+:root {
+  --font-display: 'Fredoka', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-md: 1.125rem;  /* 18px */
+  --font-size-lg: 1.25rem;   /* 20px */
+  --font-size-xl: 1.5rem;    /* 24px */
+  --font-size-2xl: 2rem;     /* 32px */
+  --font-size-3xl: 2.5rem;   /* 40px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+}
+
+/* ─────────────────────────────────────────
+   SHAPE & SPACING
+   ───────────────────────────────────────── */
+:root {
+  /* Border radii */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+
+  /* Shadows — chunky 4–6px offset, prototype style */
+  --shadow-sm: 3px 3px 0px rgba(0, 0, 0, 0.15);
+  --shadow-md: 4px 4px 0px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 6px 6px 0px rgba(0, 0, 0, 0.18);
+  --shadow-card: 4px 4px 0px rgba(0, 0, 0, 0.12);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Safe area insets for notched phones */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─────────────────────────────────────────
+   ANIMATION
+   ───────────────────────────────────────── */
+:root {
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─────────────────────────────────────────
+   GLOBAL RESETS
+   ───────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* The app handles its own scroll areas */
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent iOS tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}

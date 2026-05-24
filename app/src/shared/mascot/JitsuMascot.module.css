@@ -1,0 +1,81 @@
+.mascot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  flex-shrink: 0;
+  /* Smooth mood transitions */
+  transition: background var(--duration-slow) var(--ease-smooth);
+}
+
+.sm  { width: 60px;  height: 60px; }
+.md  { width: 100px; height: 100px; }
+.lg  { width: 140px; height: 140px; }
+
+.face { line-height: 1; user-select: none; display: block; }
+
+.sm  .face { font-size: 32px; }
+.md  .face { font-size: 52px; }
+.lg  .face { font-size: 72px; }
+
+/* ── Mood: happy (default) ───────────────────────────────────────────────────
+   Gentle bob — content, steady energy */
+.happy {
+  animation: happyBob 3s var(--ease-smooth) infinite;
+}
+
+@keyframes happyBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30%       { transform: translateY(-4px) rotate(-2deg); }
+  60%       { transform: translateY(-2px) rotate(2deg); }
+}
+
+/* ── Mood: cheer ─────────────────────────────────────────────────────────────
+   Excited jump — high-energy celebration */
+.cheer {
+  animation: cheerJump 0.55s var(--ease-bounce) infinite alternate;
+}
+
+@keyframes cheerJump {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-12px) scale(1.05); }
+}
+
+/* ── Mood: wow ───────────────────────────────────────────────────────────────
+   Big pulse + slight rotation — surprised, eyes wide */
+.wow {
+  animation: wowPulse 0.7s var(--ease-bounce) infinite;
+}
+
+@keyframes wowPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  40%       { transform: scale(1.12) rotate(-4deg); }
+  70%       { transform: scale(1.08) rotate(4deg); }
+}
+
+/* ── Mood: calm ──────────────────────────────────────────────────────────────
+   Slow, gentle sway — peaceful, grounded */
+.calm {
+  animation: calmSway 4s ease-in-out infinite;
+}
+
+@keyframes calmSway {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-3px) rotate(1.5deg); }
+}
+
+/* ── Mood: sleep ─────────────────────────────────────────────────────────────
+   Slow drooping nod — drowsy, barely moving */
+.sleep {
+  animation: sleepNod 3.5s ease-in-out infinite;
+}
+
+@keyframes sleepNod {
+  0%   { transform: rotate(0deg) translateY(0); }
+  15%  { transform: rotate(6deg) translateY(3px); }
+  30%  { transform: rotate(8deg) translateY(4px); }
+  55%  { transform: rotate(6deg) translateY(3px); }
+  70%  { transform: rotate(0deg) translateY(0); }
+  100% { transform: rotate(0deg) translateY(0); }
+}

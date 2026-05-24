@@ -1,0 +1,188 @@
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  padding: calc(var(--safe-top) + var(--space-5)) var(--space-5) var(--space-5);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-on-secondary);
+}
+
+.subtitle {
+  font-size: var(--font-size-sm);
+  color: rgba(255,255,255,0.8);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Hero card */
+.heroCard {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.flameIcon {
+  font-size: 56px;
+  animation: bounce 1.5s var(--ease-bounce) infinite;
+}
+
+.streakNum {
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.streakUnit {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+}
+
+.flameLabel {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+/* Weekly grid */
+.section {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+}
+
+.weekRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.dayCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.dayDot {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+}
+
+.dot_done    { background: var(--color-accent); }
+.dot_partial { background: var(--color-secondary); }
+.dot_empty   { background: var(--color-state-missed); opacity: 0.5; }
+.dot_none    { background: color-mix(in srgb, var(--color-text) 12%, transparent); }
+.dotToday    { border-color: var(--color-primary); }
+
+.dayLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  margin-right: 2px;
+}
+
+/* Stats */
+.statsRow {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.statCard {
+  flex: 1;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  box-shadow: var(--shadow-card);
+}
+
+.statNum {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
+}
+
+.statLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.motivate {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  padding: var(--space-2) var(--space-4);
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}

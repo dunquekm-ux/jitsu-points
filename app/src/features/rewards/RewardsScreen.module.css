@@ -1,0 +1,97 @@
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+  padding: calc(var(--safe-top) + var(--space-5)) var(--space-5) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-on-secondary);
+}
+
+.balance {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  color: var(--color-text-on-secondary);
+  opacity: 0.85;
+}
+
+.balanceNum { font-size: var(--font-size-xl); font-weight: var(--font-weight-extrabold); }
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-card);
+}
+
+.affordable { border-left: 4px solid var(--color-secondary); }
+.locked     { border-left: 4px solid var(--color-state-locked); opacity: 0.7; }
+
+.cardInfo { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.rewardTitle { font-family: var(--font-display); font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--color-text); }
+.cost { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+
+.empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: var(--space-3);
+  font-family: var(--font-display); font-size: var(--font-size-3xl);
+  color: var(--color-text-muted);
+}
+
+.overlay {
+  position: fixed; inset: 0;
+  background: var(--color-bg-overlay);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 900; animation: fadeIn var(--duration-base) var(--ease-smooth);
+}
+
+.dialog, .successCard {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  max-width: 300px; width: calc(100% - 48px);
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-4);
+  box-shadow: var(--shadow-lg);
+  animation: popIn var(--duration-slow) var(--ease-bounce);
+}
+
+.confirmTitle { font-family: var(--font-display); font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); }
+.confirmReward { font-family: var(--font-display); font-size: var(--font-size-2xl); font-weight: var(--font-weight-extrabold); color: var(--color-primary); text-align: center; }
+.confirmCost { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.confirmBtns { display: flex; gap: var(--space-3); width: 100%; justify-content: center; }
+
+.successIcon { font-size: 64px; }
+.successText { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.successReward { font-family: var(--font-display); font-size: var(--font-size-2xl); font-weight: var(--font-weight-extrabold); color: var(--color-primary); text-align: center; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn  { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
