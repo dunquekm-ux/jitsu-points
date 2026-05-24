@@ -1,73 +1,47 @@
-# React + TypeScript + Vite
+# Jitsu Points
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Gamified chores and rewards app for kids ages 5–12. Parents create tasks and rewards; kids complete missions, earn points, and redeem prizes.
 
-Currently, two official plugins are available:
+**Live app:** https://jitsu-points.pages.dev
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- React 19 + TypeScript + Vite 8
+- IndexedDB (`idb`) — local-first, works fully offline
+- Google Drive API — family data synced to their own Google account
+- Zustand — global state
+- CSS Modules + custom properties — 4 themes (Candy, Berry, Ocean, Sunset)
+- Cloudflare Pages — hosting (free, zero infrastructure)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting started
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd app
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open http://localhost:5173 — click "Load Demo Data" to explore with sample data.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Environment variables
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env.local
+# Add your Google OAuth Client ID (optional — app runs local-only without it)
+VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 ```
+
+## Scripts
+
+```bash
+npm run dev          # Dev server
+npm run build        # Production build
+npm run test         # Unit tests (119 passing)
+npm run test:e2e     # Playwright E2E tests
+npm run typecheck    # TypeScript check
+npm run lint         # ESLint
+```
+
+## Architecture
+
+See [`CLAUDE.md`](../CLAUDE.md) for full documentation, [`DECISIONS.md`](../DECISIONS.md) for architecture decisions, and [`DOMAIN.md`](../DOMAIN.md) for the data model.
