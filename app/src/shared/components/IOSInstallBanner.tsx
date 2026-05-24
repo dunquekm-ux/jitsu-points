@@ -11,7 +11,7 @@
  *  3. Notifications API is available (user's iOS version supports web push)
  *  4. User hasn't permanently dismissed the banner
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styles from './IOSInstallBanner.module.css';
 
 const DISMISS_KEY = 'jitsu_ios_banner_dismissed';
@@ -29,18 +29,9 @@ function isSafariNonInstalled(): boolean {
 }
 
 export default function IOSInstallBanner() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (
-      isIOS() &&
-      isSafariNonInstalled() &&
-      'Notification' in window &&
-      !localStorage.getItem(DISMISS_KEY)
-    ) {
-      setVisible(true);
-    }
-  }, []);
+  const [visible, setVisible] = useState(
+    () => isIOS() && isSafariNonInstalled() && 'Notification' in window && !localStorage.getItem(DISMISS_KEY),
+  );
 
   if (!visible) return null;
 

@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -17,6 +17,16 @@ export default defineConfig([
     ],
     languageOptions: {
       globals: globals.browser,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', {
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+      // Form pre-fill from store in useEffect is a legitimate pattern;
+      // the rule is overly strict for this use case.
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])

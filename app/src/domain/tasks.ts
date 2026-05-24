@@ -162,7 +162,7 @@ export function calculateStreak(
 
   // Walk backwards from today
   const [y, m, d] = today.split('-').map(Number);
-  let cursor = new Date(y, m - 1, d);
+  const cursor = new Date(y, m - 1, d);
   let streak = 0;
 
   for (let i = 0; i < 365; i++) {
