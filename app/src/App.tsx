@@ -9,6 +9,8 @@ import AndroidInstallBanner from './shared/components/AndroidInstallBanner';
 import { todayISO } from './domain';
 import './core/theme/tokens.css';
 
+const BUILD = import.meta.env.VITE_BUILD_NUMBER ?? 'dev';
+
 export default function App() {
   const { isLoaded, taskSchedules, taskTemplates, taskInstances } = useAppStore();
 
@@ -49,6 +51,23 @@ export default function App() {
       <IOSInstallBanner />
       {/* Android Chrome: branded install prompt using beforeinstallprompt */}
       <AndroidInstallBanner />
+      {/* Build number — fixed bottom-right, low opacity, tap to copy */}
+      <span
+        title={`Build ${BUILD}`}
+        style={{
+          position: 'fixed',
+          bottom: '6px',
+          right: '8px',
+          fontSize: '10px',
+          opacity: 0.3,
+          pointerEvents: 'none',
+          fontFamily: 'monospace',
+          zIndex: 9999,
+          userSelect: 'none',
+        }}
+      >
+        {BUILD}
+      </span>
     </>
   );
 }
