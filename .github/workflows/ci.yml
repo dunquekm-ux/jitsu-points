@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   check:
@@ -41,6 +41,7 @@ jobs:
       - name: Build
         env:
           VITE_BUILD_NUMBER: ${{ github.run_number }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
