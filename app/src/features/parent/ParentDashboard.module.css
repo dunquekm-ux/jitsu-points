@@ -12,7 +12,11 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--color-text) 0%, color-mix(in srgb, var(--color-text) 70%, var(--color-primary)) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-text) 0%,
+    color-mix(in srgb, var(--color-text) 70%, var(--color-primary)) 100%
+  );
   padding: calc(var(--safe-top) + var(--space-4)) var(--space-5) var(--space-5);
   display: flex;
   flex-direction: column;
@@ -23,7 +27,7 @@
 .backBtn {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.75);
+  color: rgba(255, 255, 255, 0.75);
   font-family: var(--font-display);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -71,10 +75,16 @@
   border-top: 3px solid var(--tile-color, var(--color-primary));
   transition: transform var(--duration-fast) var(--ease-bounce);
 }
-.actionTile:hover  { transform: scale(1.04); }
-.actionTile:active { transform: scale(0.96); }
+.actionTile:hover {
+  transform: scale(1.04);
+}
+.actionTile:active {
+  transform: scale(0.96);
+}
 
-.actionIcon  { font-size: 28px; }
+.actionIcon {
+  font-size: 28px;
+}
 .actionLabel {
   font-family: var(--font-display);
   font-size: var(--font-size-xs);
@@ -162,7 +172,9 @@
   border-radius: var(--radius-md);
   transition: transform var(--duration-fast);
 }
-.bonusQuickBtn:hover { transform: scale(1.2); }
+.bonusQuickBtn:hover {
+  transform: scale(1.2);
+}
 
 /* Tasks list */
 .taskList {
@@ -181,7 +193,10 @@
   box-shadow: var(--shadow-card);
 }
 
-.taskIcon { font-size: 24px; flex-shrink: 0; }
+.taskIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
 
 .taskInfo {
   flex: 1;
@@ -236,7 +251,10 @@
   align-items: center;
   gap: var(--space-3);
 }
-.reconnectIcon { font-size: 20px; flex-shrink: 0; }
+.reconnectIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
 .reconnectText {
   flex: 1;
   font-family: var(--font-display);
@@ -246,7 +264,8 @@
 }
 .reconnectBtn {
   background: var(--color-secondary);
-  border: none; border-radius: var(--radius-full);
+  border: none;
+  border-radius: var(--radius-full);
   color: var(--color-text-on-secondary);
   padding: var(--space-1) var(--space-3);
   font-family: var(--font-display);
@@ -255,9 +274,20 @@
   cursor: pointer;
   flex-shrink: 0;
 }
-.reconnectBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.reconnectBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
 
 .settingsSection {
   padding-bottom: var(--space-6);

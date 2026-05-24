@@ -17,15 +17,15 @@ export default function TabBar({ childId }: Props) {
   const { pathname } = useLocation();
 
   const tabs: Tab[] = [
-    { id: 'home',     label: 'Home',     emoji: '🏠', path: `/child/${childId}` },
-    { id: 'rewards',  label: 'Rewards',  emoji: '🎁', path: `/child/${childId}/rewards` },
-    { id: 'streak',   label: 'Streak',   emoji: '🔥', path: `/child/${childId}/streak` },
+    { id: 'home', label: 'Home', emoji: '🏠', path: `/child/${childId}` },
+    { id: 'rewards', label: 'Rewards', emoji: '🎁', path: `/child/${childId}/rewards` },
+    { id: 'streak', label: 'Streak', emoji: '🔥', path: `/child/${childId}/streak` },
     { id: 'trophies', label: 'Trophies', emoji: '🏆', path: `/child/${childId}/achievements` },
   ];
 
   return (
     <nav className={styles.nav} aria-label="Main navigation">
-      {tabs.map(tab => {
+      {tabs.map((tab) => {
         const isActive = pathname === tab.path;
         return (
           <button

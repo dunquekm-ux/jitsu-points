@@ -1,11 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  saveTokens,
-  loadTokens,
-  clearTokens,
-  hasValidToken,
-  tokenExpiresAt,
-} from '../tokens';
+import { saveTokens, loadTokens, clearTokens, hasValidToken, tokenExpiresAt } from '../tokens';
 import type { AuthTokens } from '../types';
 
 function makeTokens(overrides: Partial<AuthTokens> = {}): AuthTokens {

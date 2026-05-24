@@ -39,12 +39,7 @@ export default function App() {
   // rescheduleAllReminders() is cheap — it just clears and re-sets timeouts.
   useEffect(() => {
     if (!isLoaded) return;
-    rescheduleAllReminders(
-      Object.values(taskSchedules),
-      taskTemplates,
-      taskInstances,
-      todayISO(),
-    );
+    rescheduleAllReminders(Object.values(taskSchedules), taskTemplates, taskInstances, todayISO());
   }, [isLoaded, taskSchedules, taskTemplates, taskInstances]);
 
   return (

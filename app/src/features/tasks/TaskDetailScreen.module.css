@@ -80,8 +80,25 @@
   letter-spacing: 0.05em;
 }
 
-.doneText   { color: var(--color-accent); font-family: var(--font-display); font-size: var(--font-size-lg); text-align: center; }
-.missedText { color: var(--color-state-missed); font-family: var(--font-display); font-size: var(--font-size-base); text-align: center; }
-.lockedText { color: var(--color-text-muted); font-family: var(--font-display); font-size: var(--font-size-base); text-align: center; }
+.doneText {
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  text-align: center;
+}
+.missedText {
+  color: var(--color-state-missed);
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  text-align: center;
+}
+.lockedText {
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  text-align: center;
+}
 
-.completeBtn { max-width: 320px; }
+.completeBtn {
+  max-width: 320px;
+}

@@ -29,11 +29,7 @@ describe('currentPoints', () => {
   });
 
   it('sums all deltas for child', () => {
-    const events = [
-      makeEvent({ delta: 50 }),
-      makeEvent({ delta: 30 }),
-      makeEvent({ delta: -20 }),
-    ];
+    const events = [makeEvent({ delta: 50 }), makeEvent({ delta: 30 }), makeEvent({ delta: -20 })];
     expect(currentPoints(events, 'child-1')).toBe(60);
   });
 
@@ -47,10 +43,7 @@ describe('currentPoints', () => {
   });
 
   it('can return a negative balance', () => {
-    const events = [
-      makeEvent({ delta: 10 }),
-      makeEvent({ delta: -20 }),
-    ];
+    const events = [makeEvent({ delta: 10 }), makeEvent({ delta: -20 })];
     expect(currentPoints(events, 'child-1')).toBe(-10);
   });
 });
@@ -59,7 +52,7 @@ describe('lifetimeXp', () => {
   it('only sums positive deltas', () => {
     const events = [
       makeEvent({ delta: 50 }),
-      makeEvent({ delta: -20 }),  // demerit — not counted
+      makeEvent({ delta: -20 }), // demerit — not counted
       makeEvent({ delta: -100 }), // reward redemption — not counted
       makeEvent({ delta: 30 }),
     ];
@@ -114,7 +107,7 @@ describe('clampDemerit', () => {
 
 describe('levelProgress', () => {
   it('returns 0 progress at level start', () => {
-    expect(levelProgress(0)).toBe(0);   // level 1 start
+    expect(levelProgress(0)).toBe(0); // level 1 start
     expect(levelProgress(100)).toBe(0); // level 2 start
   });
 

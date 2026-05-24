@@ -22,10 +22,7 @@ export interface SyncResult {
  * Decide whether the Drive file is newer than our local cache.
  * Returns true if we should replace local with Drive data.
  */
-export function shouldPull(
-  driveLastUpdated: string,
-  localLastSyncedAt: string | null,
-): boolean {
+export function shouldPull(driveLastUpdated: string, localLastSyncedAt: string | null): boolean {
   if (!localLastSyncedAt) return true; // First sync on this device
   return new Date(driveLastUpdated) > new Date(localLastSyncedAt);
 }
@@ -69,11 +66,7 @@ export async function sync(accessToken: string): Promise<SyncResult> {
     if (needsPush) {
       const localFile = await serializeToFile();
       if (localFile) {
-        const fileId = await pushDriveFile(
-          localFile,
-          accessToken,
-          freshMeta?.driveFileId ?? null,
-        );
+        const fileId = await pushDriveFile(localFile, accessToken, freshMeta?.driveFileId ?? null);
         await db.syncMeta.set({
           driveFileId: fileId,
           lastSyncedAt: new Date().toISOString(),
@@ -141,11 +134,7 @@ export async function push(accessToken: string): Promise<void> {
     const localFile = await serializeToFile();
     if (!localFile) return;
 
-    const fileId = await pushDriveFile(
-      localFile,
-      accessToken,
-      meta?.driveFileId ?? null,
-    );
+    const fileId = await pushDriveFile(localFile, accessToken, meta?.driveFileId ?? null);
     await db.syncMeta.set({
       driveFileId: fileId,
       lastSyncedAt: new Date().toISOString(),

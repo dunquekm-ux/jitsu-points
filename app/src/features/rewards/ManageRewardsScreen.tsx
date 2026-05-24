@@ -5,7 +5,7 @@ import { useAppStore } from '../../core/store/appStore';
 import styles from './ManageRewardsScreen.module.css';
 
 interface EditState {
-  rewardId: string | null;  // null = new
+  rewardId: string | null; // null = new
   title: string;
   cost: string;
 }
@@ -23,7 +23,7 @@ export default function ManageRewardsScreen() {
   }
 
   function startEdit(id: string) {
-    const r = rewards.find(x => x.id === id);
+    const r = rewards.find((x) => x.id === id);
     if (!r) return;
     setEditing({ rewardId: id, title: r.title, cost: String(r.cost) });
   }
@@ -51,7 +51,9 @@ export default function ManageRewardsScreen() {
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate('/parent')}>← Back</button>
+        <button className={styles.backBtn} onClick={() => navigate('/parent')}>
+          ← Back
+        </button>
         <h1 className={styles.title}>🎁 Manage Rewards</h1>
       </div>
 
@@ -65,7 +67,7 @@ export default function ManageRewardsScreen() {
               className={styles.input}
               placeholder="e.g. Ice Cream Treat"
               value={editing.title}
-              onChange={e => setEditing(s => s ? { ...s, title: e.target.value } : s)}
+              onChange={(e) => setEditing((s) => (s ? { ...s, title: e.target.value } : s))}
               maxLength={40}
               autoFocus
             />
@@ -75,20 +77,26 @@ export default function ManageRewardsScreen() {
               className={styles.input}
               value={editing.cost}
               min={1}
-              onChange={e => setEditing(s => s ? { ...s, cost: e.target.value } : s)}
+              onChange={(e) => setEditing((s) => (s ? { ...s, cost: e.target.value } : s))}
             />
             <div className={styles.formBtns}>
-              <ChunkyButton variant="ghost" size="sm" onClick={() => setEditing(null)}>Cancel</ChunkyButton>
+              <ChunkyButton variant="ghost" size="sm" onClick={() => setEditing(null)}>
+                Cancel
+              </ChunkyButton>
               <ChunkyButton
                 variant="secondary"
                 size="sm"
                 disabled={!editing.title.trim() || Number(editing.cost) <= 0 || saving}
                 onClick={handleSave}
-              >{saving ? 'Saving…' : 'Save'}</ChunkyButton>
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </ChunkyButton>
             </div>
           </div>
         ) : (
-          <ChunkyButton variant="primary" size="sm" onClick={startNew}>+ New Reward</ChunkyButton>
+          <ChunkyButton variant="primary" size="sm" onClick={startNew}>
+            + New Reward
+          </ChunkyButton>
         )}
 
         {/* Reward list */}
@@ -96,8 +104,11 @@ export default function ManageRewardsScreen() {
           <p className={styles.empty}>No rewards yet — add one above!</p>
         ) : (
           <div className={styles.list}>
-            {rewards.map(r => (
-              <div key={r.id} className={[styles.row, !r.enabled ? styles.rowDisabled : ''].join(' ')}>
+            {rewards.map((r) => (
+              <div
+                key={r.id}
+                className={[styles.row, !r.enabled ? styles.rowDisabled : ''].join(' ')}
+              >
                 <div className={styles.rowInfo}>
                   <span className={styles.rowTitle}>{r.title}</span>
                   <span className={styles.rowCost}>⭐ {r.cost}</span>
@@ -112,14 +123,22 @@ export default function ManageRewardsScreen() {
                   >
                     <span className={styles.toggleThumb} />
                   </button>
-                  <button className={styles.editBtn} onClick={() => startEdit(r.id)}>Edit</button>
+                  <button className={styles.editBtn} onClick={() => startEdit(r.id)}>
+                    Edit
+                  </button>
                   {confirmDelete === r.id ? (
                     <div className={styles.confirmRow}>
-                      <button className={styles.confirmYes} onClick={() => handleDelete(r.id)}>Delete</button>
-                      <button className={styles.confirmNo}  onClick={() => setConfirmDelete(null)}>No</button>
+                      <button className={styles.confirmYes} onClick={() => handleDelete(r.id)}>
+                        Delete
+                      </button>
+                      <button className={styles.confirmNo} onClick={() => setConfirmDelete(null)}>
+                        No
+                      </button>
                     </div>
                   ) : (
-                    <button className={styles.deleteBtn} onClick={() => setConfirmDelete(r.id)}>🗑</button>
+                    <button className={styles.deleteBtn} onClick={() => setConfirmDelete(r.id)}>
+                      🗑
+                    </button>
                   )}
                 </div>
               </div>

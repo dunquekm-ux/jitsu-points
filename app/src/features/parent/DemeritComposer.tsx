@@ -17,7 +17,7 @@ export default function DemeritComposer() {
   const [saving, setSaving] = useState(false);
 
   const capped = Math.min(amount, MAX_DEMERIT);
-  const selectedProfile = profiles.find(p => p.id === childId);
+  const selectedProfile = profiles.find((p) => p.id === childId);
 
   async function handleSave() {
     if (!childId || amount <= 0) return;
@@ -29,7 +29,9 @@ export default function DemeritComposer() {
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate('/parent')}>← Back</button>
+        <button className={styles.backBtn} onClick={() => navigate('/parent')}>
+          ← Back
+        </button>
         <h1 className={styles.title}>💙 Give Demerit</h1>
         <p className={styles.subtitle}>Calm and corrective — max {MAX_DEMERIT} pts</p>
       </div>
@@ -38,7 +40,7 @@ export default function DemeritComposer() {
         {/* Child picker */}
         <label className={styles.label}>Who is this for?</label>
         <div className={styles.kidGrid}>
-          {profiles.map(p => (
+          {profiles.map((p) => (
             <button
               key={p.id}
               className={[styles.kidBtn, p.id === childId ? styles.kidSelected : ''].join(' ')}
@@ -53,12 +55,14 @@ export default function DemeritComposer() {
         {/* Amount */}
         <label className={styles.label}>Amount (max {MAX_DEMERIT} ⭐)</label>
         <div className={styles.amountRow}>
-          {[2, 5, 10, 15, 20].map(v => (
+          {[2, 5, 10, 15, 20].map((v) => (
             <button
               key={v}
               className={[styles.amountChip, capped === v ? styles.chipSelected : ''].join(' ')}
               onClick={() => setAmount(v)}
-            >−{v}</button>
+            >
+              −{v}
+            </button>
           ))}
         </div>
         <input
@@ -67,7 +71,7 @@ export default function DemeritComposer() {
           value={amount}
           min={1}
           max={MAX_DEMERIT}
-          onChange={e => setAmount(Math.min(MAX_DEMERIT, Math.max(1, Number(e.target.value))))}
+          onChange={(e) => setAmount(Math.min(MAX_DEMERIT, Math.max(1, Number(e.target.value))))}
         />
         {amount > MAX_DEMERIT && (
           <p className={styles.capNote}>Capped at −{MAX_DEMERIT} pts per the house rules.</p>
@@ -80,7 +84,7 @@ export default function DemeritComposer() {
           className={styles.input}
           placeholder="e.g. Left room messy after reminders"
           value={note}
-          onChange={e => setNote(e.target.value)}
+          onChange={(e) => setNote(e.target.value)}
           maxLength={80}
         />
 

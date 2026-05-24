@@ -1,7 +1,14 @@
 import { useParams } from 'react-router-dom';
 import TabBar from '../../shared/components/TabBar';
 import { useAppStore } from '../../core/store/appStore';
-import { calculateStreak, todayISO, levelProgress, LEVEL_THRESHOLDS, lifetimeXp, levelFromXp } from '../../domain';
+import {
+  calculateStreak,
+  todayISO,
+  levelProgress,
+  LEVEL_THRESHOLDS,
+  lifetimeXp,
+  levelFromXp,
+} from '../../domain';
 import styles from './AchievementsScreen.module.css';
 
 interface Achievement {
@@ -12,11 +19,7 @@ interface Achievement {
   unlocked: boolean;
 }
 
-function buildAchievements(
-  completedCount: number,
-  streak: number,
-  level: number,
-): Achievement[] {
+function buildAchievements(completedCount: number, streak: number, level: number): Achievement[] {
   return [
     {
       id: 'first_task',
@@ -102,18 +105,18 @@ export default function AchievementsScreen() {
   const { childId } = useParams<{ childId: string }>();
   const { taskInstances, pointsEvents, profiles } = useAppStore();
 
-  const profile = profiles.find(p => p.id === childId);
+  const profile = profiles.find((p) => p.id === childId);
   const xp = lifetimeXp(pointsEvents, childId ?? '');
   const level = levelFromXp(xp);
   const progress = levelProgress(xp);
   const today = todayISO();
   const streak = calculateStreak(taskInstances, childId ?? '', today);
   const completedCount = taskInstances.filter(
-    i => i.childId === childId && i.state === 'completed',
+    (i) => i.childId === childId && i.state === 'completed',
   ).length;
 
   const achievements = buildAchievements(completedCount, streak, level);
-  const unlockedCount = achievements.filter(a => a.unlocked).length;
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   const maxLevel = LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1].level;
   const isMaxLevel = level >= maxLevel;
@@ -137,9 +140,14 @@ export default function AchievementsScreen() {
             {!isMaxLevel && (
               <div className={styles.xpBarWrap}>
                 <div className={styles.xpBar}>
-                  <div className={styles.xpFill} style={{ width: `${Math.round(progress * 100)}%` }} />
+                  <div
+                    className={styles.xpFill}
+                    style={{ width: `${Math.round(progress * 100)}%` }}
+                  />
                 </div>
-                <p className={styles.xpLabel}>{Math.round(progress * 100)}% to Level {level + 1}</p>
+                <p className={styles.xpLabel}>
+                  {Math.round(progress * 100)}% to Level {level + 1}
+                </p>
               </div>
             )}
             {isMaxLevel && <p className={styles.maxLevel}>🌟 Max level reached!</p>}
@@ -161,10 +169,12 @@ export default function AchievementsScreen() {
 
         {/* Achievement grid */}
         <div className={styles.grid}>
-          {achievements.map(a => (
+          {achievements.map((a) => (
             <div
               key={a.id}
-              className={[styles.tile, a.unlocked ? styles.tileUnlocked : styles.tileLocked].join(' ')}
+              className={[styles.tile, a.unlocked ? styles.tileUnlocked : styles.tileLocked].join(
+                ' ',
+              )}
             >
               <span className={styles.tileIcon}>{a.unlocked ? a.icon : '🔒'}</span>
               <span className={styles.tileTitle}>{a.title}</span>

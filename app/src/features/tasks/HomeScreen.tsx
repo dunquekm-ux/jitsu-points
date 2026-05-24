@@ -21,17 +21,28 @@ export default function HomeScreen() {
   const navigate = useNavigate();
 
   const {
-    profiles, taskTemplates, taskSchedules,
-    pointsEvents, isLoaded, load, selectChild,
-    celebration, levelUp, dismissCelebration, dismissLevelUp,
-    pendingBonus, pendingDemerit, dismissBonus, dismissDemerit,
+    profiles,
+    taskTemplates,
+    taskSchedules,
+    pointsEvents,
+    isLoaded,
+    load,
+    selectChild,
+    celebration,
+    levelUp,
+    dismissCelebration,
+    dismissLevelUp,
+    pendingBonus,
+    pendingDemerit,
+    dismissBonus,
+    dismissDemerit,
   } = useAppStore();
 
-  const taskInstances = useAppStore(s => selectTodaysTasks(s, childId ?? ''));
-  const pts    = useAppStore(s => selectChildPoints(s, childId ?? ''));
-  const level  = useAppStore(s => selectChildLevel(s, childId ?? ''));
-  const xp     = lifetimeXp(pointsEvents, childId ?? '');
-  const nextThreshold = LEVEL_THRESHOLDS.find(t => t.xpRequired > xp);
+  const taskInstances = useAppStore((s) => selectTodaysTasks(s, childId ?? ''));
+  const pts = useAppStore((s) => selectChildPoints(s, childId ?? ''));
+  const level = useAppStore((s) => selectChildLevel(s, childId ?? ''));
+  const xp = lifetimeXp(pointsEvents, childId ?? '');
+  const nextThreshold = LEVEL_THRESHOLDS.find((t) => t.xpRequired > xp);
   const xpToNext = nextThreshold ? nextThreshold.xpRequired - xp : 0;
 
   useEffect(() => {
@@ -49,20 +60,27 @@ export default function HomeScreen() {
   }, [load]);
 
   if (!isLoaded || !childId) {
-    return <div className={styles.screen}><div className={styles.spinner}>🥷</div></div>;
+    return (
+      <div className={styles.screen}>
+        <div className={styles.spinner}>🥷</div>
+      </div>
+    );
   }
 
-  const profile = profiles.find(p => p.id === childId);
-  if (!profile) { navigate('/'); return null; }
+  const profile = profiles.find((p) => p.id === childId);
+  if (!profile) {
+    navigate('/');
+    return null;
+  }
 
   // Split tasks by state
-  const available  = taskInstances.filter(i => i.state === 'available');
-  const completed  = taskInstances.filter(i => i.state === 'completed');
-  const locked     = taskInstances.filter(i => i.state === 'locked');
-  const missed     = taskInstances.filter(i => i.state === 'missed');
+  const available = taskInstances.filter((i) => i.state === 'available');
+  const completed = taskInstances.filter((i) => i.state === 'completed');
+  const locked = taskInstances.filter((i) => i.state === 'locked');
+  const missed = taskInstances.filter((i) => i.state === 'missed');
 
   const totalToday = taskInstances.length;
-  const doneToday  = completed.length;
+  const doneToday = completed.length;
   const progressPct = totalToday > 0 ? (doneToday / totalToday) * 100 : 0;
 
   const ordered = [...available, ...locked, ...completed, ...missed];
@@ -87,10 +105,15 @@ export default function HomeScreen() {
 
         {/* XP progress bar */}
         <div className={styles.xpBar}>
-          <div className={styles.xpFill} style={{ width: `${Math.min((xp / (nextThreshold?.xpRequired ?? xp)) * 100, 100)}%` }} />
+          <div
+            className={styles.xpFill}
+            style={{ width: `${Math.min((xp / (nextThreshold?.xpRequired ?? xp)) * 100, 100)}%` }}
+          />
         </div>
         {nextThreshold && (
-          <span className={styles.xpLabel}>{xpToNext} XP to Level {level + 1}</span>
+          <span className={styles.xpLabel}>
+            {xpToNext} XP to Level {level + 1}
+          </span>
         )}
       </div>
 
@@ -114,7 +137,7 @@ export default function HomeScreen() {
             <p>No missions today!</p>
           </div>
         ) : (
-          ordered.map(instance => {
+          ordered.map((instance) => {
             const template = taskTemplates[instance.templateId];
             const schedule = taskSchedules[instance.scheduleId];
             if (!template || !schedule) return null;

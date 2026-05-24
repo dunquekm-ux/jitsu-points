@@ -61,7 +61,7 @@ export function playTaskComplete(): void {
   try {
     const audioCtx = getCtx();
     const t = audioCtx.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
     notes.forEach((freq, i) => playTone(freq, t + i * 0.08, 0.35, 'sine', 0.25));
   } catch {
     // Silently ignore — no audio context on this platform
@@ -77,12 +77,14 @@ export function playLevelUp(): void {
     const audioCtx = getCtx();
     const t = audioCtx.currentTime;
     // Sustained root chord (C5, E5, G5)
-    [523.25, 659.25, 783.99].forEach(freq => playTone(freq, t, 0.5, 'triangle', 0.18));
+    [523.25, 659.25, 783.99].forEach((freq) => playTone(freq, t, 0.5, 'triangle', 0.18));
     // Ascending victory run a beat later
-    [783.99, 1046.50, 1318.51, 1567.98].forEach((freq, i) =>
+    [783.99, 1046.5, 1318.51, 1567.98].forEach((freq, i) =>
       playTone(freq, t + 0.45 + i * 0.1, 0.45, 'sine', 0.22),
     );
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
@@ -93,8 +95,10 @@ export function playRedemption(): void {
   try {
     const audioCtx = getCtx();
     const t = audioCtx.currentTime;
-    [1046.50, 880.0, 698.46, 523.25].forEach((freq, i) =>
+    [1046.5, 880.0, 698.46, 523.25].forEach((freq, i) =>
       playTone(freq, t + i * 0.12, 0.5, 'sine', 0.22),
     );
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }

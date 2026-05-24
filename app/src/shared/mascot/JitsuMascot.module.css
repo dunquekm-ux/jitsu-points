@@ -9,15 +9,34 @@
   transition: background var(--duration-slow) var(--ease-smooth);
 }
 
-.sm  { width: 60px;  height: 60px; }
-.md  { width: 100px; height: 100px; }
-.lg  { width: 140px; height: 140px; }
+.sm {
+  width: 60px;
+  height: 60px;
+}
+.md {
+  width: 100px;
+  height: 100px;
+}
+.lg {
+  width: 140px;
+  height: 140px;
+}
 
-.face { line-height: 1; user-select: none; display: block; }
+.face {
+  line-height: 1;
+  user-select: none;
+  display: block;
+}
 
-.sm  .face { font-size: 32px; }
-.md  .face { font-size: 52px; }
-.lg  .face { font-size: 72px; }
+.sm .face {
+  font-size: 32px;
+}
+.md .face {
+  font-size: 52px;
+}
+.lg .face {
+  font-size: 72px;
+}
 
 /* ── Mood: happy (default) ───────────────────────────────────────────────────
    Gentle bob — content, steady energy */
@@ -26,9 +45,16 @@
 }
 
 @keyframes happyBob {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  30%       { transform: translateY(-4px) rotate(-2deg); }
-  60%       { transform: translateY(-2px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+  60% {
+    transform: translateY(-2px) rotate(2deg);
+  }
 }
 
 /* ── Mood: cheer ─────────────────────────────────────────────────────────────
@@ -38,8 +64,12 @@
 }
 
 @keyframes cheerJump {
-  from { transform: translateY(0) scale(1); }
-  to   { transform: translateY(-12px) scale(1.05); }
+  from {
+    transform: translateY(0) scale(1);
+  }
+  to {
+    transform: translateY(-12px) scale(1.05);
+  }
 }
 
 /* ── Mood: wow ───────────────────────────────────────────────────────────────
@@ -49,9 +79,16 @@
 }
 
 @keyframes wowPulse {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  40%       { transform: scale(1.12) rotate(-4deg); }
-  70%       { transform: scale(1.08) rotate(4deg); }
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  40% {
+    transform: scale(1.12) rotate(-4deg);
+  }
+  70% {
+    transform: scale(1.08) rotate(4deg);
+  }
 }
 
 /* ── Mood: calm ──────────────────────────────────────────────────────────────
@@ -61,8 +98,13 @@
 }
 
 @keyframes calmSway {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%       { transform: translateY(-3px) rotate(1.5deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1.5deg);
+  }
 }
 
 /* ── Mood: sleep ─────────────────────────────────────────────────────────────
@@ -72,10 +114,22 @@
 }
 
 @keyframes sleepNod {
-  0%   { transform: rotate(0deg) translateY(0); }
-  15%  { transform: rotate(6deg) translateY(3px); }
-  30%  { transform: rotate(8deg) translateY(4px); }
-  55%  { transform: rotate(6deg) translateY(3px); }
-  70%  { transform: rotate(0deg) translateY(0); }
-  100% { transform: rotate(0deg) translateY(0); }
+  0% {
+    transform: rotate(0deg) translateY(0);
+  }
+  15% {
+    transform: rotate(6deg) translateY(3px);
+  }
+  30% {
+    transform: rotate(8deg) translateY(4px);
+  }
+  55% {
+    transform: rotate(6deg) translateY(3px);
+  }
+  70% {
+    transform: rotate(0deg) translateY(0);
+  }
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
 }

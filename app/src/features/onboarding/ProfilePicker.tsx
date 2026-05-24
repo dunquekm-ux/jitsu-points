@@ -48,7 +48,7 @@ export default function ProfilePicker() {
         </div>
       ) : (
         <div className={styles.grid} data-testid="profile-picker">
-          {profiles.map(profile => (
+          {profiles.map((profile) => (
             <button
               key={profile.id}
               className={styles.profileBtn}

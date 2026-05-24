@@ -16,9 +16,9 @@ export interface UseSyncReturn {
 }
 
 export function useSync(): UseSyncReturn {
-  const status = useSyncStore(s => s.status);
-  const lastSyncedAt = useSyncStore(s => s.lastSyncedAt);
-  const error = useSyncStore(s => s.error);
+  const status = useSyncStore((s) => s.status);
+  const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
+  const error = useSyncStore((s) => s.error);
   const accessToken = useAuthStore(selectAccessToken);
 
   const triggerSync = useCallback(async () => {

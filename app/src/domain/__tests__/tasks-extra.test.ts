@@ -3,12 +3,7 @@
  * Fills coverage gaps from Phase 0 + validates the instance generator.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import {
-  recalculateInstanceStates,
-  generateInstances,
-  todayISO,
-  dateToISO,
-} from '../tasks';
+import { recalculateInstanceStates, generateInstances, todayISO, dateToISO } from '../tasks';
 import type { TaskInstance, TaskSchedule, TaskTemplate } from '../types';
 
 function makeInstance(overrides: Partial<TaskInstance> = {}): TaskInstance {
@@ -67,9 +62,9 @@ describe('todayISO', () => {
 
 describe('dateToISO', () => {
   it('formats a Date as YYYY-MM-DD with zero padding', () => {
-    expect(dateToISO(new Date(2026, 0, 1))).toBe('2026-01-01');   // Jan  1
+    expect(dateToISO(new Date(2026, 0, 1))).toBe('2026-01-01'); // Jan  1
     expect(dateToISO(new Date(2026, 11, 31))).toBe('2026-12-31'); // Dec 31
-    expect(dateToISO(new Date(2026, 4, 9))).toBe('2026-05-09');   // May  9
+    expect(dateToISO(new Date(2026, 4, 9))).toBe('2026-05-09'); // May  9
   });
 });
 
@@ -119,9 +114,15 @@ describe('generateInstances', () => {
   const now = new Date(2026, 4, 23, 8, 0); // 08:00 — within window
 
   it('generates instances for each date in the range', () => {
-    const result = generateInstances(template, schedule, ['2026-05-21', '2026-05-22', '2026-05-23'], [], now);
+    const result = generateInstances(
+      template,
+      schedule,
+      ['2026-05-21', '2026-05-22', '2026-05-23'],
+      [],
+      now,
+    );
     expect(result).toHaveLength(3);
-    expect(result.map(r => r.date)).toEqual(['2026-05-21', '2026-05-22', '2026-05-23']);
+    expect(result.map((r) => r.date)).toEqual(['2026-05-21', '2026-05-22', '2026-05-23']);
   });
 
   it('sets correct initial state via resolveTaskState', () => {
@@ -137,7 +138,13 @@ describe('generateInstances', () => {
 
   it('skips dates that already have an instance for this schedule', () => {
     const existing = [makeInstance({ date: '2026-05-22', scheduleId: 'sched-1' })];
-    const result = generateInstances(template, schedule, ['2026-05-22', '2026-05-23'], existing, now);
+    const result = generateInstances(
+      template,
+      schedule,
+      ['2026-05-22', '2026-05-23'],
+      existing,
+      now,
+    );
     expect(result).toHaveLength(1);
     expect(result[0].date).toBe('2026-05-23');
   });
@@ -160,8 +167,14 @@ describe('generateInstances', () => {
   });
 
   it('generates unique IDs for each instance', () => {
-    const result = generateInstances(template, schedule, ['2026-05-21', '2026-05-22', '2026-05-23'], [], now);
-    const ids = result.map(r => r.id);
+    const result = generateInstances(
+      template,
+      schedule,
+      ['2026-05-21', '2026-05-22', '2026-05-23'],
+      [],
+      now,
+    );
+    const ids = result.map((r) => r.id);
     expect(new Set(ids).size).toBe(3);
   });
 

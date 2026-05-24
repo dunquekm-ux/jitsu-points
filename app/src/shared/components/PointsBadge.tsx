@@ -8,9 +8,5 @@ interface Props {
 
 export default function PointsBadge({ points, size = 'md', signed = false }: Props) {
   const label = signed && points > 0 ? `+${points}` : String(points);
-  return (
-    <span className={[styles.badge, styles[size]].join(' ')}>
-      ⭐ {label}
-    </span>
-  );
+  return <span className={[styles.badge, styles[size]].join(' ')}>⭐ {label}</span>;
 }

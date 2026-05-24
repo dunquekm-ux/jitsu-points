@@ -118,11 +118,7 @@ export function createPointsEvent(
 
 // ─── Reward ───────────────────────────────────────────────────────────────────
 
-export function createReward(
-  title: string,
-  cost: number,
-  overrides?: Partial<Reward>,
-): Reward {
+export function createReward(title: string, cost: number, overrides?: Partial<Reward>): Reward {
   return {
     id: generateId(),
     title,

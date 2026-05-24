@@ -24,7 +24,7 @@
 
 .subtitle {
   font-size: var(--font-size-sm);
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .body {
@@ -173,7 +173,9 @@
   opacity: 0.6;
 }
 
-.tileIcon { font-size: 32px; }
+.tileIcon {
+  font-size: 32px;
+}
 
 .tileTitle {
   font-family: var(--font-display);

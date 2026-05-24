@@ -30,7 +30,9 @@ export default function JoinFamily() {
     if (!codeOk) return;
     if (!HAS_AUTH) {
       // No auth configured — can't pull from Drive; show message
-      setErrorMsg('Google Drive sync is not configured on this build. Ask your family admin to share the exported file directly.');
+      setErrorMsg(
+        'Google Drive sync is not configured on this build. Ask your family admin to share the exported file directly.',
+      );
       setStep('error');
       return;
     }
@@ -60,7 +62,9 @@ export default function JoinFamily() {
 
   return (
     <div className={styles.screen}>
-      <button className={styles.backBtn} onClick={() => navigate('/welcome')}>← Back</button>
+      <button className={styles.backBtn} onClick={() => navigate('/welcome')}>
+        ← Back
+      </button>
 
       {/* Step dots */}
       {(() => {
@@ -70,10 +74,13 @@ export default function JoinFamily() {
         return (
           <div className={styles.steps}>
             {ALL.map((s, i) => (
-              <div key={s} className={[
-                styles.dot,
-                i === idx ? styles.dotActive : i < idx ? styles.dotDone : '',
-              ].join(' ')} />
+              <div
+                key={s}
+                className={[
+                  styles.dot,
+                  i === idx ? styles.dotActive : i < idx ? styles.dotDone : '',
+                ].join(' ')}
+              />
             ))}
           </div>
         );
@@ -91,10 +98,13 @@ export default function JoinFamily() {
           <div className={styles.field}>
             <label className={styles.label}>Join code</label>
             <input
-              className={[styles.codeInput, codeOk ? styles.codeOk : rawCode.length > 0 ? styles.codeBad : ''].join(' ')}
+              className={[
+                styles.codeInput,
+                codeOk ? styles.codeOk : rawCode.length > 0 ? styles.codeBad : '',
+              ].join(' ')}
               placeholder="e.g. TIGER-42"
               value={rawCode}
-              onChange={e => setRawCode(e.target.value.toUpperCase())}
+              onChange={(e) => setRawCode(e.target.value.toUpperCase())}
               maxLength={10}
               autoCapitalize="characters"
               autoFocus
@@ -104,7 +114,13 @@ export default function JoinFamily() {
             )}
           </div>
 
-          <ChunkyButton variant="primary" size="lg" fullWidth disabled={!codeOk} onClick={handleCodeContinue}>
+          <ChunkyButton
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={!codeOk}
+            onClick={handleCodeContinue}
+          >
             Continue →
           </ChunkyButton>
         </div>
@@ -116,7 +132,8 @@ export default function JoinFamily() {
           <span className={styles.cardIcon}>🔑</span>
           <h1 className={styles.cardTitle}>Sign in with Google</h1>
           <p className={styles.cardBody}>
-            Sign in with the <strong>same Google account</strong> that was used to set up this family. This lets us find your family data on Google Drive.
+            Sign in with the <strong>same Google account</strong> that was used to set up this
+            family. This lets us find your family data on Google Drive.
           </p>
 
           <div className={styles.codePreview}>
@@ -124,10 +141,18 @@ export default function JoinFamily() {
             <span className={styles.codePreviewCode}>{normalised}</span>
           </div>
 
-          <ChunkyButton variant="primary" size="lg" fullWidth disabled={busy} onClick={handleSignIn}>
+          <ChunkyButton
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={busy}
+            onClick={handleSignIn}
+          >
             {busy ? 'Opening Google…' : '🔑 Sign in with Google'}
           </ChunkyButton>
-          <button className={styles.backLink} onClick={() => setStep('code')}>← Change code</button>
+          <button className={styles.backLink} onClick={() => setStep('code')}>
+            ← Change code
+          </button>
         </div>
       )}
 
@@ -136,7 +161,9 @@ export default function JoinFamily() {
         <div className={styles.card}>
           <span className={[styles.cardIcon, styles.spin].join(' ')}>⚙️</span>
           <h1 className={styles.cardTitle}>Syncing your family…</h1>
-          <p className={styles.cardBody}>Downloading your family data from Google Drive. This only takes a moment.</p>
+          <p className={styles.cardBody}>
+            Downloading your family data from Google Drive. This only takes a moment.
+          </p>
         </div>
       )}
 
@@ -146,7 +173,15 @@ export default function JoinFamily() {
           <span className={styles.cardIcon}>😕</span>
           <h1 className={styles.cardTitle}>Something went wrong</h1>
           <p className={styles.errorMsg}>{errorMsg}</p>
-          <ChunkyButton variant="ghost" size="md" fullWidth onClick={() => { setStep('code'); setErrorMsg(''); }}>
+          <ChunkyButton
+            variant="ghost"
+            size="md"
+            fullWidth
+            onClick={() => {
+              setStep('code');
+              setErrorMsg('');
+            }}
+          >
             Try again
           </ChunkyButton>
         </div>

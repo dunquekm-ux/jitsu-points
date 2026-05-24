@@ -18,8 +18,8 @@ import DemeritComposer from '../../features/parent/DemeritComposer';
 const router = createBrowserRouter([
   // Onboarding
   { path: '/welcome', element: <WelcomeScreen /> },
-  { path: '/setup',   element: <FamilySetup /> },
-  { path: '/join',    element: <JoinFamily /> },
+  { path: '/setup', element: <FamilySetup /> },
+  { path: '/join', element: <JoinFamily /> },
 
   // Child routes
   { path: '/', element: <ProfilePicker /> },

@@ -30,7 +30,11 @@ function isSafariNonInstalled(): boolean {
 
 export default function IOSInstallBanner() {
   const [visible, setVisible] = useState(
-    () => isIOS() && isSafariNonInstalled() && 'Notification' in window && !localStorage.getItem(DISMISS_KEY),
+    () =>
+      isIOS() &&
+      isSafariNonInstalled() &&
+      'Notification' in window &&
+      !localStorage.getItem(DISMISS_KEY),
   );
 
   if (!visible) return null;
@@ -42,10 +46,11 @@ export default function IOSInstallBanner() {
 
   return (
     <div className={styles.banner} role="status">
-      <span className={styles.icon} aria-hidden="true">📲</span>
+      <span className={styles.icon} aria-hidden="true">
+        📲
+      </span>
       <div className={styles.text}>
-        <strong>Get task reminders!</strong> Tap{' '}
-        <span className={styles.shareIcon}>⎙</span>{' '}
+        <strong>Get task reminders!</strong> Tap <span className={styles.shareIcon}>⎙</span>{' '}
         <strong>Share</strong> → <strong>Add to Home Screen</strong> in Safari.
       </div>
       <button

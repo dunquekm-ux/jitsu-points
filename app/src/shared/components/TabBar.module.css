@@ -19,11 +19,14 @@
   border: none;
   cursor: pointer;
   color: var(--color-text-muted);
-  transition: color var(--duration-fast) var(--ease-smooth),
-              transform var(--duration-fast) var(--ease-bounce);
+  transition:
+    color var(--duration-fast) var(--ease-smooth),
+    transform var(--duration-fast) var(--ease-bounce);
 }
 
-.tab:active { transform: scale(0.92); }
+.tab:active {
+  transform: scale(0.92);
+}
 
 .tab.active {
   color: var(--color-primary);

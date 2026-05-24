@@ -32,7 +32,11 @@ export default function ThemeSwitcher() {
             >
               <span className={styles.swatchDot} />
               <span className={styles.swatchLabel}>{label}</span>
-              {current === id && <span className={styles.check} aria-hidden>✓</span>}
+              {current === id && (
+                <span className={styles.check} aria-hidden>
+                  ✓
+                </span>
+              )}
             </button>
           ),
         )}

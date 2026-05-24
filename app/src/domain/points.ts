@@ -27,9 +27,7 @@ const MAX_DEMERIT = 20;
  * Current spendable points for a child. Can be negative.
  */
 export function currentPoints(events: PointsEvent[], childId: string): number {
-  return events
-    .filter(e => e.childId === childId)
-    .reduce((sum, e) => sum + e.delta, 0);
+  return events.filter((e) => e.childId === childId).reduce((sum, e) => sum + e.delta, 0);
 }
 
 /**
@@ -37,7 +35,7 @@ export function currentPoints(events: PointsEvent[], childId: string): number {
  */
 export function lifetimeXp(events: PointsEvent[], childId: string): number {
   return events
-    .filter(e => e.childId === childId && e.delta > 0)
+    .filter((e) => e.childId === childId && e.delta > 0)
     .reduce((sum, e) => sum + e.delta, 0);
 }
 
@@ -81,8 +79,8 @@ export function clampDemerit(requestedAmount: number): number {
  */
 export function levelProgress(xp: number): number {
   const currentLevel = levelFromXp(xp);
-  const currentThreshold = LEVEL_THRESHOLDS.find(t => t.level === currentLevel);
-  const nextThreshold = LEVEL_THRESHOLDS.find(t => t.level === currentLevel + 1);
+  const currentThreshold = LEVEL_THRESHOLDS.find((t) => t.level === currentLevel);
+  const nextThreshold = LEVEL_THRESHOLDS.find((t) => t.level === currentLevel + 1);
 
   if (!nextThreshold || !currentThreshold) return 1; // Max level
 

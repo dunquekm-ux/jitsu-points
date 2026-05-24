@@ -115,7 +115,12 @@ interface AppState {
   deleteChild: (childId: string) => Promise<void>;
 
   // Actions — onboarding
-  initFamily: (familyName: string, childName: string, childAvatar: AvatarId, accessToken: string) => Promise<string>;
+  initFamily: (
+    familyName: string,
+    childName: string,
+    childAvatar: AvatarId,
+    accessToken: string,
+  ) => Promise<string>;
   joinFamily: (rawCode: string, accessToken: string) => Promise<void>;
 
   // Dev helper
@@ -132,9 +137,9 @@ async function flushToDB(
   updatedInstances: TaskInstance[],
 ): Promise<void> {
   await Promise.all([
-    ...newInstances.map(i => db.taskInstances.put(i)),
-    ...newEvents.map(e => db.pointsEvents.put(e)),
-    ...updatedInstances.map(i => db.taskInstances.put(i)),
+    ...newInstances.map((i) => db.taskInstances.put(i)),
+    ...newEvents.map((e) => db.pointsEvents.put(e)),
+    ...updatedInstances.map((i) => db.taskInstances.put(i)),
   ]);
   await markDirty();
   const token = useAuthStore.getState().tokens?.accessToken;
@@ -196,7 +201,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Generate missing instances for the streak window
     const newInstances: TaskInstance[] = [];
     for (const template of templatesList) {
-      const schedules = schedulesList.filter(s => s.taskTemplateId === template.id);
+      const schedules = schedulesList.filter((s) => s.taskTemplateId === template.id);
       for (const schedule of schedules) {
         const generated = generateInstances(template, schedule, window, existingInstances, now);
         newInstances.push(...generated);
@@ -205,7 +210,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     // Persist new instances
     if (newInstances.length > 0) {
-      await Promise.all(newInstances.map(i => db.taskInstances.put(i)));
+      await Promise.all(newInstances.map((i) => db.taskInstances.put(i)));
     }
 
     const allInstances = [...existingInstances, ...newInstances];
@@ -215,11 +220,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     const recalculated = recalculateInstanceStates(allInstances, schedMapForRecalc, now);
 
     // Persist any state changes
-    const changed = recalculated.filter(
-      (r, i) => r.state !== allInstances[i]?.state,
-    );
+    const changed = recalculated.filter((r, i) => r.state !== allInstances[i]?.state);
     if (changed.length > 0) {
-      await Promise.all(changed.map(i => db.taskInstances.put(i)));
+      await Promise.all(changed.map((i) => db.taskInstances.put(i)));
     }
 
     set({
@@ -243,7 +246,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   completeTask: async (instanceId) => {
     const state = get();
-    const instance = state.taskInstances.find(i => i.id === instanceId);
+    const instance = state.taskInstances.find((i) => i.id === instanceId);
     if (!instance || instance.state !== 'available') return;
 
     const template = state.taskTemplates[instance.templateId];
@@ -265,7 +268,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     // Optimistic update
-    const updatedInstances = state.taskInstances.map(i =>
+    const updatedInstances = state.taskInstances.map((i) =>
       i.id === instanceId ? completedInstance : i,
     );
     const updatedEvents = [...state.pointsEvents, event];
@@ -285,11 +288,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     await flushToDB([], [event], [completedInstance]);
 
     // Refresh profile level/streak cache
-    const updatedProfile = state.profiles.find(p => p.id === instance.childId);
+    const updatedProfile = state.profiles.find((p) => p.id === instance.childId);
     if (updatedProfile && newLevel > prevLevel) {
       const refreshed = { ...updatedProfile, level: newLevel };
       await db.profiles.put(refreshed);
-      set(s => ({ profiles: s.profiles.map(p => p.id === refreshed.id ? refreshed : p) }));
+      set((s) => ({ profiles: s.profiles.map((p) => (p.id === refreshed.id ? refreshed : p)) }));
     }
   },
 
@@ -297,7 +300,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   redeemReward: async (rewardId) => {
     const state = get();
-    const reward = state.rewards.find(r => r.id === rewardId && r.enabled);
+    const reward = state.rewards.find((r) => r.id === rewardId && r.enabled);
     if (!reward || !state.activeChildId) return;
 
     const pts = currentPoints(state.pointsEvents, state.activeChildId);
@@ -308,7 +311,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       note: reward.title,
     });
 
-    set(s => ({
+    set((s) => ({
       pointsEvents: [...s.pointsEvents, event],
       redemptionTitle: reward.title,
     }));
@@ -321,7 +324,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   addBonus: async (childId, delta, note) => {
     const absDelta = Math.abs(delta);
     const event = createPointsEvent(childId, absDelta, 'bonus', { note });
-    set(s => ({
+    set((s) => ({
       pointsEvents: [...s.pointsEvents, event],
       pendingBonus: { childId, delta: absDelta, note },
     }));
@@ -333,7 +336,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   addDemerit: async (childId, amount, note) => {
     const delta = clampDemerit(amount);
     const event = createPointsEvent(childId, delta, 'demerit', { note });
-    set(s => ({
+    set((s) => ({
       pointsEvents: [...s.pointsEvents, event],
       pendingDemerit: { childId, delta, note },
     }));
@@ -346,7 +349,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { celebration } = get();
     if (celebration?.newLevel) {
       const { profiles, activeChildId } = get();
-      const profile = profiles.find(p => p.id === activeChildId);
+      const profile = profiles.find((p) => p.id === activeChildId);
       set({
         celebration: null,
         levelUp: { level: celebration.newLevel, childName: profile?.name ?? '' },
@@ -367,21 +370,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       icon: data.icon,
       allowEarlyCompletion: data.allowEarlyCompletion,
     });
-    const schedules = data.schedules.map(s =>
+    const schedules = data.schedules.map((s) =>
       createSchedule(template.id, s.label, s.startTime, s.endTime, {
         reminderTime: s.reminderTime,
       }),
     );
     await db.taskTemplates.put(template);
-    await Promise.all(schedules.map(s => db.taskSchedules.put(s)));
+    await Promise.all(schedules.map((s) => db.taskSchedules.put(s)));
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({
+    set((s) => ({
       taskTemplates: { ...s.taskTemplates, [template.id]: template },
       taskSchedules: {
         ...s.taskSchedules,
-        ...Object.fromEntries(schedules.map(s => [s.id, s])),
+        ...Object.fromEntries(schedules.map((s) => [s.id, s])),
       },
     }));
     return template.id;
@@ -402,23 +405,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     };
     // Delete old schedules for this template
     const oldSchedules = Object.values(get().taskSchedules).filter(
-      s => s.taskTemplateId === templateId,
+      (s) => s.taskTemplateId === templateId,
     );
     await db.taskTemplates.put(updated);
-    await Promise.all(oldSchedules.map(s => db.taskSchedules.delete(s.id)));
-    const newSchedules = data.schedules.map(s =>
+    await Promise.all(oldSchedules.map((s) => db.taskSchedules.delete(s.id)));
+    const newSchedules = data.schedules.map((s) =>
       createSchedule(templateId, s.label, s.startTime, s.endTime, {
         reminderTime: s.reminderTime,
       }),
     );
-    await Promise.all(newSchedules.map(s => db.taskSchedules.put(s)));
+    await Promise.all(newSchedules.map((s) => db.taskSchedules.put(s)));
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
     const newSchedMap = { ...get().taskSchedules };
     for (const s of oldSchedules) delete newSchedMap[s.id];
     for (const s of newSchedules) newSchedMap[s.id] = s;
-    set(s => ({
+    set((s) => ({
       taskTemplates: { ...s.taskTemplates, [templateId]: updated },
       taskSchedules: newSchedMap,
     }));
@@ -428,10 +431,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   deleteTask: async (templateId) => {
     const schedules = Object.values(get().taskSchedules).filter(
-      s => s.taskTemplateId === templateId,
+      (s) => s.taskTemplateId === templateId,
     );
     await db.taskTemplates.delete(templateId);
-    await Promise.all(schedules.map(s => db.taskSchedules.delete(s.id)));
+    await Promise.all(schedules.map((s) => db.taskSchedules.delete(s.id)));
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
@@ -450,33 +453,33 @@ export const useAppStore = create<AppState>((set, get) => ({
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({ rewards: [...s.rewards, reward] }));
+    set((s) => ({ rewards: [...s.rewards, reward] }));
   },
 
   // ─── updateRewardItem ─────────────────────────────────────────────────────
 
   updateRewardItem: async (rewardId, changes) => {
-    const existing = get().rewards.find(r => r.id === rewardId);
+    const existing = get().rewards.find((r) => r.id === rewardId);
     if (!existing) return;
     const updated = { ...existing, ...changes };
     await db.rewards.put(updated);
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({ rewards: s.rewards.map(r => r.id === rewardId ? updated : r) }));
+    set((s) => ({ rewards: s.rewards.map((r) => (r.id === rewardId ? updated : r)) }));
   },
 
   // ─── toggleReward ─────────────────────────────────────────────────────────
 
   toggleReward: async (rewardId) => {
-    const existing = get().rewards.find(r => r.id === rewardId);
+    const existing = get().rewards.find((r) => r.id === rewardId);
     if (!existing) return;
     const updated = { ...existing, enabled: !existing.enabled };
     await db.rewards.put(updated);
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({ rewards: s.rewards.map(r => r.id === rewardId ? updated : r) }));
+    set((s) => ({ rewards: s.rewards.map((r) => (r.id === rewardId ? updated : r)) }));
   },
 
   // ─── deleteReward ─────────────────────────────────────────────────────────
@@ -486,7 +489,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({ rewards: s.rewards.filter(r => r.id !== rewardId) }));
+    set((s) => ({ rewards: s.rewards.filter((r) => r.id !== rewardId) }));
   },
 
   // ─── createChild ─────────────────────────────────────────────────────────
@@ -497,21 +500,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({ profiles: [...s.profiles, profile] }));
+    set((s) => ({ profiles: [...s.profiles, profile] }));
     return profile;
   },
 
   // ─── updateChild ─────────────────────────────────────────────────────────
 
   updateChild: async (childId, changes) => {
-    const existing = get().profiles.find(p => p.id === childId);
+    const existing = get().profiles.find((p) => p.id === childId);
     if (!existing) return;
     const updated = { ...existing, ...changes };
     await db.profiles.put(updated);
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({ profiles: s.profiles.map(p => p.id === childId ? updated : p) }));
+    set((s) => ({ profiles: s.profiles.map((p) => (p.id === childId ? updated : p)) }));
   },
 
   // ─── deleteChild ─────────────────────────────────────────────────────────
@@ -521,7 +524,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await markDirty();
     const token = useAuthStore.getState().tokens?.accessToken;
     if (token) schedulePush(token);
-    set(s => ({ profiles: s.profiles.filter(p => p.id !== childId) }));
+    set((s) => ({ profiles: s.profiles.filter((p) => p.id !== childId) }));
   },
 
   // ─── initFamily ──────────────────────────────────────────────────────────
@@ -538,7 +541,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (accessToken) {
       try {
         const fileId = await pushDriveFile(driveFile, accessToken);
-        await db.syncMeta.set({ driveFileId: fileId, lastSyncedAt: new Date().toISOString(), isDirty: false });
+        await db.syncMeta.set({
+          driveFileId: fileId,
+          lastSyncedAt: new Date().toISOString(),
+          isDirty: false,
+        });
       } catch (err) {
         console.warn('[initFamily] Drive push failed, will retry on next sync', err);
         await markDirty();
@@ -554,13 +561,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   joinFamily: async (rawCode, accessToken) => {
     const result = await pullDriveFile(accessToken);
     if (!result) {
-      throw new Error('No Jitsu Points data found on this Google account. Make sure you sign in with the same account the family was created on.');
+      throw new Error(
+        'No Jitsu Points data found on this Google account. Make sure you sign in with the same account the family was created on.',
+      );
     }
     if (normaliseJoinCode(result.file.joinCode) !== normaliseJoinCode(rawCode)) {
       throw new Error('Join code does not match. Check the code and try again.');
     }
     await seedFromDriveFile(result.file);
-    await db.syncMeta.set({ driveFileId: result.fileId, lastSyncedAt: new Date().toISOString(), isDirty: false });
+    await db.syncMeta.set({
+      driveFileId: result.fileId,
+      lastSyncedAt: new Date().toISOString(),
+      isDirty: false,
+    });
     await get().load();
   },
 
@@ -588,5 +601,5 @@ export function selectChildLevel(state: AppState, childId: string): number {
 
 export function selectTodaysTasks(state: AppState, childId: string): TaskInstance[] {
   const today = todayISO();
-  return state.taskInstances.filter(i => i.childId === childId && i.date === today);
+  return state.taskInstances.filter((i) => i.childId === childId && i.date === today);
 }

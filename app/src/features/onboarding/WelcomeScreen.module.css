@@ -4,8 +4,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--safe-top) + var(--space-8)) var(--space-6) calc(var(--safe-bottom) + var(--space-8));
-  background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-info) 55%, var(--color-secondary) 100%);
+  padding: calc(var(--safe-top) + var(--space-8)) var(--space-6)
+    calc(var(--safe-bottom) + var(--space-8));
+  background: linear-gradient(
+    160deg,
+    var(--color-primary) 0%,
+    var(--color-info) 55%,
+    var(--color-secondary) 100%
+  );
   gap: var(--space-8);
   overflow-y: auto;
 }
@@ -22,7 +28,7 @@
 .mascot {
   font-size: 80px;
   animation: float 3s ease-in-out infinite;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
 }
 
 .title {
@@ -30,7 +36,7 @@
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-extrabold);
   color: #fff;
-  text-shadow: 2px 3px 0 rgba(0,0,0,0.15);
+  text-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
   letter-spacing: -0.02em;
 }
 
@@ -38,12 +44,12 @@
   font-family: var(--font-display);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .sub {
   font-size: var(--font-size-base);
-  color: rgba(255,255,255,0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* Action buttons */
@@ -55,7 +61,8 @@
   max-width: 380px;
 }
 
-.primaryBtn, .secondaryBtn {
+.primaryBtn,
+.secondaryBtn {
   display: flex;
   align-items: center;
   gap: var(--space-4);
@@ -64,28 +71,42 @@
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: transform var(--duration-fast) var(--ease-bounce),
-              box-shadow var(--duration-fast) var(--ease-smooth);
+  transition:
+    transform var(--duration-fast) var(--ease-bounce),
+    box-shadow var(--duration-fast) var(--ease-smooth);
   width: 100%;
 }
 
 .primaryBtn {
   background: #fff;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
-.primaryBtn:hover  { transform: scale(1.03); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
-.primaryBtn:active { transform: scale(0.97); }
+.primaryBtn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.primaryBtn:active {
+  transform: scale(0.97);
+}
 
 .secondaryBtn {
-  background: rgba(255,255,255,0.2);
-  border: 2px solid rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-.secondaryBtn:hover  { background: rgba(255,255,255,0.3); transform: scale(1.03); }
-.secondaryBtn:active { transform: scale(0.97); }
+.secondaryBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.03);
+}
+.secondaryBtn:active {
+  transform: scale(0.97);
+}
 
-.btnIcon { font-size: 32px; flex-shrink: 0; }
+.btnIcon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
 
 .btnText {
   display: flex;
@@ -93,17 +114,31 @@
   gap: 2px;
 }
 
-.primaryBtn .btnText strong  { color: var(--color-primary); font-family: var(--font-display); font-size: var(--font-size-lg); }
-.primaryBtn .btnText small   { color: var(--color-text-muted); font-size: var(--font-size-xs); }
-.secondaryBtn .btnText strong { color: #fff; font-family: var(--font-display); font-size: var(--font-size-lg); }
-.secondaryBtn .btnText small  { color: rgba(255,255,255,0.75); font-size: var(--font-size-xs); }
+.primaryBtn .btnText strong {
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+}
+.primaryBtn .btnText small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+.secondaryBtn .btnText strong {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+}
+.secondaryBtn .btnText small {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--font-size-xs);
+}
 
 /* Dev */
 .devBtn {
-  background: rgba(0,0,0,0.2);
-  border: 2px dashed rgba(255,255,255,0.4);
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px dashed rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-md);
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   padding: var(--space-2) var(--space-4);
   cursor: pointer;
   font-size: var(--font-size-xs);
@@ -111,6 +146,11 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50%       { transform: translateY(-12px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(2deg);
+  }
 }

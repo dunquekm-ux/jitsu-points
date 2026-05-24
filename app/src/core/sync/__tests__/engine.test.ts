@@ -142,7 +142,7 @@ describe('sync()', () => {
     await db.syncMeta.set({
       driveFileId: 'f-1',
       lastSyncedAt: '2026-05-23T00:00:00Z',
-      isDirty: true,  // dirty!
+      isDirty: true, // dirty!
     });
 
     const result = await sync('test-token');

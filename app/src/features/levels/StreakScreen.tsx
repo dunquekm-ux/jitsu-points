@@ -5,19 +5,25 @@ import { calculateStreak, todayISO } from '../../domain';
 import styles from './StreakScreen.module.css';
 
 const FLAME_LEVELS = [
-  { min: 0,  max: 2,  icon: '🌱', label: 'Just starting' },
-  { min: 3,  max: 6,  icon: '🔥', label: 'On fire!' },
-  { min: 7,  max: 13, icon: '🔥🔥', label: 'Hot streak!' },
+  { min: 0, max: 2, icon: '🌱', label: 'Just starting' },
+  { min: 3, max: 6, icon: '🔥', label: 'On fire!' },
+  { min: 7, max: 13, icon: '🔥🔥', label: 'Hot streak!' },
   { min: 14, max: 29, icon: '🔥🔥🔥', label: 'Unstoppable!' },
   { min: 30, max: Infinity, icon: '💎🔥', label: 'Legend!' },
 ];
 
 function flameForStreak(n: number) {
-  return FLAME_LEVELS.find(f => n >= f.min && n <= f.max) ?? FLAME_LEVELS[0];
+  return FLAME_LEVELS.find((f) => n >= f.min && n <= f.max) ?? FLAME_LEVELS[0];
 }
 
 // Last 7 days as filled circles
-function WeekRow({ instances, childId }: { instances: ReturnType<typeof useAppStore.getState>['taskInstances']; childId: string }) {
+function WeekRow({
+  instances,
+  childId,
+}: {
+  instances: ReturnType<typeof useAppStore.getState>['taskInstances'];
+  childId: string;
+}) {
   const today = todayISO();
   const [y, m, d] = today.split('-').map(Number);
   const base = new Date(y, m - 1, d);
@@ -26,11 +32,11 @@ function WeekRow({ instances, childId }: { instances: ReturnType<typeof useAppSt
     const dt = new Date(base);
     dt.setDate(dt.getDate() - (6 - i));
     const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-    const dayInstances = instances.filter(inst => inst.childId === childId && inst.date === iso);
+    const dayInstances = instances.filter((inst) => inst.childId === childId && inst.date === iso);
     const isToday = iso === today;
     let status: 'done' | 'partial' | 'empty' | 'none' = 'none';
     if (dayInstances.length > 0) {
-      const completed = dayInstances.filter(i => i.state === 'completed').length;
+      const completed = dayInstances.filter((i) => i.state === 'completed').length;
       if (completed === dayInstances.length) status = 'done';
       else if (completed > 0) status = 'partial';
       else status = 'empty';
@@ -40,7 +46,7 @@ function WeekRow({ instances, childId }: { instances: ReturnType<typeof useAppSt
 
   return (
     <div className={styles.weekRow}>
-      {days.map(day => (
+      {days.map((day) => (
         <div key={day.iso} className={styles.dayCol}>
           <div
             className={[
@@ -60,7 +66,7 @@ export default function StreakScreen() {
   const { childId } = useParams<{ childId: string }>();
   const { taskInstances, profiles } = useAppStore();
 
-  const profile = profiles.find(p => p.id === childId);
+  const profile = profiles.find((p) => p.id === childId);
   const today = todayISO();
   const streak = calculateStreak(taskInstances, childId ?? '', today);
   const flame = flameForStreak(streak);
@@ -108,7 +114,7 @@ export default function StreakScreen() {
           </div>
           <div className={styles.statCard}>
             <span className={styles.statNum}>
-              {taskInstances.filter(i => i.childId === childId && i.state === 'completed').length}
+              {taskInstances.filter((i) => i.childId === childId && i.state === 'completed').length}
             </span>
             <span className={styles.statLabel}>Total done</span>
           </div>
@@ -119,7 +125,9 @@ export default function StreakScreen() {
           <p className={styles.motivate}>Complete today's missions to start your streak! 🚀</p>
         )}
         {streak > 0 && streak < 7 && (
-          <p className={styles.motivate}>Keep it up! {7 - streak} more days to a week-long streak 🌟</p>
+          <p className={styles.motivate}>
+            Keep it up! {7 - streak} more days to a week-long streak 🌟
+          </p>
         )}
         {streak >= 7 && (
           <p className={styles.motivate}>You're on a roll! Don't break the chain! 💪</p>

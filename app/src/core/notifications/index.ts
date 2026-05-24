@@ -81,12 +81,7 @@ async function showNotification(title: string, body: string): Promise<void> {
  * @param body    Notification body text
  * @param fireAt  When to show the notification
  */
-export function scheduleReminder(
-  key: string,
-  title: string,
-  body: string,
-  fireAt: Date,
-): void {
+export function scheduleReminder(key: string, title: string, body: string, fireAt: Date): void {
   cancelReminder(key);
 
   const msUntilFire = fireAt.getTime() - Date.now();
@@ -141,7 +136,7 @@ export function rescheduleAllReminders(
   cancelAllReminders();
 
   const now = new Date();
-  const todayInstances = instances.filter(i => i.date === todayStr);
+  const todayInstances = instances.filter((i) => i.date === todayStr);
 
   for (const schedule of schedules) {
     if (!schedule.reminderTime) continue;
@@ -151,7 +146,7 @@ export function rescheduleAllReminders(
 
     // Find this schedule's instance for today
     const instance = todayInstances.find(
-      i => i.scheduleId === schedule.id && i.templateId === schedule.taskTemplateId,
+      (i) => i.scheduleId === schedule.id && i.templateId === schedule.taskTemplateId,
     );
 
     // Skip if the task is already done or past

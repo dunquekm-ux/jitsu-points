@@ -21,9 +21,9 @@ describe('isValidJoinCode', () => {
   });
 
   it('rejects invalid codes', () => {
-    expect(isValidJoinCode('TIGER42')).toBe(false);    // no dash
-    expect(isValidJoinCode('TIG-42')).toBe(false);     // word too short (< 4 chars)
-    expect(isValidJoinCode('TIGER-4')).toBe(false);    // single digit
+    expect(isValidJoinCode('TIGER42')).toBe(false); // no dash
+    expect(isValidJoinCode('TIG-42')).toBe(false); // word too short (< 4 chars)
+    expect(isValidJoinCode('TIGER-4')).toBe(false); // single digit
     expect(isValidJoinCode('')).toBe(false);
   });
 

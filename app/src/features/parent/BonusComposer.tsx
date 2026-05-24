@@ -23,12 +23,14 @@ export default function BonusComposer() {
     navigate('/parent');
   }
 
-  const selectedProfile = profiles.find(p => p.id === childId);
+  const selectedProfile = profiles.find((p) => p.id === childId);
 
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate('/parent')}>← Back</button>
+        <button className={styles.backBtn} onClick={() => navigate('/parent')}>
+          ← Back
+        </button>
         <h1 className={styles.title}>🎉 Give Bonus</h1>
       </div>
 
@@ -36,7 +38,7 @@ export default function BonusComposer() {
         {/* Child picker */}
         <label className={styles.label}>Who gets the bonus?</label>
         <div className={styles.kidGrid}>
-          {profiles.map(p => (
+          {profiles.map((p) => (
             <button
               key={p.id}
               className={[styles.kidBtn, p.id === childId ? styles.kidSelected : ''].join(' ')}
@@ -51,12 +53,14 @@ export default function BonusComposer() {
         {/* Amount */}
         <label className={styles.label}>Bonus amount (⭐ points)</label>
         <div className={styles.amountRow}>
-          {[5, 10, 15, 20, 25, 50].map(v => (
+          {[5, 10, 15, 20, 25, 50].map((v) => (
             <button
               key={v}
               className={[styles.amountChip, amount === v ? styles.chipSelected : ''].join(' ')}
               onClick={() => setAmount(v)}
-            >+{v}</button>
+            >
+              +{v}
+            </button>
           ))}
         </div>
         <input
@@ -65,7 +69,7 @@ export default function BonusComposer() {
           value={amount}
           min={1}
           max={999}
-          onChange={e => setAmount(Math.max(1, Number(e.target.value)))}
+          onChange={(e) => setAmount(Math.max(1, Number(e.target.value)))}
         />
 
         {/* Note */}
@@ -75,7 +79,7 @@ export default function BonusComposer() {
           className={styles.input}
           placeholder="e.g. Great attitude today!"
           value={note}
-          onChange={e => setNote(e.target.value)}
+          onChange={(e) => setNote(e.target.value)}
           maxLength={80}
         />
 

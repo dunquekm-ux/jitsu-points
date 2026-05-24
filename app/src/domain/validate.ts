@@ -59,7 +59,12 @@ function isStringOrNull(v: unknown, field: string): string | null {
 }
 
 const VALID_AVATARS: AvatarId[] = [
-  'speed_hero', 'water_pup', 'leaf_ninja', 'flame_fox', 'star_kid', 'moon_cub',
+  'speed_hero',
+  'water_pup',
+  'leaf_ninja',
+  'flame_fox',
+  'star_kid',
+  'moon_cub',
 ];
 const VALID_TASK_STATES: TaskState[] = ['locked', 'available', 'completed', 'missed'];
 const VALID_EVENT_TYPES: PointsEventType[] = ['task', 'reward', 'bonus', 'demerit'];
@@ -90,7 +95,10 @@ function validateTaskTemplate(raw: unknown, idx: number): TaskTemplate {
     title: isString(o.title, `taskTemplates[${idx}].title`),
     icon: isString(o.icon, `taskTemplates[${idx}].icon`),
     points: isNumber(o.points, `taskTemplates[${idx}].points`),
-    allowEarlyCompletion: isBoolean(o.allowEarlyCompletion, `taskTemplates[${idx}].allowEarlyCompletion`),
+    allowEarlyCompletion: isBoolean(
+      o.allowEarlyCompletion,
+      `taskTemplates[${idx}].allowEarlyCompletion`,
+    ),
     requiresPhoto: isBoolean(o.requiresPhoto, `taskTemplates[${idx}].requiresPhoto`),
     assignedChildId: isString(o.assignedChildId, `taskTemplates[${idx}].assignedChildId`),
   };
@@ -127,7 +135,10 @@ function validateTaskInstance(raw: unknown, idx: number): TaskInstance {
     date: isString(o.date, `taskInstances[${idx}].date`),
     state: state as TaskState,
     completedAt: isStringOrNull(o.completedAt ?? null, `taskInstances[${idx}].completedAt`),
-    selfiePhotoPath: isStringOrNull(o.selfiePhotoPath ?? null, `taskInstances[${idx}].selfiePhotoPath`),
+    selfiePhotoPath: isStringOrNull(
+      o.selfiePhotoPath ?? null,
+      `taskInstances[${idx}].selfiePhotoPath`,
+    ),
   };
 }
 
@@ -161,9 +172,8 @@ function validateReward(raw: unknown, idx: number): Reward {
 function validateSettings(raw: unknown): AppSettings {
   const o = isObject(raw, 'settings');
   return {
-    notificationsEnabled: typeof o.notificationsEnabled === 'boolean'
-      ? o.notificationsEnabled
-      : false,
+    notificationsEnabled:
+      typeof o.notificationsEnabled === 'boolean' ? o.notificationsEnabled : false,
     theme: typeof o.theme === 'string' ? o.theme : 'candy',
   };
 }

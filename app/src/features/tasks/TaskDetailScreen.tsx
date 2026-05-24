@@ -10,7 +10,7 @@ export default function TaskDetailScreen() {
   const navigate = useNavigate();
 
   const { taskInstances, taskTemplates, taskSchedules, completeTask } = useAppStore();
-  const instance = taskInstances.find(i => i.id === instanceId);
+  const instance = taskInstances.find((i) => i.id === instanceId);
   const template = instance ? taskTemplates[instance.templateId] : null;
   const schedule = instance ? taskSchedules[instance.scheduleId] : null;
 
@@ -27,9 +27,8 @@ export default function TaskDetailScreen() {
     navigate(`/child/${childId}`);
   }
 
-  const mascotMood = instance.state === 'completed' ? 'cheer'
-                   : instance.state === 'available'  ? 'happy'
-                   : 'calm';
+  const mascotMood =
+    instance.state === 'completed' ? 'cheer' : instance.state === 'available' ? 'happy' : 'calm';
 
   return (
     <div className={styles.screen}>
@@ -59,7 +58,9 @@ export default function TaskDetailScreen() {
           <p className={styles.missedText}>💨 This mission has expired. Get the next one!</p>
         )}
         {instance.state === 'locked' && (
-          <p className={styles.lockedText}>🔒 Not available yet — check back at {schedule.startTime}!</p>
+          <p className={styles.lockedText}>
+            🔒 Not available yet — check back at {schedule.startTime}!
+          </p>
         )}
 
         {isAvailable && (

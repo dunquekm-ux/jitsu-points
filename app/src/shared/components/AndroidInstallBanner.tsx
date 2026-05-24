@@ -68,15 +68,13 @@ export default function AndroidInstallBanner() {
 
   return (
     <div className={styles.banner} role="status">
-      <span className={styles.icon} aria-hidden="true">⚡</span>
+      <span className={styles.icon} aria-hidden="true">
+        ⚡
+      </span>
       <div className={styles.text}>
         <strong>Add Jitsu to your home screen</strong> for the best experience and task reminders.
       </div>
-      <button
-        className={styles.installBtn}
-        onClick={handleInstall}
-        disabled={installing}
-      >
+      <button className={styles.installBtn} onClick={handleInstall} disabled={installing}>
         {installing ? '…' : 'Install'}
       </button>
       <button

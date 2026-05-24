@@ -8,8 +8,8 @@ export type MascotMood = 'happy' | 'wow' | 'calm' | 'sleep' | 'cheer';
 
 const MOOD_EMOJI: Record<MascotMood, string> = {
   happy: '🥷',
-  wow:   '😮',
-  calm:  '😌',
+  wow: '😮',
+  calm: '😌',
   sleep: '😴',
   cheer: '🎉',
 };

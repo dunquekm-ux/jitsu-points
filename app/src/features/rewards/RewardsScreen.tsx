@@ -9,7 +9,7 @@ import styles from './RewardsScreen.module.css';
 export default function RewardsScreen() {
   const { childId } = useParams<{ childId: string }>();
   const { rewards, redemptionTitle, redeemReward, dismissRedemption } = useAppStore();
-  const pts = useAppStore(s => selectChildPoints(s, childId ?? ''));
+  const pts = useAppStore((s) => selectChildPoints(s, childId ?? ''));
 
   const [confirming, setConfirming] = useState<string | null>(null);
 
@@ -18,7 +18,7 @@ export default function RewardsScreen() {
     if (redemptionTitle) playRedemption();
   }, [redemptionTitle]);
 
-  const enabledRewards = rewards.filter(r => r.enabled);
+  const enabledRewards = rewards.filter((r) => r.enabled);
 
   async function handleRedeem(rewardId: string) {
     await redeemReward(rewardId);
@@ -42,7 +42,7 @@ export default function RewardsScreen() {
             <p>No rewards set up yet.</p>
           </div>
         ) : (
-          enabledRewards.map(reward => {
+          enabledRewards.map((reward) => {
             const canAfford = pts >= reward.cost;
             return (
               <div
@@ -70,23 +70,30 @@ export default function RewardsScreen() {
       <TabBar childId={childId ?? ''} />
 
       {/* Confirm dialog */}
-      {confirming && (() => {
-        const r = rewards.find(x => x.id === confirming);
-        if (!r) return null;
-        return (
-          <div className={styles.overlay} onClick={() => setConfirming(null)}>
-            <div className={styles.dialog} onClick={e => e.stopPropagation()}>
-              <p className={styles.confirmTitle}>Claim reward?</p>
-              <p className={styles.confirmReward}>{r.title}</p>
-              <p className={styles.confirmCost}>Costs {r.cost} ⭐ — you have {pts}</p>
-              <div className={styles.confirmBtns}>
-                <ChunkyButton variant="ghost" size="sm" onClick={() => setConfirming(null)}>Cancel</ChunkyButton>
-                <ChunkyButton variant="secondary" size="sm" onClick={() => handleRedeem(r.id)}>Yes, claim!</ChunkyButton>
+      {confirming &&
+        (() => {
+          const r = rewards.find((x) => x.id === confirming);
+          if (!r) return null;
+          return (
+            <div className={styles.overlay} onClick={() => setConfirming(null)}>
+              <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
+                <p className={styles.confirmTitle}>Claim reward?</p>
+                <p className={styles.confirmReward}>{r.title}</p>
+                <p className={styles.confirmCost}>
+                  Costs {r.cost} ⭐ — you have {pts}
+                </p>
+                <div className={styles.confirmBtns}>
+                  <ChunkyButton variant="ghost" size="sm" onClick={() => setConfirming(null)}>
+                    Cancel
+                  </ChunkyButton>
+                  <ChunkyButton variant="secondary" size="sm" onClick={() => handleRedeem(r.id)}>
+                    Yes, claim!
+                  </ChunkyButton>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* Redemption success */}
       {redemptionTitle && (
@@ -95,7 +102,9 @@ export default function RewardsScreen() {
             <span className={styles.successIcon}>🎉</span>
             <p className={styles.successText}>Enjoy your</p>
             <p className={styles.successReward}>{redemptionTitle}</p>
-            <ChunkyButton variant="primary" onClick={dismissRedemption}>Awesome!</ChunkyButton>
+            <ChunkyButton variant="primary" onClick={dismissRedemption}>
+              Awesome!
+            </ChunkyButton>
           </div>
         </div>
       )}

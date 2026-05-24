@@ -13,7 +13,9 @@ import { DRIVE_SCOPE } from './types';
 
 const GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 
-let _tokenClient: ReturnType<NonNullable<Window['google']>['accounts']['oauth2']['initTokenClient']> | null = null;
+let _tokenClient: ReturnType<
+  NonNullable<Window['google']>['accounts']['oauth2']['initTokenClient']
+> | null = null;
 
 /**
  * Inject the GIS script tag into <head>. Safe to call multiple times.
@@ -23,7 +25,7 @@ export function loadGIS(): Promise<void> {
   if (window.google?.accounts) return Promise.resolve();
   if (document.querySelector(`script[src="${GIS_SCRIPT_URL}"]`)) {
     // Already injected — wait for it to load
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const interval = setInterval(() => {
         if (window.google?.accounts) {
           clearInterval(interval);
@@ -74,7 +76,16 @@ function requestToken(prompt: string): Promise<AuthTokens> {
     const client = getOrCreateTokenClient();
 
     // Monkey-patch the callback for this request
-    (client as unknown as { callback: (r: { access_token: string; expires_in: number; email?: string; error?: string }) => void }).callback = (response) => {
+    (
+      client as unknown as {
+        callback: (r: {
+          access_token: string;
+          expires_in: number;
+          email?: string;
+          error?: string;
+        }) => void;
+      }
+    ).callback = (response) => {
       if (response.error) {
         reject(new Error(`GIS token error: ${response.error}`));
         return;
@@ -112,7 +123,7 @@ export function silentRefresh(): Promise<AuthTokens> {
  */
 export async function revokeToken(accessToken: string): Promise<void> {
   await loadGIS();
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     window.google?.accounts.oauth2.revoke(accessToken, resolve);
   });
 }

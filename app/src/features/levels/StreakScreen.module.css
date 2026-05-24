@@ -24,7 +24,7 @@
 
 .subtitle {
   font-size: var(--font-size-sm);
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .body {
@@ -115,11 +115,22 @@
   border: 2px solid transparent;
 }
 
-.dot_done    { background: var(--color-accent); }
-.dot_partial { background: var(--color-secondary); }
-.dot_empty   { background: var(--color-state-missed); opacity: 0.5; }
-.dot_none    { background: color-mix(in srgb, var(--color-text) 12%, transparent); }
-.dotToday    { border-color: var(--color-primary); }
+.dot_done {
+  background: var(--color-accent);
+}
+.dot_partial {
+  background: var(--color-secondary);
+}
+.dot_empty {
+  background: var(--color-state-missed);
+  opacity: 0.5;
+}
+.dot_none {
+  background: color-mix(in srgb, var(--color-text) 12%, transparent);
+}
+.dotToday {
+  border-color: var(--color-primary);
+}
 
 .dayLabel {
   font-size: var(--font-size-xs);
@@ -183,6 +194,11 @@
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }

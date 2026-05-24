@@ -30,9 +30,9 @@ export interface FamilyMeta {
 /** Stored under key 'main' in the syncMeta store. */
 export interface SyncMeta {
   key: 'main';
-  driveFileId: string | null;  // Drive file ID once created/found
+  driveFileId: string | null; // Drive file ID once created/found
   lastSyncedAt: string | null; // ISO timestamp of last successful pull
-  isDirty: boolean;            // true = local has unpushed changes
+  isDirty: boolean; // true = local has unpushed changes
 }
 
 /** Stored under key 'main' in the settings store. */

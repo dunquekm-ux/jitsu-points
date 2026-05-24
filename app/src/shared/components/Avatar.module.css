@@ -24,26 +24,47 @@
   justify-content: center;
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-card);
-  transition: transform var(--duration-fast) var(--ease-bounce),
-              box-shadow var(--duration-fast) var(--ease-smooth);
+  transition:
+    transform var(--duration-fast) var(--ease-bounce),
+    box-shadow var(--duration-fast) var(--ease-smooth);
   flex-shrink: 0;
 }
 
 /* Sizes */
-.sm  { width: 48px; height: 48px; }
-.md  { width: 72px; height: 72px; }
-.lg  { width: 96px; height: 96px; }
-.xl  { width: 128px; height: 128px; }
+.sm {
+  width: 48px;
+  height: 48px;
+}
+.md {
+  width: 72px;
+  height: 72px;
+}
+.lg {
+  width: 96px;
+  height: 96px;
+}
+.xl {
+  width: 128px;
+  height: 128px;
+}
 
 .emoji {
   line-height: 1;
   user-select: none;
 }
 
-.sm .emoji  { font-size: 22px; }
-.md .emoji  { font-size: 32px; }
-.lg .emoji  { font-size: 44px; }
-.xl .emoji  { font-size: 60px; }
+.sm .emoji {
+  font-size: 22px;
+}
+.md .emoji {
+  font-size: 32px;
+}
+.lg .emoji {
+  font-size: 44px;
+}
+.xl .emoji {
+  font-size: 60px;
+}
 
 .label {
   font-family: var(--font-display);

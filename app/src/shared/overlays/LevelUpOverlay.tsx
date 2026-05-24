@@ -10,7 +10,9 @@ interface Props {
 }
 
 export default function LevelUpOverlay({ level, childName, onDismiss }: Props) {
-  useEffect(() => { playLevelUp(); }, []);
+  useEffect(() => {
+    playLevelUp();
+  }, []);
 
   return (
     <div className={styles.overlay} role="dialog" aria-modal aria-label="Level up">
@@ -18,7 +20,9 @@ export default function LevelUpOverlay({ level, childName, onDismiss }: Props) {
         <div className={styles.burst}>✨</div>
         <div className={styles.badge}>Level {level}</div>
         <h2 className={styles.title}>Level Up!</h2>
-        <p className={styles.sub}>{childName} reached Level {level}! 🥷</p>
+        <p className={styles.sub}>
+          {childName} reached Level {level}! 🥷
+        </p>
         <ChunkyButton variant="primary" size="lg" fullWidth onClick={onDismiss}>
           Let's Go! ⚡
         </ChunkyButton>

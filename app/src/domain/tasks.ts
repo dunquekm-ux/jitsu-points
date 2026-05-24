@@ -42,7 +42,7 @@ export function recalculateInstanceStates(
   schedules: Map<string, TaskSchedule>,
   now: Date,
 ): TaskInstance[] {
-  return instances.map(inst => {
+  return instances.map((inst) => {
     const schedule = schedules.get(inst.scheduleId);
     if (!schedule) return inst;
     const state = resolveTaskState(inst, schedule, now);
@@ -108,8 +108,8 @@ export function generateInstances(
   // Build a set of dates that already have an instance for this schedule
   const existingKeys = new Set(
     existing
-      .filter(i => i.scheduleId === schedule.id && i.templateId === template.id)
-      .map(i => i.date),
+      .filter((i) => i.scheduleId === schedule.id && i.templateId === template.id)
+      .map((i) => i.date),
   );
 
   const newInstances: TaskInstance[] = [];
@@ -152,7 +152,7 @@ export function calculateStreak(
   today: ISODate,
 ): number {
   // Group by date, child-filtered
-  const childInstances = instances.filter(i => i.childId === childId);
+  const childInstances = instances.filter((i) => i.childId === childId);
   const byDate = new Map<ISODate, TaskInstance[]>();
   for (const inst of childInstances) {
     const arr = byDate.get(inst.date) ?? [];
@@ -181,7 +181,7 @@ export function calculateStreak(
         break;
       }
     } else {
-      const allCompleted = dayInstances.every(inst => inst.state === 'completed');
+      const allCompleted = dayInstances.every((inst) => inst.state === 'completed');
       if (allCompleted) {
         streak++;
       } else {

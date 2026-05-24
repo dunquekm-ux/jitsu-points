@@ -4,9 +4,26 @@
  */
 
 const WORDS = [
-  'TIGER', 'PANDA', 'EAGLE', 'KOALA', 'SHARK', 'OTTER', 'RAVEN',
-  'BISON', 'COBRA', 'GECKO', 'HIPPO', 'LLAMA', 'MOOSE', 'TAPIR',
-  'ZEBRA', 'CRANE', 'DINGO', 'FINCH', 'HYENA', 'LEMUR',
+  'TIGER',
+  'PANDA',
+  'EAGLE',
+  'KOALA',
+  'SHARK',
+  'OTTER',
+  'RAVEN',
+  'BISON',
+  'COBRA',
+  'GECKO',
+  'HIPPO',
+  'LLAMA',
+  'MOOSE',
+  'TAPIR',
+  'ZEBRA',
+  'CRANE',
+  'DINGO',
+  'FINCH',
+  'HYENA',
+  'LEMUR',
 ];
 
 /**

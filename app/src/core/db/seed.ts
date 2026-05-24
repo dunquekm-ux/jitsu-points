@@ -15,66 +15,66 @@ export async function seedFromDriveFile(file: JitsuDriveFile): Promise<void> {
   // Helper: sync one store (upsert all incoming, delete orphans)
   async function syncProfiles(): Promise<void> {
     const tx = db.transaction('profiles', 'readwrite');
-    const incomingIds = new Set(file.profiles.map(p => p.id));
+    const incomingIds = new Set(file.profiles.map((p) => p.id));
     const existingKeys = await tx.store.getAllKeys();
     await Promise.all([
-      ...file.profiles.map(p => tx.store.put(p)),
-      ...existingKeys.filter(k => !incomingIds.has(k)).map(k => tx.store.delete(k)),
+      ...file.profiles.map((p) => tx.store.put(p)),
+      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
       tx.done,
     ]);
   }
 
   async function syncTaskTemplates(): Promise<void> {
     const tx = db.transaction('taskTemplates', 'readwrite');
-    const incomingIds = new Set(file.taskTemplates.map(t => t.id));
+    const incomingIds = new Set(file.taskTemplates.map((t) => t.id));
     const existingKeys = await tx.store.getAllKeys();
     await Promise.all([
-      ...file.taskTemplates.map(t => tx.store.put(t)),
-      ...existingKeys.filter(k => !incomingIds.has(k)).map(k => tx.store.delete(k)),
+      ...file.taskTemplates.map((t) => tx.store.put(t)),
+      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
       tx.done,
     ]);
   }
 
   async function syncTaskSchedules(): Promise<void> {
     const tx = db.transaction('taskSchedules', 'readwrite');
-    const incomingIds = new Set(file.taskSchedules.map(s => s.id));
+    const incomingIds = new Set(file.taskSchedules.map((s) => s.id));
     const existingKeys = await tx.store.getAllKeys();
     await Promise.all([
-      ...file.taskSchedules.map(s => tx.store.put(s)),
-      ...existingKeys.filter(k => !incomingIds.has(k)).map(k => tx.store.delete(k)),
+      ...file.taskSchedules.map((s) => tx.store.put(s)),
+      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
       tx.done,
     ]);
   }
 
   async function syncTaskInstances(): Promise<void> {
     const tx = db.transaction('taskInstances', 'readwrite');
-    const incomingIds = new Set(file.taskInstances.map(i => i.id));
+    const incomingIds = new Set(file.taskInstances.map((i) => i.id));
     const existingKeys = await tx.store.getAllKeys();
     await Promise.all([
-      ...file.taskInstances.map(i => tx.store.put(i)),
-      ...existingKeys.filter(k => !incomingIds.has(k)).map(k => tx.store.delete(k)),
+      ...file.taskInstances.map((i) => tx.store.put(i)),
+      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
       tx.done,
     ]);
   }
 
   async function syncPointsEvents(): Promise<void> {
     const tx = db.transaction('pointsEvents', 'readwrite');
-    const incomingIds = new Set(file.pointsEvents.map(e => e.id));
+    const incomingIds = new Set(file.pointsEvents.map((e) => e.id));
     const existingKeys = await tx.store.getAllKeys();
     await Promise.all([
-      ...file.pointsEvents.map(e => tx.store.put(e)),
-      ...existingKeys.filter(k => !incomingIds.has(k)).map(k => tx.store.delete(k)),
+      ...file.pointsEvents.map((e) => tx.store.put(e)),
+      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
       tx.done,
     ]);
   }
 
   async function syncRewards(): Promise<void> {
     const tx = db.transaction('rewards', 'readwrite');
-    const incomingIds = new Set(file.rewards.map(r => r.id));
+    const incomingIds = new Set(file.rewards.map((r) => r.id));
     const existingKeys = await tx.store.getAllKeys();
     await Promise.all([
-      ...file.rewards.map(r => tx.store.put(r)),
-      ...existingKeys.filter(k => !incomingIds.has(k)).map(k => tx.store.delete(k)),
+      ...file.rewards.map((r) => tx.store.put(r)),
+      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
       tx.done,
     ]);
   }

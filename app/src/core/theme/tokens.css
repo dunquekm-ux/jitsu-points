@@ -70,7 +70,7 @@
 
   --color-bg: #f5eeff;
   --color-bg-card: #ffffff;
-  --color-bg-overlay: rgba(30, 0, 60, 0.50);
+  --color-bg-overlay: rgba(30, 0, 60, 0.5);
 
   --color-text: #1e0040;
   --color-text-muted: #7a6a90;
@@ -100,7 +100,7 @@
 
   --color-bg: #e0f7ff;
   --color-bg-card: #ffffff;
-  --color-bg-overlay: rgba(0, 20, 50, 0.50);
+  --color-bg-overlay: rgba(0, 20, 50, 0.5);
 
   --color-text: #003049;
   --color-text-muted: #4a7a90;
@@ -130,7 +130,7 @@
 
   --color-bg: #fff4e6;
   --color-bg-card: #ffffff;
-  --color-bg-overlay: rgba(60, 20, 0, 0.50);
+  --color-bg-overlay: rgba(60, 20, 0, 0.5);
 
   --color-text: #3c1400;
   --color-text-muted: #9a6040;
@@ -145,14 +145,14 @@
   --font-display: 'Fredoka', sans-serif;
   --font-body: 'Nunito', sans-serif;
 
-  --font-size-xs: 0.75rem;   /* 12px */
-  --font-size-sm: 0.875rem;  /* 14px */
-  --font-size-base: 1rem;    /* 16px */
-  --font-size-md: 1.125rem;  /* 18px */
-  --font-size-lg: 1.25rem;   /* 20px */
-  --font-size-xl: 1.5rem;    /* 24px */
-  --font-size-2xl: 2rem;     /* 32px */
-  --font-size-3xl: 2.5rem;   /* 40px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-md: 1.125rem; /* 18px */
+  --font-size-lg: 1.25rem; /* 20px */
+  --font-size-xl: 1.5rem; /* 24px */
+  --font-size-2xl: 2rem; /* 32px */
+  --font-size-3xl: 2.5rem; /* 40px */
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
@@ -210,13 +210,17 @@
 /* ─────────────────────────────────────────
    GLOBAL RESETS
    ───────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
   overflow: hidden; /* The app handles its own scroll areas */

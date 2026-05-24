@@ -5,7 +5,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { _useTestDb } from '../schema';
 import { db } from '../index';
-import { createProfile, createTaskTemplate, createSchedule, createTaskInstance, createPointsEvent, createReward } from '../../../domain';
+import {
+  createProfile,
+  createTaskTemplate,
+  createSchedule,
+  createTaskInstance,
+  createPointsEvent,
+  createReward,
+} from '../../../domain';
 
 // Each test gets its own named DB — no shared state.
 let _counter = 0;
@@ -28,7 +35,7 @@ describe('profiles CRUD', () => {
     await db.profiles.put(p2);
     const all = await db.profiles.getAll();
     expect(all).toHaveLength(2);
-    expect(all.map(p => p.name).sort()).toEqual(['Emma', 'Max']);
+    expect(all.map((p) => p.name).sort()).toEqual(['Emma', 'Max']);
   });
 
   it('delete removes a profile', async () => {
@@ -53,7 +60,7 @@ describe('taskSchedules — by-templateId index', () => {
 
     const results = await db.taskSchedules.byTemplate(t.id);
     expect(results).toHaveLength(2);
-    expect(results.map(s => s.label).sort()).toEqual(['Evening', 'Morning']);
+    expect(results.map((s) => s.label).sort()).toEqual(['Evening', 'Morning']);
   });
 });
 
@@ -67,18 +74,18 @@ describe('taskInstances — compound index', () => {
     const i3 = createTaskInstance('t1', 's1', child2, '2026-05-23');
     const i4 = createTaskInstance('t1', 's1', child1, '2026-05-22');
 
-    await Promise.all([i1, i2, i3, i4].map(i => db.taskInstances.put(i)));
+    await Promise.all([i1, i2, i3, i4].map((i) => db.taskInstances.put(i)));
 
     const results = await db.taskInstances.byChildAndDate(child1, '2026-05-23');
     expect(results).toHaveLength(2);
-    expect(results.every(r => r.childId === child1 && r.date === '2026-05-23')).toBe(true);
+    expect(results.every((r) => r.childId === child1 && r.date === '2026-05-23')).toBe(true);
   });
 
   it('byChild returns all instances for a child', async () => {
     const i1 = createTaskInstance('t1', 's1', 'child-1', '2026-05-21');
     const i2 = createTaskInstance('t1', 's1', 'child-1', '2026-05-22');
     const i3 = createTaskInstance('t1', 's1', 'child-2', '2026-05-22');
-    await Promise.all([i1, i2, i3].map(i => db.taskInstances.put(i)));
+    await Promise.all([i1, i2, i3].map((i) => db.taskInstances.put(i)));
 
     const results = await db.taskInstances.byChild('child-1');
     expect(results).toHaveLength(2);
@@ -90,11 +97,11 @@ describe('pointsEvents — by-childId index', () => {
     const e1 = createPointsEvent('child-1', 10, 'task');
     const e2 = createPointsEvent('child-1', 5, 'bonus');
     const e3 = createPointsEvent('child-2', 20, 'task');
-    await Promise.all([e1, e2, e3].map(e => db.pointsEvents.put(e)));
+    await Promise.all([e1, e2, e3].map((e) => db.pointsEvents.put(e)));
 
     const results = await db.pointsEvents.byChild('child-1');
     expect(results).toHaveLength(2);
-    expect(results.every(e => e.childId === 'child-1')).toBe(true);
+    expect(results.every((e) => e.childId === 'child-1')).toBe(true);
   });
 });
 
@@ -144,7 +151,11 @@ describe('syncMeta', () => {
   });
 
   it('setDriveFileId preserves other fields', async () => {
-    await db.syncMeta.set({ driveFileId: null, lastSyncedAt: '2026-05-23T00:00:00Z', isDirty: true });
+    await db.syncMeta.set({
+      driveFileId: null,
+      lastSyncedAt: '2026-05-23T00:00:00Z',
+      isDirty: true,
+    });
     await db.syncMeta.setDriveFileId('drive-file-abc');
     const meta = await db.syncMeta.get();
     expect(meta?.driveFileId).toBe('drive-file-abc');

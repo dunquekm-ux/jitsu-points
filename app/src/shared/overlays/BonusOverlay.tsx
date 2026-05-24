@@ -10,12 +10,14 @@ interface Props {
 export default function BonusOverlay({ delta, note, onDismiss }: Props) {
   return (
     <div className={styles.overlay} onClick={onDismiss}>
-      <div className={styles.card} onClick={e => e.stopPropagation()}>
+      <div className={styles.card} onClick={(e) => e.stopPropagation()}>
         <span className={styles.icon}>🎉</span>
         <p className={styles.headline}>Surprise bonus!</p>
         <p className={styles.points}>+{delta} ⭐</p>
         {note && <p className={styles.note}>{note}</p>}
-        <ChunkyButton variant="primary" onClick={onDismiss}>Woohoo!</ChunkyButton>
+        <ChunkyButton variant="primary" onClick={onDismiss}>
+          Woohoo!
+        </ChunkyButton>
       </div>
     </div>
   );

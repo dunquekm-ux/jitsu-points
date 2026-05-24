@@ -72,11 +72,7 @@ describe('dateRange', () => {
   });
 
   it('returns 3 days including today', () => {
-    expect(dateRange('2026-05-23', 3)).toEqual([
-      '2026-05-21',
-      '2026-05-22',
-      '2026-05-23',
-    ]);
+    expect(dateRange('2026-05-23', 3)).toEqual(['2026-05-21', '2026-05-22', '2026-05-23']);
   });
 
   it('handles month rollover', () => {

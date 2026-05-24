@@ -10,10 +10,10 @@ interface Props {
 }
 
 const STATE_CONFIG: Record<TaskState, { emoji: string; label: string; color: string }> = {
-  available:  { emoji: '⚡', label: 'Ready!',     color: 'var(--color-state-available)' },
-  locked:     { emoji: '🔒', label: 'Not yet',    color: 'var(--color-state-locked)' },
-  completed:  { emoji: '✅', label: 'Done!',       color: 'var(--color-state-completed)' },
-  missed:     { emoji: '💨', label: 'Missed',      color: 'var(--color-state-missed)' },
+  available: { emoji: '⚡', label: 'Ready!', color: 'var(--color-state-available)' },
+  locked: { emoji: '🔒', label: 'Not yet', color: 'var(--color-state-locked)' },
+  completed: { emoji: '✅', label: 'Done!', color: 'var(--color-state-completed)' },
+  missed: { emoji: '💨', label: 'Missed', color: 'var(--color-state-missed)' },
 };
 
 export default function TaskCard({ instance, template, scheduleLabel }: Props) {
@@ -28,11 +28,9 @@ export default function TaskCard({ instance, template, scheduleLabel }: Props) {
 
   return (
     <div
-      className={[
-        styles.card,
-        styles[instance.state],
-        isClickable ? styles.clickable : '',
-      ].join(' ')}
+      className={[styles.card, styles[instance.state], isClickable ? styles.clickable : ''].join(
+        ' ',
+      )}
       onClick={handleClick}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
@@ -53,7 +51,9 @@ export default function TaskCard({ instance, template, scheduleLabel }: Props) {
         {instance.state !== 'completed' && instance.state !== 'missed' ? (
           <PointsBadge points={template.points} size="sm" />
         ) : null}
-        <span className={styles.stateEmoji} title={config.label}>{config.emoji}</span>
+        <span className={styles.stateEmoji} title={config.label}>
+          {config.emoji}
+        </span>
       </div>
     </div>
   );

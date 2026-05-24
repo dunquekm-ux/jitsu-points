@@ -20,7 +20,11 @@ export class DriveError extends Error {
   }
 }
 
-async function driveRequest(url: string, options: RequestInit, accessToken: string): Promise<Response> {
+async function driveRequest(
+  url: string,
+  options: RequestInit,
+  accessToken: string,
+): Promise<Response> {
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -30,7 +34,11 @@ async function driveRequest(url: string, options: RequestInit, accessToken: stri
   });
   if (!res.ok) {
     let detail = '';
-    try { detail = await res.text(); } catch { /* ignore */ }
+    try {
+      detail = await res.text();
+    } catch {
+      /* ignore */
+    }
     throw new DriveError(`Drive API error ${res.status}: ${detail}`, res.status);
   }
   return res;
@@ -42,9 +50,11 @@ async function driveRequest(url: string, options: RequestInit, accessToken: stri
  * Find the app's Drive folder ID. Returns null if not found.
  */
 export async function findFolder(accessToken: string): Promise<string | null> {
-  const q = encodeURIComponent(`name='${APP_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const q = encodeURIComponent(
+    `name='${APP_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+  );
   const res = await driveRequest(`${DRIVE_API}/files?q=${q}&fields=files(id)`, {}, accessToken);
-  const data = await res.json() as { files: { id: string }[] };
+  const data = (await res.json()) as { files: { id: string }[] };
   return data.files[0]?.id ?? null;
 }
 
@@ -61,7 +71,7 @@ export async function createFolder(accessToken: string): Promise<string> {
     },
     accessToken,
   );
-  const data = await res.json() as { id: string };
+  const data = (await res.json()) as { id: string };
   return data.id;
 }
 
@@ -84,7 +94,7 @@ export async function findFile(accessToken: string): Promise<string | null> {
     {},
     accessToken,
   );
-  const data = await res.json() as { files: { id: string; modifiedTime: string }[] };
+  const data = (await res.json()) as { files: { id: string; modifiedTime: string }[] };
   return data.files[0]?.id ?? null;
 }
 
@@ -100,7 +110,11 @@ export async function readFile(fileId: string, accessToken: string): Promise<str
  * Create jitsu-points.json in the app folder with initial content.
  * Returns the new file ID.
  */
-export async function createFile(content: string, folderId: string, accessToken: string): Promise<string> {
+export async function createFile(
+  content: string,
+  folderId: string,
+  accessToken: string,
+): Promise<string> {
   const metadata = JSON.stringify({ name: FILE_NAME, mimeType: MIME_JSON, parents: [folderId] });
   const body = new FormData();
   body.append('metadata', new Blob([metadata], { type: MIME_JSON }));
@@ -111,14 +125,18 @@ export async function createFile(content: string, folderId: string, accessToken:
     { method: 'POST', body },
     accessToken,
   );
-  const data = await res.json() as { id: string };
+  const data = (await res.json()) as { id: string };
   return data.id;
 }
 
 /**
  * Overwrite the content of an existing Drive file.
  */
-export async function updateFile(fileId: string, content: string, accessToken: string): Promise<void> {
+export async function updateFile(
+  fileId: string,
+  content: string,
+  accessToken: string,
+): Promise<void> {
   await driveRequest(
     `${UPLOAD_API}/files/${fileId}?uploadType=media`,
     {

@@ -15,11 +15,16 @@
 }
 
 .backBtn {
-  background: none; border: none;
-  color: rgba(255,255,255,0.75);
-  font-family: var(--font-display); font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold); cursor: pointer;
-  padding: 0; text-align: left; width: fit-content;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  width: fit-content;
 }
 
 .title {
@@ -66,7 +71,9 @@
   transition: transform var(--duration-fast) var(--ease-bounce);
   min-width: 80px;
 }
-.kidBtn:hover { transform: scale(1.05); }
+.kidBtn:hover {
+  transform: scale(1.05);
+}
 .kidSelected {
   border-color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-card));

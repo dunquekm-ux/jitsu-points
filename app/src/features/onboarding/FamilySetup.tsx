@@ -70,7 +70,9 @@ export default function FamilySetup() {
 
   return (
     <div className={styles.screen}>
-      <button className={styles.backBtn} onClick={() => navigate('/welcome')}>← Back</button>
+      <button className={styles.backBtn} onClick={() => navigate('/welcome')}>
+        ← Back
+      </button>
 
       {/* Step indicator */}
       {(() => {
@@ -79,10 +81,13 @@ export default function FamilySetup() {
         return (
           <div className={styles.steps}>
             {ALL.map((s, i) => (
-              <div key={s} className={[
-                styles.dot,
-                i === idx ? styles.dotActive : i < idx ? styles.dotDone : '',
-              ].join(' ')} />
+              <div
+                key={s}
+                className={[
+                  styles.dot,
+                  i === idx ? styles.dotActive : i < idx ? styles.dotDone : '',
+                ].join(' ')}
+              />
             ))}
           </div>
         );
@@ -94,13 +99,18 @@ export default function FamilySetup() {
           <span className={styles.cardIcon}>☁️</span>
           <h1 className={styles.cardTitle}>Connect Google Drive</h1>
           <p className={styles.cardBody}>
-            Jitsu Points stores your family data in your own Google Drive — free, private, and works across all your devices.
+            Jitsu Points stores your family data in your own Google Drive — free, private, and works
+            across all your devices.
           </p>
-          <p className={styles.cardBody}>
-            You only sign in once. Children never need to sign in.
-          </p>
+          <p className={styles.cardBody}>You only sign in once. Children never need to sign in.</p>
           {authError && <p className={styles.error}>{authError}</p>}
-          <ChunkyButton variant="primary" size="lg" fullWidth disabled={saving} onClick={handleGoogleSignIn}>
+          <ChunkyButton
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={saving}
+            onClick={handleGoogleSignIn}
+          >
             {saving ? 'Opening Google…' : '🔑 Sign in with Google'}
           </ChunkyButton>
           <button className={styles.skipLink} onClick={() => setStep('details')}>
@@ -121,7 +131,7 @@ export default function FamilySetup() {
               className={styles.input}
               placeholder="e.g. The Smiths"
               value={familyName}
-              onChange={e => setFamilyName(e.target.value)}
+              onChange={(e) => setFamilyName(e.target.value)}
               maxLength={30}
               autoFocus
             />
@@ -136,7 +146,7 @@ export default function FamilySetup() {
               className={styles.input}
               placeholder="e.g. Emma"
               value={childName}
-              onChange={e => setChildName(e.target.value)}
+              onChange={(e) => setChildName(e.target.value)}
               maxLength={20}
             />
           </div>
@@ -144,10 +154,13 @@ export default function FamilySetup() {
           <div className={styles.field}>
             <label className={styles.label}>Avatar</label>
             <div className={styles.avatarGrid}>
-              {AVATARS.map(id => (
+              {AVATARS.map((id) => (
                 <button
                   key={id}
-                  className={[styles.avatarBtn, childAvatar === id ? styles.avatarSelected : ''].join(' ')}
+                  className={[
+                    styles.avatarBtn,
+                    childAvatar === id ? styles.avatarSelected : '',
+                  ].join(' ')}
                   onClick={() => setChildAvatar(id)}
                   aria-label={AVATAR_CONFIG[id].label}
                 >
@@ -175,13 +188,13 @@ export default function FamilySetup() {
         <div className={styles.card}>
           <span className={styles.cardIcon}>🎉</span>
           <h1 className={styles.cardTitle}>You're all set!</h1>
-          <p className={styles.cardBody}>
-            Share this code to add Jitsu Points on other devices:
-          </p>
+          <p className={styles.cardBody}>Share this code to add Jitsu Points on other devices:</p>
 
           <div className={styles.joinCodeBox}>
             <span className={styles.joinCode}>{joinCode}</span>
-            <button className={styles.copyBtn} onClick={copyCode}>📋 Copy</button>
+            <button className={styles.copyBtn} onClick={copyCode}>
+              📋 Copy
+            </button>
           </div>
 
           <p className={styles.codeHint}>
@@ -190,11 +203,17 @@ export default function FamilySetup() {
 
           {!accessToken && (
             <p className={styles.localNote}>
-              💡 No cloud sync yet — your data is saved locally. Go to Parent Mode → Settings to connect Google Drive later.
+              💡 No cloud sync yet — your data is saved locally. Go to Parent Mode → Settings to
+              connect Google Drive later.
             </p>
           )}
 
-          <ChunkyButton variant="primary" size="lg" fullWidth onClick={() => navigate('/', { replace: true })}>
+          <ChunkyButton
+            variant="primary"
+            size="lg"
+            fullWidth
+            onClick={() => navigate('/', { replace: true })}
+          >
             Let's go! 🥷
           </ChunkyButton>
         </div>
