@@ -26,6 +26,7 @@ export default function FamilySetup() {
   const [joinCode, setJoinCode] = useState('');
   const [saving, setSaving] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   // ── Step 1: Google sign-in ────────────────────────────────────────────────
 
@@ -63,7 +64,21 @@ export default function FamilySetup() {
   }
 
   async function copyCode() {
-    await navigator.clipboard.writeText(joinCode).catch(() => {});
+    try {
+      await navigator.clipboard.writeText(joinCode);
+    } catch {
+      // Fallback for browsers that block clipboard API (e.g. iOS Safari without permission)
+      const el = document.createElement('textarea');
+      el.value = joinCode;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -193,7 +208,7 @@ export default function FamilySetup() {
           <div className={styles.joinCodeBox}>
             <span className={styles.joinCode}>{joinCode}</span>
             <button className={styles.copyBtn} onClick={copyCode}>
-              📋 Copy
+              {copied ? '✅ Copied!' : '📋 Copy'}
             </button>
           </div>
 

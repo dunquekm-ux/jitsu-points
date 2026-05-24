@@ -59,18 +59,19 @@ export default function HomeScreen() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [load]);
 
-  if (!isLoaded || !childId) {
+  const profile = profiles.find((p) => p.id === childId);
+
+  // Navigate during render is illegal — do it in an effect instead (DEF-004)
+  useEffect(() => {
+    if (isLoaded && childId && !profile) navigate('/');
+  }, [isLoaded, childId, profile, navigate]);
+
+  if (!isLoaded || !childId || !profile) {
     return (
       <div className={styles.screen}>
         <div className={styles.spinner}>🥷</div>
       </div>
     );
-  }
-
-  const profile = profiles.find((p) => p.id === childId);
-  if (!profile) {
-    navigate('/');
-    return null;
   }
 
   // Split tasks by state
