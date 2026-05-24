@@ -73,11 +73,11 @@ export default function ParentDashboard() {
 
       <div className={styles.body}>
         {/* Connect / Reconnect Drive banner */}
-        {HAS_AUTH && (status === 'unauthenticated' || status === 'idle') && (
+        {HAS_AUTH && (status === 'unauthenticated' || status === 'unknown') && (
           <div className={styles.reconnectBanner}>
             <span className={styles.reconnectIcon}>☁️</span>
             <span className={styles.reconnectText}>
-              {status === 'idle'
+              {status === 'unknown'
                 ? 'Connect Google Drive to sync across devices'
                 : 'Drive sync paused'}
             </span>
@@ -86,7 +86,7 @@ export default function ParentDashboard() {
               disabled={reconnecting}
               onClick={handleReconnect}
             >
-              {reconnecting ? 'Connecting…' : status === 'idle' ? 'Connect' : 'Reconnect'}
+              {reconnecting ? 'Connecting…' : status === 'unknown' ? 'Connect' : 'Reconnect'}
             </button>
           </div>
         )}
