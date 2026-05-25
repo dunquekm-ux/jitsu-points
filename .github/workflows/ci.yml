@@ -7,6 +7,7 @@ on:
     branches: [master]
 
 jobs:
+  # ── Job 1: quality gates ────────────────────────────────────────────────────
   check:
     name: Lint, Test & Build
     runs-on: ubuntu-latest
@@ -19,7 +20,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: app/package-lock.json
 
@@ -44,11 +45,44 @@ jobs:
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         run: npm run build
 
-      - name: Deploy to Cloudflare Pages
+      # Upload the dist/ folder so the deploy job can use it without rebuilding
+      - name: Upload build artifact
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: app/dist
+          retention-days: 1
+
+  # ── Job 2: deploy (master push only) ───────────────────────────────────────
+  deploy:
+    name: Deploy to Cloudflare Pages
+    needs: check
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=jitsu-points
-          workingDirectory: app
+          command: pages deploy dist --project-name=jitsu-points --commit-dirty=true
+
+      - name: Smoke-test live URL
+        run: |
+          echo "⏳ Waiting 15s for CDN propagation..."
+          sleep 15
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://jitsu-points.pages.dev)
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ Live URL returned $STATUS — deployment may have failed"
+            exit 1
+          fi
+          echo "✅ jitsu-points.pages.dev is up and returning 200"
