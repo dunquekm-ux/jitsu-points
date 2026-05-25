@@ -58,12 +58,17 @@ export default function App() {
           position: 'fixed',
           bottom: '6px',
           right: '8px',
-          fontSize: '10px',
-          opacity: 0.3,
+          fontSize: '11px',
+          fontWeight: 'bold',
+          opacity: 0.6,
           pointerEvents: 'none',
           fontFamily: 'monospace',
           zIndex: 9999,
           userSelect: 'none',
+          background: 'rgba(0,0,0,0.15)',
+          borderRadius: '4px',
+          padding: '1px 4px',
+          color: '#fff',
         }}
       >
         {BUILD}
