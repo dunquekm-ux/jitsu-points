@@ -5,6 +5,25 @@
 
 ---
 
+## 2026.05.24.3 — Post-launch defect fixes + join code feature
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **DEF-001** Copy join code button silent failure — added "✅ Copied!" 2s feedback + `execCommand` fallback for Safari
+- **DEF-002** Scroll/touch gestures broken on all screens — replaced Vite scaffold `index.css` with PWA-appropriate full-screen reset (`html/body/#root` all `height: 100%`)
+- **DEF-003** No Google Drive setup option in Parent Mode — "Connect Google Drive" banner now shows when auth `status === 'unknown'` (first visit), not just `'unauthenticated'` (re-connect)
+- **DEF-004** React error #185 crash on child home screen — moved `navigate('/')` from render body into `useEffect` (calling router navigation during render causes infinite re-render loop)
+- **DEF-005** Join code not accessible after onboarding — added `joinCode` to `AppState`, loaded from `familyMeta` in `load()`; new **Family & Join Code** section in Parent Dashboard with copy button
+- **Build number** now displayed in bottom-right corner of every screen (faint monospace label, `dev` locally, GitHub run number in production)
+- **CI fixes** — `npm ci` → `npm install` for cross-platform lock file, lint fixes (`const cursor`, `_key` pattern, coverage dir ignore, `set-state-in-effect` rule), Prettier applied to all source files
+
+**DEFECTS.md** created — all 5 defects logged with root cause and fix.
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.24.2 — Phase 7 complete: polish & launch (audio, theme switcher, install prompts, Playwright)
 
 **Phase:** 7

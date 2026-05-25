@@ -72,6 +72,7 @@ interface AppState {
   pointsEvents: PointsEvent[];
   rewards: Reward[];
   familyName: string;
+  joinCode: string;
 
   // UI state
   activeChildId: string | null;
@@ -156,6 +157,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   pointsEvents: [],
   rewards: [],
   familyName: '',
+  joinCode: '',
   activeChildId: null,
   isLoaded: false,
   hasFamilyData: false,
@@ -233,6 +235,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       pointsEvents: eventsList,
       rewards: rewardsList,
       familyName: meta?.familyName ?? '',
+      joinCode: meta?.joinCode ?? '',
       hasFamilyData: !!meta,
       isLoaded: true,
     });

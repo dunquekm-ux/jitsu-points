@@ -27,14 +27,41 @@ const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
-  const { profiles, taskTemplates, taskSchedules, taskInstances, pointsEvents, isLoaded, load } =
-    useAppStore();
+  const {
+    profiles,
+    taskTemplates,
+    taskSchedules,
+    taskInstances,
+    pointsEvents,
+    isLoaded,
+    load,
+    familyName,
+    joinCode,
+  } = useAppStore();
   const { status, setTokens } = useAuthStore();
   const [reconnecting, setReconnecting] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) load();
   }, [isLoaded, load]);
+
+  async function copyJoinCode() {
+    try {
+      await navigator.clipboard.writeText(joinCode);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = joinCode;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  }
 
   async function handleReconnect() {
     setReconnecting(true);
@@ -182,6 +209,25 @@ export default function ParentDashboard() {
             </div>
           )}
         </section>
+
+        {/* Family & Join Code */}
+        {joinCode && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Family</h2>
+            <div className={styles.familyCard}>
+              <div className={styles.familyInfo}>
+                <span className={styles.familyName}>{familyName}</span>
+                <span className={styles.familyHint}>Share this code to add Jitsu on another device</span>
+              </div>
+              <div className={styles.joinCodeRow}>
+                <span className={styles.joinCodeDisplay}>{joinCode}</span>
+                <button className={styles.copyCodeBtn} onClick={copyJoinCode}>
+                  {codeCopied ? '✅ Copied!' : '📋 Copy'}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Settings */}
         <div className={styles.settingsSection}>

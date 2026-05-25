@@ -86,3 +86,24 @@ Calling `navigate()` during render triggers a router state update, which causes 
 Moved the guard into a `useEffect`. Component returns the loading spinner while navigation is pending.
 
 ---
+
+## DEF-005 — No way to retrieve join code after initial setup
+
+**Severity:** Medium  
+**Screen:** ParentDashboard  
+**Status:** Fixed in build 2026.05.24.3
+
+**Steps to reproduce:**
+1. Complete family setup — join code shown once on Step 3
+2. Navigate away or close the app
+3. Need to add a second device later — no way to see the join code in the UI
+
+**Root cause:**
+`joinCode` was stored in `familyMeta` (IndexedDB) but never exposed in the Zustand `AppState` or displayed after onboarding. The only way to retrieve it was via browser DevTools → IndexedDB.
+
+**Fix:**
+- Added `joinCode: string` to `AppState` in `appStore.ts`, loaded alongside `familyName` in `load()`
+- Added **Family & Join Code** section to `ParentDashboard` — shows family name, join code in a styled dashed box, and a copy button with "✅ Copied!" feedback
+- Section only renders when `joinCode` is non-empty (hidden in demo / local-only mode)
+
+---
