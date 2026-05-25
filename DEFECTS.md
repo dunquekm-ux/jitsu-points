@@ -9,7 +9,7 @@
 
 **Severity:** Medium  
 **Screen:** FamilySetup — Step 3 (join code display)  
-**Status:** Fixed in build 2026.05.24.3
+**Status:** ✅ Closed — Fixed in build 2026.05.24.3
 
 **Steps to reproduce:**
 1. Complete family setup through to Step 3
@@ -28,7 +28,7 @@ Added `copied` boolean state. Button label switches to "✅ Copied!" for 2 secon
 
 **Severity:** High  
 **Screen:** All screens  
-**Status:** Fixed in build 2026.05.24.3
+**Status:** ✅ Closed — Fixed in build 2026.05.24.3
 
 **Steps to reproduce:**
 1. Open app on mobile
@@ -46,7 +46,7 @@ Replaced `index.css` entirely with PWA-appropriate reset: `html, body, #root` al
 
 **Severity:** Medium  
 **Screen:** ParentDashboard  
-**Status:** Fixed in build 2026.05.24.3
+**Status:** ✅ Closed — Fixed in build 2026.05.24.3
 
 **Steps to reproduce:**
 1. Complete family setup without Google sign-in (local-only mode)
@@ -65,7 +65,7 @@ Extended the banner condition to also show when `status === 'idle'`. Changed ban
 
 **Severity:** Critical  
 **Screen:** HomeScreen (`/child/:childId`)  
-**Status:** Fixed in build 2026.05.24.3
+**Status:** ✅ Closed — Fixed in build 2026.05.24.3
 
 **Steps to reproduce:**
 1. Load demo data
@@ -91,7 +91,7 @@ Moved the guard into a `useEffect`. Component returns the loading spinner while 
 
 **Severity:** Medium  
 **Screen:** ParentDashboard  
-**Status:** Fixed in build 2026.05.24.3
+**Status:** ✅ Closed — Fixed in build 2026.05.24.3
 
 **Steps to reproduce:**
 1. Complete family setup — join code shown once on Step 3
@@ -112,7 +112,7 @@ Moved the guard into a `useEffect`. Component returns the loading spinner while 
 
 **Severity:** Critical  
 **Screen:** HomeScreen (`/child/:childId`)  
-**Status:** Fixed in build 2026.05.25.15
+**Status:** ✅ Closed — Fixed in build 2026.05.25.15
 
 **Steps to reproduce:**
 1. Set up a real family (any method)
@@ -134,5 +134,24 @@ Removed the selector-based subscription for `taskInstances`. Instead:
 - Added `taskInstances` (as `allTaskInstances`) to the regular full-store destructure
 - Filtered inline in the component body: `allTaskInstances.filter(i => i.childId === childId && i.date === todayISO())`
 - Kept `selectChildPoints` and `selectChildLevel` as selectors — they return numbers (primitives), which are safe for `Object.is` comparison
+
+---
+
+## DEF-007 — Scroll / swipe still not working on some screens
+
+**Severity:** High  
+**Screen:** All screens (suspected)  
+**Status:** 🔍 Open — investigating
+
+**Steps to reproduce:**
+1. Open app on a real device
+2. Navigate to any screen with content longer than the viewport
+3. Content below the fold is not reachable by swipe/scroll gesture; must use some other interaction
+
+**Root cause:**
+Under investigation. DEF-002 replaced `index.css` with a PWA-appropriate reset (`html/body/#root` at `height: 100%`), which fixed the initial `overflow: hidden` on `#root`. However, individual screen components may still be missing `overflow-y: auto` or `overflow-y: scroll` on their scrollable containers, preventing natural scroll/swipe behaviour on touch devices.
+
+**Fix:**
+Pending investigation during next test session. Likely requires auditing screen-level CSS modules to ensure scrollable content areas have explicit `overflow-y: auto` and `touch-action: pan-y`.
 
 ---

@@ -5,6 +5,25 @@
 
 ---
 
+## 2026.05.25.1 — CI/deploy pipeline fixed + DEF-006 + build badge
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **CI pipeline overhaul** — deploy step was silently skipped on every push since launch (condition checked `refs/heads/main`, branch is `master`). Fixed branch condition; first automated deploy to Cloudflare Pages.
+- **Cloudflare account fix** — `CLOUDFLARE_ACCOUNT_ID` secret pointed to wrong account (`dunquekm@gmail.com`) instead of the account where `jitsu-points` lives (`junkinkevin@gmail.com`). Corrected.
+- **CI split into two jobs** — `Lint, Test & Build` + `Deploy to Cloudflare Pages` now show separately; failures are isolated. Smoke test added: curls live URL post-deploy, fails CI if not HTTP 200.
+- **Node.js 20 → 24** — upgraded across all CI actions; clears deprecation warnings.
+- **Build badge** — increased visibility: dark semi-transparent pill background, `opacity: 0.6`, bold — readable on any screen colour.
+- **DEF-006** React error #185 on child home screen (real family) — root cause: `selectTodaysTasks` selector used `.filter()` returning a new array reference on every call; Zustand's `useSyncExternalStore` saw an ever-changing snapshot → infinite re-render loop. Fixed by filtering inline in render body instead of via selector.
+- **DEF-007** logged — scroll/swipe not working on some screens; under investigation.
+
+**Defect summary:** DEF-001–006 ✅ Closed · DEF-007 🔍 Open
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.24.3 — Post-launch defect fixes + join code feature
 
 **Phase:** Post-launch
