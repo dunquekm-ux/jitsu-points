@@ -217,7 +217,9 @@ export default function ParentDashboard() {
             <div className={styles.familyCard}>
               <div className={styles.familyInfo}>
                 <span className={styles.familyName}>{familyName}</span>
-                <span className={styles.familyHint}>Share this code to add Jitsu on another device</span>
+                <span className={styles.familyHint}>
+                  Share this code to add Jitsu on another device
+                </span>
               </div>
               <div className={styles.joinCodeRow}>
                 <span className={styles.joinCodeDisplay}>{joinCode}</span>
