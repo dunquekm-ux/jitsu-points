@@ -107,3 +107,32 @@ Moved the guard into a `useEffect`. Component returns the loading spinner while 
 - Section only renders when `joinCode` is non-empty (hidden in demo / local-only mode)
 
 ---
+
+## DEF-006 — React error #185 on child home screen (persists after DEF-004 fix)
+
+**Severity:** Critical  
+**Screen:** HomeScreen (`/child/:childId`)  
+**Status:** Fixed in build 2026.05.25.15
+
+**Steps to reproduce:**
+1. Set up a real family (any method)
+2. Tap a child avatar on the Profile Picker
+3. App crashes: "Unexpected Application Error! Minified React error #185"
+
+**Root cause:**
+`HomeScreen.tsx` subscribed to the store using a selector that returns a new array reference on every call:
+```tsx
+const taskInstances = useAppStore((s) => selectTodaysTasks(s, childId ?? ''));
+// selectTodaysTasks uses .filter() — always returns a new array reference
+```
+Zustand's `useSyncExternalStore` compares selector snapshots with `Object.is`. Since a new array is never `===` an old array, React saw the snapshot as constantly changing and kept scheduling re-renders → infinite loop → error #185.
+
+DEF-004 fixed a separate but identical-looking crash (navigate during render). This is a different root cause that produced the same error code.
+
+**Fix:**
+Removed the selector-based subscription for `taskInstances`. Instead:
+- Added `taskInstances` (as `allTaskInstances`) to the regular full-store destructure
+- Filtered inline in the component body: `allTaskInstances.filter(i => i.childId === childId && i.date === todayISO())`
+- Kept `selectChildPoints` and `selectChildLevel` as selectors — they return numbers (primitives), which are safe for `Object.is` comparison
+
+---

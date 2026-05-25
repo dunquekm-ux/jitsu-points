@@ -7,13 +7,8 @@ import CelebrationOverlay from '../../shared/overlays/CelebrationOverlay';
 import LevelUpOverlay from '../../shared/overlays/LevelUpOverlay';
 import BonusOverlay from '../../shared/overlays/BonusOverlay';
 import DemeritOverlay from '../../shared/overlays/DemeritOverlay';
-import {
-  useAppStore,
-  selectChildPoints,
-  selectChildLevel,
-  selectTodaysTasks,
-} from '../../core/store/appStore';
-import { lifetimeXp, LEVEL_THRESHOLDS } from '../../domain';
+import { useAppStore, selectChildPoints, selectChildLevel } from '../../core/store/appStore';
+import { lifetimeXp, LEVEL_THRESHOLDS, todayISO } from '../../domain';
 import styles from './HomeScreen.module.css';
 
 export default function HomeScreen() {
@@ -24,6 +19,7 @@ export default function HomeScreen() {
     profiles,
     taskTemplates,
     taskSchedules,
+    taskInstances: allTaskInstances,
     pointsEvents,
     isLoaded,
     load,
@@ -38,7 +34,14 @@ export default function HomeScreen() {
     dismissDemerit,
   } = useAppStore();
 
-  const taskInstances = useAppStore((s) => selectTodaysTasks(s, childId ?? ''));
+  // DEF-006: Filter inline — never use a selector that returns a new array reference.
+  // selectTodaysTasks returned a new array on every call, causing useSyncExternalStore
+  // to see an ever-changing snapshot → infinite re-render loop → React error #185.
+  const taskInstances = allTaskInstances.filter(
+    (i) => i.childId === (childId ?? '') && i.date === todayISO(),
+  );
+
+  // These selectors return numbers (primitive) — safe to use as selectors
   const pts = useAppStore((s) => selectChildPoints(s, childId ?? ''));
   const level = useAppStore((s) => selectChildLevel(s, childId ?? ''));
   const xp = lifetimeXp(pointsEvents, childId ?? '');
