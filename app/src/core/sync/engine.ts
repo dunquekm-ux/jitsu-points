@@ -27,14 +27,21 @@ export function shouldPull(driveLastUpdated: string, localLastSyncedAt: string |
   return new Date(driveLastUpdated) > new Date(localLastSyncedAt);
 }
 
+// Guard against concurrent sync runs (e.g. mount + visibility change firing together)
+let _syncInProgress = false;
+
 /**
  * Run a full sync cycle:
  *   1. Pull from Drive if Drive is newer
  *   2. Push to Drive if local has changes
  *
  * Safe to call on every app open — exits early if nothing to do.
+ * Concurrent calls are no-ops (only one sync runs at a time).
  */
 export async function sync(accessToken: string): Promise<SyncResult> {
+  if (_syncInProgress) return { pulled: false, pushed: false };
+  _syncInProgress = true;
+
   const syncState = useSyncStore.getState();
   syncState.setStatus('syncing');
 
@@ -55,6 +62,15 @@ export async function sync(accessToken: string): Promise<SyncResult> {
       // Replace local if Drive is newer
       if (shouldPull(file.lastUpdated, meta?.lastSyncedAt ?? null)) {
         await seedFromDriveFile(file);
+        // Persist lastSyncedAt using Drive's own timestamp so that subsequent
+        // syncs correctly compare against Drive's lastUpdated and don't re-pull
+        // unnecessarily when nothing has changed.
+        const afterSeedMeta = await db.syncMeta.get();
+        await db.syncMeta.set({
+          driveFileId: afterSeedMeta?.driveFileId ?? fileId,
+          lastSyncedAt: file.lastUpdated,
+          isDirty: afterSeedMeta?.isDirty ?? true,
+        });
         result.pulled = true;
       }
     }
@@ -90,6 +106,8 @@ export async function sync(accessToken: string): Promise<SyncResult> {
       console.error('[Sync] error:', err);
     }
     return result;
+  } finally {
+    _syncInProgress = false;
   }
 
   return result;

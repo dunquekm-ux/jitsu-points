@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../shared/components/Avatar';
 import { useAppStore } from '../../core/store/appStore';
+import { APP_VERSION } from '../../version';
 import styles from './ProfilePicker.module.css';
 
 export default function ProfilePicker() {
@@ -66,6 +67,7 @@ export default function ProfilePicker() {
       <button className={styles.parentBtn} onClick={() => navigate('/parent')}>
         ⚙️ Parent Mode
       </button>
+      <span className={styles.buildNum}>{APP_VERSION}</span>
     </div>
   );
 }

@@ -5,6 +5,20 @@
 
 ---
 
+## 2026.05.25.7 — Build number + sync reliability fixes
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **Build number** — Full version string (`2026.05.25.7`) now shown centered under the "⚙️ Parent Mode" button on the profile picker. Driven by `src/version.ts` (updated each build). The old fixed corner overlay (which showed the GitHub run number `21`) is removed.
+- **Auto token refresh on boot** — If the stored Google access token is expired when the app opens, the app now attempts a silent GIS token refresh in the background. Previously, expired tokens caused `triggerSync` to silently no-op and the reconnect banner to show — requiring the user to manually tap "Reconnect" every hour. Now the token refreshes invisibly; Drive sync resumes automatically. If the silent refresh fails (revoked grant, signed-out Google account), the reconnect banner still shows as before.
+- **Sync engine: persist `lastSyncedAt` after pull** — After a successful Drive pull, `lastSyncedAt` is now written to IndexedDB set to `file.lastUpdated`. Previously this was only written on push. This prevents the engine from comparing stale timestamps on subsequent syncs and unnecessarily re-pulling every time.
+- **Sync engine: concurrent sync guard** — Added `_syncInProgress` flag so concurrent `sync()` calls (e.g. mount + visibility change firing together) are no-ops rather than racing.
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.25.6 — Drive sync wired up + sync status in Parent Dashboard
 
 **Phase:** Post-launch

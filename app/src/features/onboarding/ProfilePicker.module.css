@@ -121,6 +121,15 @@
   font-size: var(--font-size-sm);
 }
 
+.buildNum {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: monospace;
+  letter-spacing: 0.03em;
+  text-align: center;
+  user-select: none;
+}
+
 .parentBtn {
   margin-top: auto;
   background: rgba(255, 255, 255, 0.1);
