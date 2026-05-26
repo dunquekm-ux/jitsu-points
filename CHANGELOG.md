@@ -5,6 +5,22 @@
 
 ---
 
+## 2026.05.25.6 — Drive sync wired up + sync status in Parent Dashboard
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **Root cause fixed: devices never pulled from Google Drive** — `load()` reads only from local IndexedDB. `triggerSync()` (the hook that actually pulls from Drive) was built but never called anywhere in the UI. So after initial setup, every device was stuck reading its local stale cache — new rewards, tasks, or profiles created on another device were never seen.
+  - **Fix:** `HomeScreen` and `ParentDashboard` now call `triggerSync().then(() => load())` on mount and on every foreground resume (visibility change). This pulls the Drive file if it's newer, seeds IndexedDB, then refreshes the Zustand store so the UI updates immediately.
+- **Sync status chip in Parent Dashboard header** — Small `☁️ Synced 2 min ago ↻` line below "⚙️ Parent Mode". Only shown when authenticated.
+  - Tapping triggers an immediate manual sync + reload.
+  - States: `🔄 Syncing…` / `☁️ Synced X ago ↻` / `⚠️ Sync error — tap to retry` / `📵 Offline — will sync when connected`
+  - Not shown on child screens — sync happens silently for kids, parents are the ones who care about data freshness.
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.25.5 — All-day tasks + slot validation + CI Node 24 fix
 
 **Phase:** Post-launch

@@ -45,6 +45,31 @@
   color: #fff;
 }
 
+/* Sync status chip */
+.syncChip {
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  width: fit-content;
+  transition: color var(--duration-fast);
+}
+.syncChip:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.9);
+}
+.syncChip:disabled {
+  cursor: default;
+}
+.syncChipError {
+  color: rgba(255, 210, 63, 0.9);
+}
+.syncChipOffline {
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .body {
   flex: 1;
   overflow-y: auto;

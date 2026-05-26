@@ -8,6 +8,7 @@ import LevelUpOverlay from '../../shared/overlays/LevelUpOverlay';
 import BonusOverlay from '../../shared/overlays/BonusOverlay';
 import DemeritOverlay from '../../shared/overlays/DemeritOverlay';
 import { useAppStore, selectChildPoints, selectChildLevel } from '../../core/store/appStore';
+import { useSync } from '../../core/sync';
 import { lifetimeXp, LEVEL_THRESHOLDS, todayISO } from '../../domain';
 import styles from './HomeScreen.module.css';
 
@@ -33,6 +34,7 @@ export default function HomeScreen() {
     dismissBonus,
     dismissDemerit,
   } = useAppStore();
+  const { triggerSync } = useSync();
 
   // DEF-006: Filter inline — never use a selector that returns a new array reference.
   // selectTodaysTasks returned a new array on every call, causing useSyncExternalStore
@@ -51,16 +53,20 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!isLoaded) load();
     if (childId) selectChild(childId);
-  }, [isLoaded, load, childId, selectChild]);
+    // Pull latest from Drive then reload store so Drive changes appear immediately
+    void triggerSync().then(() => load());
+  }, [isLoaded, load, childId, selectChild, triggerSync]);
 
   // Recalculate on foreground resume
   useEffect(() => {
     function handleVisibility() {
-      if (document.visibilityState === 'visible') load();
+      if (document.visibilityState === 'visible') {
+        void triggerSync().then(() => load());
+      }
     }
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [load]);
+  }, [load, triggerSync]);
 
   const profile = profiles.find((p) => p.id === childId);
 

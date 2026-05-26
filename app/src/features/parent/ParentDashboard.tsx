@@ -4,9 +4,18 @@ import Avatar from '../../shared/components/Avatar';
 import { useAppStore, selectChildPoints } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth/store';
 import { loadGIS, signIn, silentRefresh } from '../../core/auth/gis';
+import { useSync } from '../../core/sync';
 import { calculateStreak, todayISO } from '../../domain';
 import ThemeSwitcher from './ThemeSwitcher';
 import styles from './ParentDashboard.module.css';
+
+function timeAgo(iso: string): string {
+  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (secs < 30) return 'just now';
+  if (secs < 90) return '1 min ago';
+  if (secs < 3600) return `${Math.floor(secs / 60)} min ago`;
+  return `${Math.floor(secs / 3600)} hr ago`;
+}
 
 interface ActionTile {
   icon: string;
@@ -39,12 +48,24 @@ export default function ParentDashboard() {
     joinCode,
   } = useAppStore();
   const { status, setTokens } = useAuthStore();
+  const { status: syncStatus, lastSyncedAt, triggerSync } = useSync();
   const [reconnecting, setReconnecting] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) load();
-  }, [isLoaded, load]);
+    void triggerSync().then(() => load());
+  }, [isLoaded, load, triggerSync]);
+
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') {
+        void triggerSync().then(() => load());
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [load, triggerSync]);
 
   async function copyJoinCode() {
     try {
@@ -96,6 +117,27 @@ export default function ParentDashboard() {
           ← Back
         </button>
         <h1 className={styles.title}>⚙️ Parent Mode</h1>
+        {HAS_AUTH && status === 'authenticated' && (
+          <button
+            className={[
+              styles.syncChip,
+              syncStatus === 'error' ? styles.syncChipError : '',
+              syncStatus === 'offline' ? styles.syncChipOffline : '',
+            ]
+              .join(' ')
+              .trim()}
+            onClick={() => {
+              void triggerSync().then(() => load());
+            }}
+            disabled={syncStatus === 'syncing'}
+          >
+            {syncStatus === 'syncing' && '🔄 Syncing…'}
+            {syncStatus === 'error' && '⚠️ Sync error — tap to retry'}
+            {syncStatus === 'offline' && '📵 Offline — will sync when connected'}
+            {(syncStatus === 'idle' || syncStatus === 'unsynced') &&
+              (lastSyncedAt ? `☁️ Synced ${timeAgo(lastSyncedAt)} ↻` : '☁️ Tap to sync ↻')}
+          </button>
+        )}
       </div>
 
       <div className={styles.body}>
