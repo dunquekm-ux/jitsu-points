@@ -81,16 +81,20 @@ export default function TaskDetailScreen() {
             <p className={styles.missedText}>
               💨 Today&apos;s window has passed — this one is done for today.
             </p>
-            <p className={styles.missedHint}>
-              A fresh mission appears tomorrow. See you then! 👋
-            </p>
+            <p className={styles.missedHint}>A fresh mission appears tomorrow. See you then! 👋</p>
           </div>
         )}
-        {instance.state === 'locked' && (
-          <p className={styles.lockedText}>
-            🔒 Not available yet — this mission opens at {schedule.startTime}!
-          </p>
-        )}
+        {instance.state === 'locked' &&
+          (() => {
+            const allDay = schedule.startTime === '00:00' && schedule.endTime === '23:59';
+            return (
+              <p className={styles.lockedText}>
+                {allDay
+                  ? '🔒 Not available yet — this mission opens at midnight!'
+                  : `🔒 Not available yet — this mission opens at ${schedule.startTime}!`}
+              </p>
+            );
+          })()}
 
         {isAvailable && (
           <ChunkyButton

@@ -7,8 +7,33 @@ import styles from './TaskFormScreen.module.css';
 
 const ICON_PRESETS = ['📚', '🦷', '🛏️', '🐶', '🧹', '🍽️', '🏃', '🎵', '📖', '🌱', '🚿', '👟'];
 
-function defaultSlot(): ScheduleSlot {
-  return { label: 'Morning', startTime: '07:00', endTime: '09:00', reminderTime: null };
+// Local form type — adds allDay flag (UI only; maps to 00:00–23:59 before saving)
+interface FormSlot {
+  label: string;
+  startTime: string;
+  endTime: string;
+  reminderTime: string | null;
+  allDay: boolean;
+}
+
+function defaultSlot(): FormSlot {
+  return {
+    label: 'Morning',
+    startTime: '07:00',
+    endTime: '09:00',
+    reminderTime: null,
+    allDay: false,
+  };
+}
+
+// Strip allDay before passing to the store
+function toScheduleSlot({ allDay: _allDay, ...rest }: FormSlot): ScheduleSlot {
+  return rest;
+}
+
+// Detect all-day when loading existing schedules
+function isAllDay(startTime: string, endTime: string) {
+  return startTime === '00:00' && endTime === '23:59';
 }
 
 export default function TaskFormScreen() {
@@ -33,9 +58,10 @@ export default function TaskFormScreen() {
   const [points, setPoints] = useState(10);
   const [assignedChildId, setAssignedChildId] = useState('');
   const [allowEarlyCompletion, setAllowEarlyCompletion] = useState(false);
-  const [slots, setSlots] = useState<ScheduleSlot[]>([defaultSlot()]);
+  const [slots, setSlots] = useState<FormSlot[]>([defaultSlot()]);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [slotError, setSlotError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) load();
@@ -62,6 +88,7 @@ export default function TaskFormScreen() {
             startTime: s.startTime,
             endTime: s.endTime,
             reminderTime: s.reminderTime,
+            allDay: isAllDay(s.startTime, s.endTime),
           })),
         );
       }
@@ -71,14 +98,31 @@ export default function TaskFormScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, templateId, isLoaded]);
 
-  function updateSlot(index: number, patch: Partial<ScheduleSlot>) {
+  function updateSlot(index: number, patch: Partial<FormSlot>) {
+    setSlotError(null);
     setSlots((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  }
+
+  function toggleAllDay(index: number) {
+    setSlotError(null);
+    setSlots((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        if (s.allDay) {
+          // Turning off — restore sensible defaults
+          return { ...s, allDay: false, startTime: '07:00', endTime: '09:00' };
+        } else {
+          // Turning on — spans the full day
+          return { ...s, allDay: true, startTime: '00:00', endTime: '23:59' };
+        }
+      }),
+    );
   }
 
   function addSlot() {
     setSlots((prev) => [
       ...prev,
-      { label: 'Evening', startTime: '18:00', endTime: '20:00', reminderTime: null },
+      { label: 'Evening', startTime: '18:00', endTime: '20:00', reminderTime: null, allDay: false },
     ]);
   }
 
@@ -88,6 +132,16 @@ export default function TaskFormScreen() {
 
   async function handleSave() {
     if (!title.trim() || !assignedChildId || slots.length === 0) return;
+
+    // Validate: for non-all-day slots, end time must be strictly after start time
+    const invalid = slots.find((s) => !s.allDay && s.startTime >= s.endTime);
+    if (invalid) {
+      setSlotError(
+        `"${invalid.label || 'A slot'}" has end time at or before start time. Fix it or turn on All day.`,
+      );
+      return;
+    }
+
     setSaving(true);
     const data = {
       title: title.trim(),
@@ -95,7 +149,7 @@ export default function TaskFormScreen() {
       points,
       assignedChildId,
       allowEarlyCompletion,
-      schedules: slots,
+      schedules: slots.map(toScheduleSlot),
     };
     if (isEdit && templateId) {
       await updateTask(templateId, data);
@@ -103,8 +157,6 @@ export default function TaskFormScreen() {
       await createTask(data);
     }
     // Request notification permission contextually when any slot has a reminder time.
-    // The browser shows its own modal — user sees it just after saving a task with reminders,
-    // which makes the reason obvious. We don't block navigation on the result.
     const hasReminders = slots.some((s) => s.reminderTime !== null);
     if (hasReminders && getPermissionStatus() === 'default') {
       await requestNotificationPermission();
@@ -137,6 +189,7 @@ export default function TaskFormScreen() {
             {ICON_PRESETS.map((e) => (
               <button
                 key={e}
+                type="button"
                 className={[styles.iconBtn, icon === e ? styles.iconSelected : ''].join(' ')}
                 onClick={() => setIcon(e)}
               >
@@ -172,6 +225,7 @@ export default function TaskFormScreen() {
             {[5, 10, 15, 20, 25].map((v) => (
               <button
                 key={v}
+                type="button"
                 className={[styles.chip, points === v ? styles.chipSelected : ''].join(' ')}
                 onClick={() => setPoints(v)}
               >
@@ -215,6 +269,7 @@ export default function TaskFormScreen() {
             </span>
           </div>
           <button
+            type="button"
             className={[styles.toggle, allowEarlyCompletion ? styles.toggleOn : ''].join(' ')}
             onClick={() => setAllowEarlyCompletion((v) => !v)}
             role="switch"
@@ -229,13 +284,17 @@ export default function TaskFormScreen() {
           <div className={styles.slotHeader}>
             <label className={styles.label}>Schedule slots</label>
             {slots.length < 3 && (
-              <button className={styles.addSlotBtn} onClick={addSlot}>
+              <button type="button" className={styles.addSlotBtn} onClick={addSlot}>
                 + Add slot
               </button>
             )}
           </div>
+
+          {slotError && <p className={styles.slotError}>⚠️ {slotError}</p>}
+
           {slots.map((slot, i) => (
             <div key={i} className={styles.slotCard}>
+              {/* Label + remove */}
               <div className={styles.slotRow}>
                 <input
                   className={styles.inputSm}
@@ -245,31 +304,63 @@ export default function TaskFormScreen() {
                   maxLength={20}
                 />
                 {slots.length > 1 && (
-                  <button className={styles.removeSlotBtn} onClick={() => removeSlot(i)}>
+                  <button
+                    type="button"
+                    className={styles.removeSlotBtn}
+                    onClick={() => removeSlot(i)}
+                  >
                     ✕
                   </button>
                 )}
               </div>
-              <div className={styles.slotRow}>
-                <div className={styles.timeField}>
-                  <span className={styles.timeLabel}>Start</span>
-                  <input
-                    type="time"
-                    className={styles.inputSm}
-                    value={slot.startTime}
-                    onChange={(e) => updateSlot(i, { startTime: e.target.value })}
-                  />
-                </div>
-                <div className={styles.timeField}>
-                  <span className={styles.timeLabel}>End</span>
-                  <input
-                    type="time"
-                    className={styles.inputSm}
-                    value={slot.endTime}
-                    onChange={(e) => updateSlot(i, { endTime: e.target.value })}
-                  />
-                </div>
+
+              {/* All day toggle */}
+              <div className={styles.allDayRow}>
+                <span className={styles.allDayLabel}>All day</span>
+                <button
+                  type="button"
+                  className={[styles.toggle, slot.allDay ? styles.toggleOn : ''].join(' ')}
+                  onClick={() => toggleAllDay(i)}
+                  role="switch"
+                  aria-checked={slot.allDay}
+                >
+                  <span className={styles.toggleThumb} />
+                </button>
+                <span className={styles.allDayHint}>
+                  {slot.allDay ? 'Available any time today' : 'Set a time window'}
+                </span>
               </div>
+
+              {/* Time window — hidden when all day */}
+              {!slot.allDay && (
+                <div className={styles.slotRow}>
+                  <div className={styles.timeField}>
+                    <span className={styles.timeLabel}>Start</span>
+                    <input
+                      type="time"
+                      className={styles.inputSm}
+                      value={slot.startTime}
+                      onChange={(e) => updateSlot(i, { startTime: e.target.value })}
+                    />
+                  </div>
+                  <div className={styles.timeField}>
+                    <span className={styles.timeLabel}>End</span>
+                    <input
+                      type="time"
+                      className={[
+                        styles.inputSm,
+                        slot.endTime && slot.startTime && slot.endTime <= slot.startTime
+                          ? styles.inputError
+                          : '',
+                      ].join(' ')}
+                      value={slot.endTime}
+                      onChange={(e) => updateSlot(i, { endTime: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Reminder */}
               <div className={styles.timeField}>
                 <span className={styles.timeLabel}>Reminder (optional)</span>
                 <input

@@ -5,6 +5,26 @@
 
 ---
 
+## 2026.05.25.5 — All-day tasks + slot validation + CI Node 24 fix
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **All-day task toggle** — Each schedule slot in `TaskFormScreen` now has an "All day" toggle.
+  - When enabled, the slot stores `startTime: '00:00'` / `endTime: '23:59'` — the task is available all day and only misses at 23:59.
+  - When disabled, the start/end time inputs reappear (defaulting to `07:00–09:00`).
+  - On edit-mode load, existing `00:00/23:59` schedules are auto-detected and shown with the toggle pre-enabled.
+  - The reminder time input is always visible regardless of all-day state.
+- **Slot time validation** — Saving now blocks if any non-all-day slot has end time ≤ start time.
+  - Inline error message shown below the slot header: `"Morning" has end time at or before start time. Fix it or turn on All day.`
+  - The end time input highlights in red in real time when it violates the constraint.
+- **Locked all-day message** — `TaskDetailScreen` now shows `"🔒 Not available yet — this mission opens at midnight!"` for all-day tasks instead of the misleading `"opens at 00:00"`.
+- **CI: Node.js 24 opt-in** — Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` env var to the `check` job. Suppresses the Node.js 20 deprecation warnings from `actions/checkout@v4` and `actions/setup-node@v4`. Mandatory before June 2, 2026.
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.25.4 — Missed task UX: clear messaging + section divider
 
 **Phase:** Post-launch
