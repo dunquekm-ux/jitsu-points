@@ -140,18 +140,32 @@ Removed the selector-based subscription for `taskInstances`. Instead:
 ## DEF-007 — Scroll / swipe still not working on some screens
 
 **Severity:** High  
-**Screen:** All screens (suspected)  
-**Status:** 🔍 Open — investigating
+**Screen:** ParentDashboard, TaskFormScreen, BonusComposer, DemeritComposer, ManageRewardsScreen, ManageKidsScreen  
+**Status:** ✅ Closed — Fixed in build 2026.05.25.2
 
 **Steps to reproduce:**
 1. Open app on a real device
-2. Navigate to any screen with content longer than the viewport
-3. Content below the fold is not reachable by swipe/scroll gesture; must use some other interaction
+2. Navigate to any parent screen with content longer than the viewport
+3. Content below the fold is not reachable by swipe/scroll gesture
 
 **Root cause:**
-Under investigation. DEF-002 replaced `index.css` with a PWA-appropriate reset (`html/body/#root` at `height: 100%`), which fixed the initial `overflow: hidden` on `#root`. However, individual screen components may still be missing `overflow-y: auto` or `overflow-y: scroll` on their scrollable containers, preventing natural scroll/swipe behaviour on touch devices.
+Six screen CSS modules used `min-height: 100%` on `.screen` instead of `height: 100%; overflow: hidden`. With `min-height`, the `.screen` flex container grows to fit its content rather than being capped at the viewport height. As a result, the inner `.body { flex: 1; overflow-y: auto }` container also grew to fit its content — its height was never less than its content height, so `overflow-y: auto` never triggered. The effective scroll target was the browser viewport, but with `html, body { height: 100% }` there was no working scroll mechanism.
+
+Additionally, TaskFormScreen, BonusComposer, DemeritComposer, ManageRewardsScreen, and ManageKidsScreen were missing `overflow-y: auto` on `.body` entirely — a second compounding bug.
+
+`HomeScreen`, `RewardsScreen`, `StreakScreen`, and `AchievementsScreen` used the correct `height: 100%; overflow: hidden` pattern throughout and scrolled correctly; this is why DEF-007 appeared on some screens but not others.
 
 **Fix:**
-Pending investigation during next test session. Likely requires auditing screen-level CSS modules to ensure scrollable content areas have explicit `overflow-y: auto` and `touch-action: pan-y`.
+All six broken screens updated in their CSS modules:
+- `.screen`: `min-height: 100%` → `height: 100%; overflow: hidden`
+- `.body`: added `overflow-y: auto` (where missing)
+
+Affected files:
+- `app/src/features/parent/ParentDashboard.module.css`
+- `app/src/features/tasks/TaskFormScreen.module.css`
+- `app/src/features/parent/BonusComposer.module.css`
+- `app/src/features/parent/DemeritComposer.module.css`
+- `app/src/features/rewards/ManageRewardsScreen.module.css`
+- `app/src/features/profiles/ManageKidsScreen.module.css`
 
 ---

@@ -8,14 +8,14 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.05.25.1` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–006 closed. DEF-007 (scroll/swipe) open — investigating. Rive mascot integration pending designer asset.
+**Last build:** `2026.05.25.2` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–007 all closed. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
 | Live interactive prototype | `index.html` | ✅ Complete — open in any browser |
 | Requirements spec | `jitsu_points_requirements.md` | ✅ Complete |
 | Architecture decisions | `DECISIONS.md` | ✅ 15 ADRs logged (ADR-015: security review) |
-| Defect log | `DEFECTS.md` | ✅ 7 defects logged (DEF-001–006 closed, DEF-007 open) |
+| Defect log | `DEFECTS.md` | ✅ 7 defects logged (DEF-001–007 all closed) |
 | Domain reference | `DOMAIN.md` | ✅ Types, rules, state machine |
 | Changelog | `CHANGELOG.md` | ✅ Build log through 2026.05.25.1 |
 | PWA app — Phase 0 | `app/` | ✅ Vite + React + TS, design tokens, CI pipeline |

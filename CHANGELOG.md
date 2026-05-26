@@ -5,6 +5,23 @@
 
 ---
 
+## 2026.05.25.2 — DEF-007: scroll/swipe fixed on all parent screens
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **DEF-007 closed** — Scroll/swipe not working on ParentDashboard, TaskFormScreen, BonusComposer, DemeritComposer, ManageRewardsScreen, ManageKidsScreen.
+  - Root cause: 6 screen CSS modules used `min-height: 100%` on `.screen`. A `min-height` container grows to fit content, so the inner `.body { flex: 1; overflow-y: auto }` container also grew — `overflow-y` never triggered. The correct pattern is `height: 100%; overflow: hidden` (caps the screen at viewport height) with `overflow-y: auto` on the scrollable body (so content that exceeds the capped height scrolls).
+  - Additional: 5 of the 6 screens were also missing `overflow-y: auto` on `.body` entirely.
+  - Fixed: all 6 `.screen` declarations changed to `height: 100%; overflow: hidden`; `overflow-y: auto` added to `.body` where missing.
+  - Screens that were already correct (`HomeScreen`, `RewardsScreen`, `StreakScreen`, `AchievementsScreen`) unchanged.
+
+**Defect summary:** DEF-001–007 ✅ Closed
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.25.1 — CI/deploy pipeline fixed + DEF-006 + build badge
 
 **Phase:** Post-launch
