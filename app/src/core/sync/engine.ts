@@ -32,13 +32,19 @@ let _syncInProgress = false;
 
 /**
  * Run a full sync cycle:
- *   1. Pull from Drive if Drive is newer
- *   2. Push to Drive if local has changes
+ *   1. Cancel any pending debounced push (this sync covers it)
+ *   2. Pull from Drive if Drive is newer
+ *   3. Push to Drive if local has changes
  *
  * Safe to call on every app open — exits early if nothing to do.
  * Concurrent calls are no-ops (only one sync runs at a time).
  */
 export async function sync(accessToken: string): Promise<SyncResult> {
+  // Always cancel any pending debounced push — this sync will handle the push.
+  // Must happen before the _syncInProgress guard so that a push scheduled during
+  // a concurrent sync is also cancelled (it would be redundant once this sync lands).
+  _cancelPendingPush();
+
   if (_syncInProgress) return { pulled: false, pushed: false };
   _syncInProgress = true;
 
@@ -127,8 +133,10 @@ let _pushTimer: ReturnType<typeof setTimeout> | null = null;
 let _pendingAccessToken: string | null = null;
 
 /**
- * Schedule a push 2 seconds after the last call.
- * Replaces any pending push — only the latest wins.
+ * Schedule a full sync (pull-then-push) 2 seconds after the last call.
+ * Replaces any pending timer — only the latest wins.
+ * Using a full sync instead of a blind push prevents data loss: we always
+ * incorporate the latest Drive state before overwriting it.
  */
 export function schedulePush(accessToken: string): void {
   _pendingAccessToken = accessToken;
@@ -136,13 +144,14 @@ export function schedulePush(accessToken: string): void {
   _pushTimer = setTimeout(async () => {
     _pushTimer = null;
     if (_pendingAccessToken) {
-      await push(_pendingAccessToken);
+      await sync(_pendingAccessToken);
     }
   }, 2_000);
 }
 
 /**
- * Immediate push (used by schedulePush after the debounce, and by tests).
+ * Immediate push — kept for tests and as an escape hatch.
+ * Normal flow: use schedulePush (which now triggers a full sync).
  */
 export async function push(accessToken: string): Promise<void> {
   const syncState = useSyncStore.getState();

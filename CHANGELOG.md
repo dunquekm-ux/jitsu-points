@@ -5,6 +5,40 @@
 
 ---
 
+## 2026.05.26.1 — DEF-010: sync data-loss race condition fixed
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **DEF-010 closed — sync data loss (rewards/tasks disappearing after cross-device sync)**
+  The root cause was a race condition between two independent Drive write paths:
+  - `sync()` — pull-then-push, triggered on app open / foreground resume
+  - `schedulePush()` / `push()` — debounced blind push, triggered 2 s after any mutation
+
+  A blind push reads stale local IndexedDB (e.g. 0 rewards on the phone) and overwrites Drive with it, *before* the in-flight `sync()` pull has returned with Drive's actual content. Then `sync()` sees `isDirty=false` (set by the push) and skips its own push — leaving Drive with the stale data. The next device to pull loses all parent-created data.
+
+  **Fix 1 — `schedulePush` now triggers a full sync (pull-then-push), not a blind push.**
+  `engine.ts`: `schedulePush` timer callback now calls `sync(token)` instead of `push(token)`.
+  Every write to Drive is now preceded by a pull, regardless of how it was triggered.
+  `push()` is kept for tests / emergency escape hatch only.
+
+  **Fix 2 — `sync()` cancels any pending debounced timer at entry.**
+  `engine.ts`: `_cancelPendingPush()` is called at the top of `sync()`. An externally
+  triggered sync (from HomeScreen / ParentDashboard) supersedes any pending debounced timer;
+  no duplicate sync fires immediately after.
+
+  **Fix 3 — `seedFromDriveFile` union-merges event/completion data instead of full replace.**
+  `seed.ts`:
+  - `pointsEvents` — never delete local events. Only add Drive events we don't have locally.
+    A local event not yet pushed is real data; the old code deleted it on the next pull.
+  - `taskInstances` — union: keep all instances from both sides. If Drive has an instance as
+    `available` but local has it as `completed`, keep `completed` (child beat the sync).
+    Preserve local-only instances (newly generated daily instances, unpushed completions).
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.25.7 — Build number + sync reliability fixes
 
 **Phase:** Post-launch

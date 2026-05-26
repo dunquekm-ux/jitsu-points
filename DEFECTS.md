@@ -192,6 +192,48 @@ On some iOS versions, non-native-interactive elements (`div`) require `cursor: p
 
 ---
 
+## DEF-010 — Sync data loss: rewards (and other parent-created data) disappear after cross-device sync
+
+**Severity:** High  
+**Screen:** All — data integrity issue in sync engine  
+**Status:** ✅ Closed — Fixed in build 2026.05.26.1
+
+**Steps to reproduce:**
+1. Create rewards (or tasks) on Device A (laptop)
+2. Open app on Device B (phone) — sync runs
+3. Device B correctly receives the new rewards ✓
+4. Reopen app on Device A — rewards are gone ✗
+
+**Root cause:**
+The sync engine has two independent code paths that both write to Google Drive with no coordination between them:
+
+- `sync()` — triggered by `triggerSync()` in HomeScreen/ParentDashboard. Does pull-then-push.
+- `push()` — triggered by `schedulePush()`, a debounced fire-and-forget that runs 2 seconds after any mutation (task completion, etc.). **Does push only — no pull first.**
+
+**The race condition (same device):**
+1. A mutation fires on Device B (e.g. child completes a task). `schedulePush` schedules a push in 2 seconds. Device B's IndexedDB has 0 rewards at this point (never pulled from Drive).
+2. Within those 2 seconds, `sync()` starts. It issues an HTTP GET to Drive (takes ~500ms).
+3. The 2-second debounce fires while `sync()` is waiting on the HTTP response. `push()` reads Device B's stale IndexedDB (0 rewards) and writes it to Drive.
+4. `sync()` gets its Drive response (has 2 rewards), seeds Device B's IndexedDB with 2 rewards.
+5. `sync()` checks whether to push: `isDirty = false` (set by `push()` in step 3) → no push. Drive is left with 0 rewards from step 3.
+6. Device A syncs, pulls from Drive, seeds 0 rewards → Device A loses its rewards.
+
+**Additional contributing issues identified:**
+1. `seedFromDriveFile` is fully destructive — it deletes any local entity not present in the Drive file. If Device B completes a task and that instance hasn't been pushed yet, and Device A pushes in the meantime, Device B's subsequent pull will delete the completed instance (child loses a completion).
+2. `pointsEvents` are append-only by nature but are replaced in full on every seed — same risk as above.
+3. `needsPush = freshMeta?.isDirty !== false` fires when `isDirty` is `undefined` (newly joined device), causing aggressive pushes of empty data on first sync.
+
+**Analysis:**
+Root cause is the sync algorithm design, not the Google Drive + single JSON choice. Drive is the right backend for the constraints. The algorithm needs to guarantee no device ever pushes without first incorporating Drive's latest state.
+
+**Fix (implemented in build 2026.05.26.1):**
+1. **Replaced `schedulePush`/`push()` with a debounced full sync** — `schedulePush` now calls `sync()` instead of `push()`. Every write to Drive is preceded by a pull. Eliminates blind writes entirely.
+2. **Union-merge `pointsEvents` and `taskInstances` in `seedFromDriveFile`** — `pointsEvents` are never deleted locally (only Drive events we're missing are added). `taskInstances` prefer local `completed` over Drive's non-completed for the same instance id; local-only instances are preserved.
+3. **Cancel pending sync timer at start of `sync()`** — `_cancelPendingPush()` is now called at the top of `sync()`, so an externally-triggered sync always supersedes any pending debounced timer.
+4. **`isDirty = false` on device join** — already correct in `joinFamily`; confirmed no change needed.
+
+---
+
 ## DEF-007 — Scroll / swipe still not working on some screens
 
 **Severity:** High  

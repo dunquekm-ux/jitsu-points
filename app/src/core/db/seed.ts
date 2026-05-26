@@ -1,13 +1,22 @@
 /**
- * seed — write a full JitsuDriveFile into IndexedDB.
- * Called after a Drive pull when the Drive file is newer than local data.
+ * seed — write a JitsuDriveFile into IndexedDB after a Drive pull.
  *
- * Strategy: upsert all entities + delete anything present locally but absent
- * from the Drive file (handles parent deleting a task on another device).
- * Each store is synced in its own transaction for type safety.
+ * Strategy per store type:
+ *   Structural data (profiles, taskTemplates, taskSchedules, rewards):
+ *     Full replace — upsert all Drive entities, delete local orphans.
+ *     These are parent-managed and Drive is authoritative.
+ *
+ *   Append-only event data (pointsEvents):
+ *     Union — add Drive events we don't have locally; never delete local events.
+ *     A local event not yet in Drive is an unpushed write; deleting it loses data.
+ *
+ *   Completion state (taskInstances):
+ *     Union + prefer-completed — keep all instances from both sides;
+ *     if Drive has an instance as 'available' but local has it 'completed',
+ *     keep the local 'completed' (child completed it but it hasn't synced yet).
  */
 import { openJitsuDb } from './schema';
-import type { JitsuDriveFile } from '../../domain';
+import type { JitsuDriveFile, TaskInstance } from '../../domain';
 
 export async function seedFromDriveFile(file: JitsuDriveFile): Promise<void> {
   const db = await openJitsuDb();
@@ -48,24 +57,46 @@ export async function seedFromDriveFile(file: JitsuDriveFile): Promise<void> {
 
   async function syncTaskInstances(): Promise<void> {
     const tx = db.transaction('taskInstances', 'readwrite');
-    const incomingIds = new Set(file.taskInstances.map((i) => i.id));
-    const existingKeys = await tx.store.getAllKeys();
+    // Read existing BEFORE issuing any writes (keeps transaction alive via idb)
+    const existing = await tx.store.getAll();
+
+    const localMap = new Map(existing.map((i) => [i.id, i]));
+    const driveIds = new Set(file.taskInstances.map((i) => i.id));
+
+    // Start from Drive's list; for any instance Drive has as non-completed but
+    // local has as completed, keep the local version (child beat the sync).
+    const merged: TaskInstance[] = file.taskInstances.map((di) => {
+      const local = localMap.get(di.id);
+      if (local?.state === 'completed' && di.state !== 'completed') return local;
+      return di;
+    });
+
+    // Preserve local instances not in Drive yet (newly generated daily instances
+    // and completions from an unpushed session on this device).
+    for (const local of existing) {
+      if (!driveIds.has(local.id)) merged.push(local);
+    }
+
+    const existingKeys = existing.map((i) => i.id);
     await Promise.all([
-      ...file.taskInstances.map((i) => tx.store.put(i)),
-      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
+      ...existingKeys.map((k) => tx.store.delete(k)),
+      ...merged.map((i) => tx.store.put(i)),
       tx.done,
     ]);
   }
 
   async function syncPointsEvents(): Promise<void> {
     const tx = db.transaction('pointsEvents', 'readwrite');
-    const incomingIds = new Set(file.pointsEvents.map((e) => e.id));
-    const existingKeys = await tx.store.getAllKeys();
-    await Promise.all([
-      ...file.pointsEvents.map((e) => tx.store.put(e)),
-      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
-      tx.done,
-    ]);
+    // Read existing first — we never delete local events, only add missing Drive ones.
+    const existing = await tx.store.getAll();
+
+    // pointsEvents are append-only. A local event absent from Drive is an
+    // unpushed write — deleting it loses points forever. Union: add Drive events
+    // we don't have locally; leave all existing local events untouched.
+    const localIds = new Set(existing.map((e) => e.id));
+    const toAdd = file.pointsEvents.filter((e) => !localIds.has(e.id));
+
+    await Promise.all([...toAdd.map((e) => tx.store.put(e)), tx.done]);
   }
 
   async function syncRewards(): Promise<void> {
