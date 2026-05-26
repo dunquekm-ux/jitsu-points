@@ -8,10 +8,20 @@ import styles from './RewardsScreen.module.css';
 
 export default function RewardsScreen() {
   const { childId } = useParams<{ childId: string }>();
-  const { rewards, redemptionTitle, redeemReward, dismissRedemption } = useAppStore();
+  const { rewards, redemptionTitle, redeemReward, dismissRedemption, isLoaded, load, selectChild } =
+    useAppStore();
   const pts = useAppStore((s) => selectChildPoints(s, childId ?? ''));
 
   const [confirming, setConfirming] = useState<string | null>(null);
+
+  // DEF-009: Ensure data is loaded and activeChildId is set.
+  // redeemReward() uses state.activeChildId internally — if the user navigates
+  // directly to this screen (or via TabBar without HomeScreen), activeChildId
+  // would be null and every claim attempt silently does nothing.
+  useEffect(() => {
+    if (!isLoaded) load();
+    if (childId) selectChild(childId);
+  }, [isLoaded, load, childId, selectChild]);
 
   // Play chime when redemption succeeds
   useEffect(() => {

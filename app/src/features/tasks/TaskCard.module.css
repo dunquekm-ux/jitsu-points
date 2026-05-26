@@ -1,4 +1,12 @@
 .card {
+  /* Reset button defaults */
+  appearance: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -14,14 +22,11 @@
   user-select: none;
 }
 
-.clickable {
-  cursor: pointer;
-}
-.clickable:hover {
+.card:hover {
   transform: translateX(3px) scale(1.01);
   box-shadow: var(--shadow-md);
 }
-.clickable:active {
+.card:active {
   transform: scale(0.98);
 }
 

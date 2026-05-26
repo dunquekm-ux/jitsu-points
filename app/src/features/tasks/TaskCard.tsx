@@ -19,23 +19,22 @@ const STATE_CONFIG: Record<TaskState, { emoji: string; label: string; color: str
 export default function TaskCard({ instance, template, scheduleLabel }: Props) {
   const navigate = useNavigate();
   const config = STATE_CONFIG[instance.state];
-  const isClickable = instance.state === 'available';
 
+  // DEF-008: All states navigate to TaskDetailScreen — detail screen shows the
+  // appropriate message (complete button only shown when available).
+  // Previously only 'available' was clickable, so locked/missed/completed cards
+  // were silent dead zones that confused users.
   function handleClick() {
-    if (!isClickable) return;
     navigate(`/child/${instance.childId}/task/${instance.id}`);
   }
 
   return (
-    <div
-      className={[styles.card, styles[instance.state], isClickable ? styles.clickable : ''].join(
-        ' ',
-      )}
+    <button
+      type="button"
+      className={[styles.card, styles[instance.state]].join(' ')}
       onClick={handleClick}
-      role={isClickable ? 'button' : undefined}
-      tabIndex={isClickable ? 0 : undefined}
       aria-label={`${template.title} — ${config.label}`}
-      data-testid={isClickable ? 'task-card-available' : undefined}
+      data-testid={instance.state === 'available' ? 'task-card-available' : undefined}
       style={{ '--state-color': config.color } as React.CSSProperties}
     >
       <div className={styles.iconWrap}>
@@ -55,6 +54,6 @@ export default function TaskCard({ instance, template, scheduleLabel }: Props) {
           {config.emoji}
         </span>
       </div>
-    </div>
+    </button>
   );
 }

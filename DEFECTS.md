@@ -137,6 +137,61 @@ Removed the selector-based subscription for `taskInstances`. Instead:
 
 ---
 
+## DEF-009 — Reward claiming silently does nothing
+
+**Severity:** High  
+**Screen:** RewardsScreen (`/child/:childId/rewards`)  
+**Status:** ✅ Closed — Fixed in build 2026.05.25.3
+
+**Steps to reproduce:**
+1. Navigate to a child's Rewards Vault via the TabBar
+2. Tap "Claim" on an affordable reward
+3. Confirm dialog appears; tap "Yes, claim!"
+4. Nothing happens — points are not deducted, no success animation
+
+**Root cause:**
+`redeemReward()` in `appStore.ts` guards with `if (!reward || !state.activeChildId) return`. `activeChildId` is set by `selectChild(childId)`, which is only called from `HomeScreen`'s `useEffect`. If the user navigates to `/rewards` via the TabBar (coming from HomeScreen, which DOES call `selectChild`), `activeChildId` is set and works. However if the user opens the app fresh to the rewards URL, or if the store state was reset, `activeChildId` is `null` and every claim silently bails out. Additionally, RewardsScreen never called `load()`, so fresh-navigation could also result in empty reward/points data.
+
+**Fix:**
+Added `useEffect` to `RewardsScreen` that calls both `load()` (if not yet loaded) and `selectChild(childId)` — mirroring the pattern already used in `HomeScreen`. This ensures `activeChildId` is always set before any redemption attempt.
+
+---
+
+## DEF-008 — Tasks cannot be selected / tapped on child home screen
+
+**Severity:** High  
+**Screen:** HomeScreen (`/child/:childId`), TaskDetailScreen  
+**Status:** ✅ Closed — Fixed in build 2026.05.25.3
+
+**Steps to reproduce:**
+1. Navigate to a child's home screen
+2. Tap any task card
+3. Nothing happens (or the task detail screen flashes and immediately navigates back)
+
+**Root cause — two compounding bugs:**
+
+**Bug A — Only `available` tasks were tappable.**
+`TaskCard` set `isClickable = instance.state === 'available'` and suppressed the `onClick` for all other states. Tasks in `locked`, `missed`, or `completed` state visually appeared as dead zones — tapping them did nothing. Users expected to be able to tap any task to see its details.
+
+**Bug B — `navigate()` called during render in `TaskDetailScreen` (DEF-004 pattern).**
+```tsx
+if (!instance || !template || !schedule) {
+  navigate(`/child/${childId}`);  // ← illegal: navigate during render
+  return null;
+}
+```
+This is the same bug fixed in `HomeScreen` as DEF-004. If triggered (e.g. data not yet loaded when the component mounts), it causes immediate navigation back, making it appear as though tapping a task does nothing.
+
+**Bug C — `TaskCard` used a `div` with `onClick`.**
+On some iOS versions, non-native-interactive elements (`div`) require `cursor: pointer` to receive click events inside scroll containers. While `.clickable { cursor: pointer }` was present, a native `<button>` is more reliable across all browsers and iOS versions.
+
+**Fix:**
+- `TaskCard.tsx` — Changed `div` to `<button type="button">`. Removed `isClickable` guard — all task states now navigate to TaskDetailScreen. Removed `.clickable` CSS class (replaced with direct `.card` styles).
+- `TaskDetailScreen.tsx` — Moved `navigate()` to `useEffect` (same fix as DEF-004). Added `load()` guard in case the screen is opened without going through HomeScreen first. Loading state shown while data resolves.
+- `StreakScreen.tsx`, `AchievementsScreen.tsx` — Added `load()` guard (preventive — same pattern).
+
+---
+
 ## DEF-007 — Scroll / swipe still not working on some screens
 
 **Severity:** High  

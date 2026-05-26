@@ -5,6 +5,24 @@
 
 ---
 
+## 2026.05.25.3 — DEF-008 + DEF-009: task tap + reward claim fixed
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **DEF-008** Task cards unresponsive on child home screen — two root causes fixed:
+  1. `TaskCard` was a `div`; changed to `<button type="button">` — ensures reliable touch events on all iOS versions without needing `cursor: pointer` hacks
+  2. Only `available` tasks were clickable (other states were dead zones) — now all states navigate to `TaskDetailScreen`; the detail screen shows the appropriate message per state and the COMPLETE button is only visible when `available`
+  3. `TaskDetailScreen` had `navigate()` in the render body (same pattern as DEF-004 on HomeScreen) — moved to `useEffect`; added `load()` guard for direct-URL navigation
+- **DEF-009** Reward claiming silently did nothing — `redeemReward()` guards on `state.activeChildId` which is only set by `HomeScreen`'s `selectChild()` effect; if `RewardsScreen` was reached without `activeChildId` being set, every claim bailed silently — added `selectChild(childId)` + `load()` in `RewardsScreen`'s `useEffect`
+- **Preventive** — added `load()` guards to `StreakScreen` and `AchievementsScreen` (both previously had no data-loading safety net for direct-URL navigation)
+
+**Defect summary:** DEF-001–009 ✅ Closed
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.25.2 — DEF-007: scroll/swipe fixed on all parent screens
 
 **Phase:** Post-launch

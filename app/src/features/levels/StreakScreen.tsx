@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import TabBar from '../../shared/components/TabBar';
 import { useAppStore } from '../../core/store/appStore';
@@ -64,7 +65,11 @@ function WeekRow({
 
 export default function StreakScreen() {
   const { childId } = useParams<{ childId: string }>();
-  const { taskInstances, profiles } = useAppStore();
+  const { taskInstances, profiles, isLoaded, load } = useAppStore();
+
+  useEffect(() => {
+    if (!isLoaded) load();
+  }, [isLoaded, load]);
 
   const profile = profiles.find((p) => p.id === childId);
   const today = todayISO();

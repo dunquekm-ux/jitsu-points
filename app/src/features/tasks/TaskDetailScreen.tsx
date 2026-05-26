@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import PointsBadge from '../../shared/components/PointsBadge';
@@ -9,14 +10,35 @@ export default function TaskDetailScreen() {
   const { childId, instanceId } = useParams<{ childId: string; instanceId: string }>();
   const navigate = useNavigate();
 
-  const { taskInstances, taskTemplates, taskSchedules, completeTask } = useAppStore();
+  const { taskInstances, taskTemplates, taskSchedules, completeTask, isLoaded, load } =
+    useAppStore();
+
+  // Ensure data is loaded (e.g. user landed here directly without going through HomeScreen)
+  useEffect(() => {
+    if (!isLoaded) load();
+  }, [isLoaded, load]);
+
   const instance = taskInstances.find((i) => i.id === instanceId);
   const template = instance ? taskTemplates[instance.templateId] : null;
   const schedule = instance ? taskSchedules[instance.scheduleId] : null;
 
-  if (!instance || !template || !schedule) {
-    navigate(`/child/${childId}`);
-    return null;
+  // DEF-008 / DEF-004: navigate during render is illegal — use effect instead.
+  // Redirects back to child home only after data is confirmed loaded and instance
+  // genuinely cannot be found (not just a loading race).
+  useEffect(() => {
+    if (isLoaded && instanceId && !instance) {
+      navigate(`/child/${childId}`);
+    }
+  }, [isLoaded, instanceId, instance, childId, navigate]);
+
+  if (!isLoaded || !instance || !template || !schedule) {
+    return (
+      <div className={styles.screen}>
+        <div className={styles.back} style={{ paddingTop: 'var(--space-8)' }}>
+          🥷
+        </div>
+      </div>
+    );
   }
 
   const isAvailable = instance.state === 'available';

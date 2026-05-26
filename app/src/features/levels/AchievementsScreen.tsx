@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import TabBar from '../../shared/components/TabBar';
 import { useAppStore } from '../../core/store/appStore';
@@ -103,7 +104,11 @@ function buildAchievements(completedCount: number, streak: number, level: number
 
 export default function AchievementsScreen() {
   const { childId } = useParams<{ childId: string }>();
-  const { taskInstances, pointsEvents, profiles } = useAppStore();
+  const { taskInstances, pointsEvents, profiles, isLoaded, load } = useAppStore();
+
+  useEffect(() => {
+    if (!isLoaded) load();
+  }, [isLoaded, load]);
 
   const profile = profiles.find((p) => p.id === childId);
   const xp = lifetimeXp(pointsEvents, childId ?? '');
