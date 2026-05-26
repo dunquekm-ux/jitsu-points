@@ -77,11 +77,18 @@ export default function TaskDetailScreen() {
           <p className={styles.doneText}>✅ Mission complete! Great work!</p>
         )}
         {instance.state === 'missed' && (
-          <p className={styles.missedText}>💨 This mission has expired. Get the next one!</p>
+          <div className={styles.missedBox}>
+            <p className={styles.missedText}>
+              💨 Today&apos;s window has passed — this one is done for today.
+            </p>
+            <p className={styles.missedHint}>
+              A fresh mission appears tomorrow. See you then! 👋
+            </p>
+          </div>
         )}
         {instance.state === 'locked' && (
           <p className={styles.lockedText}>
-            🔒 Not available yet — check back at {schedule.startTime}!
+            🔒 Not available yet — this mission opens at {schedule.startTime}!
           </p>
         )}
 

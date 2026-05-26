@@ -8,7 +8,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.05.25.3` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–009 all closed. Rive mascot integration pending designer asset.
+**Last build:** `2026.05.25.4` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–009 all closed. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|

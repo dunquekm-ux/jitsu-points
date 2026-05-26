@@ -5,6 +5,20 @@
 
 ---
 
+## 2026.05.25.4 — Missed task UX: clear messaging + section divider
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **Missed task clarity** — Users were confused seeing expired tasks with no explanation of what to do or when they'd return.
+  - `HomeScreen`: Missed tasks now appear under a `💨 Missed today — back tomorrow` section divider, visually separated from active missions. Active tasks (available, locked, completed) appear above the line; missed tasks below.
+  - `TaskDetailScreen`: Tapping a missed task now shows a clear two-line message — "Today's window has passed" + "A fresh mission appears tomorrow. See you then! 👋" — instead of the vague "Get the next one!" text.
+- **No behaviour change** — Missed instances still exist in the DB (required for streak calculation). They generate a fresh instance on the next app open for tomorrow's date. The `homeScreen` filter (`todayISO()`) ensures yesterday's missed tasks never show on subsequent days.
+
+**Build:** 110 modules — 119 unit tests passing
+
+---
+
 ## 2026.05.25.3 — DEF-008 + DEF-009: task tap + reward claim fixed
 
 **Phase:** Post-launch

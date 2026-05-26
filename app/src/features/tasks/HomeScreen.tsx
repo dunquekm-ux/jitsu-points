@@ -87,8 +87,6 @@ export default function HomeScreen() {
   const doneToday = completed.length;
   const progressPct = totalToday > 0 ? (doneToday / totalToday) * 100 : 0;
 
-  const ordered = [...available, ...locked, ...completed, ...missed];
-
   return (
     <div className={styles.screen}>
       {/* Header */}
@@ -141,19 +139,42 @@ export default function HomeScreen() {
             <p>No missions today!</p>
           </div>
         ) : (
-          ordered.map((instance) => {
-            const template = taskTemplates[instance.templateId];
-            const schedule = taskSchedules[instance.scheduleId];
-            if (!template || !schedule) return null;
-            return (
-              <TaskCard
-                key={instance.id}
-                instance={instance}
-                template={template}
-                scheduleLabel={schedule.label}
-              />
-            );
-          })
+          <>
+            {/* Active tasks — available, locked, completed */}
+            {[...available, ...locked, ...completed].map((instance) => {
+              const template = taskTemplates[instance.templateId];
+              const schedule = taskSchedules[instance.scheduleId];
+              if (!template || !schedule) return null;
+              return (
+                <TaskCard
+                  key={instance.id}
+                  instance={instance}
+                  template={template}
+                  scheduleLabel={schedule.label}
+                />
+              );
+            })}
+
+            {/* Missed tasks — shown at the bottom under a divider */}
+            {missed.length > 0 && (
+              <>
+                <p className={styles.missedDivider}>💨 Missed today — back tomorrow</p>
+                {missed.map((instance) => {
+                  const template = taskTemplates[instance.templateId];
+                  const schedule = taskSchedules[instance.scheduleId];
+                  if (!template || !schedule) return null;
+                  return (
+                    <TaskCard
+                      key={instance.id}
+                      instance={instance}
+                      template={template}
+                      scheduleLabel={schedule.label}
+                    />
+                  );
+                })}
+              </>
+            )}
+          </>
         )}
       </div>
 
