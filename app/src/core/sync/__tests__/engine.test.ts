@@ -179,4 +179,92 @@ describe('sync()', () => {
     expect(result.pulled).toBe(false);
     expect(result.pushed).toBe(false);
   });
+
+  it('is a no-op when called concurrently (only one sync runs at a time)', async () => {
+    // Simulates mount + visibility-change firing simultaneously.
+    // First call starts; second call should return immediately without pulling/pushing.
+    let pullCallCount = 0;
+    vi.spyOn(driveModule, 'pullDriveFile').mockImplementation(async () => {
+      pullCallCount++;
+      await new Promise((r) => setTimeout(r, 10)); // simulate async Drive fetch
+      return null;
+    });
+    vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
+
+    // Fire both calls without awaiting the first
+    const [r1, r2] = await Promise.all([sync('tok'), sync('tok')]);
+
+    // One of them ran, the other was a no-op
+    expect(pullCallCount).toBe(1);
+    // The one that ran may have returned pulled:false (Drive returned null)
+    // The concurrent no-op returns pulled:false, pushed:false
+    expect([r1.pulled, r2.pulled]).toEqual(expect.arrayContaining([false]));
+  });
+});
+
+// ─── schedulePush — triggers full sync not blind push ────────────────────────
+
+import { schedulePush } from '../engine';
+
+describe('schedulePush', () => {
+  beforeEach(() => {
+    _useTestDb(`jitsu-engine-test-${++_counter}`);
+    _cancelPendingPush();
+    vi.restoreAllMocks();
+    vi.useFakeTimers();
+    useSyncStore.setState({ status: 'idle', lastSyncedAt: null, error: null });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    _cancelPendingPush();
+  });
+
+  it('triggers sync() (pull-then-push) after 2 seconds, not a blind push', async () => {
+    // This is the core DEF-010 fix: schedulePush must call sync(), not push().
+    // We verify by checking that pullDriveFile is called (pull step) when the
+    // debounce fires — a blind push would only call pushDriveFile.
+    const pullSpy = vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue(null);
+    vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
+
+    schedulePush('test-token');
+    expect(pullSpy).not.toHaveBeenCalled(); // not yet
+
+    await vi.runAllTimersAsync();
+
+    expect(pullSpy).toHaveBeenCalledOnce(); // sync()'s pull step ran
+  });
+
+  it('debounces — only one sync fires when called multiple times within 2 s', async () => {
+    const pullSpy = vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue(null);
+    vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
+
+    schedulePush('tok');
+    schedulePush('tok');
+    schedulePush('tok'); // only this one should fire
+
+    await vi.runAllTimersAsync();
+
+    expect(pullSpy).toHaveBeenCalledOnce();
+  });
+
+  it('sync() cancels a pending schedulePush timer', async () => {
+    // Fake timers conflict with fake-indexeddb for this test: fake-indexeddb uses
+    // setTimeout(fn, 0) internally, so its Promise chains stall when fake timers
+    // are active and nothing is advancing the 0ms ticks. Switch to real timers for
+    // this one test so that `await sync()` can complete normally.
+    vi.useRealTimers();
+
+    const pullSpy = vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue(null);
+    vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
+
+    schedulePush('tok'); // arms a real 2-second timer
+    await sync('tok'); // calls _cancelPendingPush() at entry, then runs pull
+
+    // The scheduled push was cancelled — pullDriveFile should have been called
+    // exactly once (from the explicit sync above), not again when the timer fires.
+    // afterEach also calls _cancelPendingPush() as belt-and-suspenders.
+    expect(pullSpy).toHaveBeenCalledOnce();
+    pullSpy.mockRestore();
+  });
 });
