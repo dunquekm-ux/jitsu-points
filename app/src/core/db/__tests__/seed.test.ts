@@ -1,26 +1,19 @@
 /**
- * seedFromDriveFile tests — verify union-merge behaviour for DEF-010.
+ * seedFromDriveFile tests — verify merge behaviour for DEF-010.
  *
  * Key invariants tested:
  *   1. pointsEvents: local events never deleted — Drive events we're missing are added
  *   2. taskInstances: union, prefer local 'completed' over Drive 'available'
  *   3. taskInstances: local-only instances preserved (new daily generations, unpushed completions)
  *   4. Structural stores (profiles, taskTemplates, rewards): Drive wins — orphans deleted
+ *      (safe because all parent writes are online-only — no local orphans can exist)
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { _useTestDb } from '../schema';
 import { db } from '../index';
 import { seedFromDriveFile } from '../seed';
-import {
-  createProfile,
-  createReward,
-  createPointsEvent,
-  createTaskInstance,
-  createTaskTemplate,
-  createSchedule,
-  createFamilyFile,
-} from '../../../domain';
-import type { JitsuDriveFile, TaskInstance, PointsEvent } from '../../../domain';
+import { createReward, createPointsEvent, createTaskInstance } from '../../../domain';
+import type { JitsuDriveFile, TaskInstance } from '../../../domain';
 
 let _counter = 0;
 beforeEach(() => {
@@ -234,82 +227,6 @@ describe('seedFromDriveFile — structural stores (Drive authoritative)', () => 
   });
 });
 
-// ─── preserveLocalOrphans — structural data protection when dirty ─────────────
-
-describe('seedFromDriveFile — preserveLocalOrphans', () => {
-  it('keeps local rewards not in Drive when preserveLocalOrphans = true', async () => {
-    // DEF-011 scenario: rewards created on laptop but never pushed (auth expired).
-    // Another device pushed task completions → Drive.lastUpdated changed.
-    // Laptop reconnects → sync pulls (Drive is newer) → must NOT delete local rewards.
-    const localReward = createReward('Ice Cream', 100);
-    const localReward2 = createReward('Movie Night', 200);
-    await db.rewards.put(localReward);
-    await db.rewards.put(localReward2);
-
-    // Drive has no rewards (they were created locally and never pushed)
-    await seedFromDriveFile(baseFile({ rewards: [] }), { preserveLocalOrphans: true });
-
-    const stored = await db.rewards.getAll();
-    expect(stored).toHaveLength(2); // both local rewards survived
-    const ids = stored.map((r) => r.id);
-    expect(ids).toContain(localReward.id);
-    expect(ids).toContain(localReward2.id);
-  });
-
-  it('deletes local rewards not in Drive when preserveLocalOrphans = false (default)', async () => {
-    // When local is clean (everything was already pushed), Drive is authoritative.
-    // A reward absent from Drive was intentionally deleted on another device.
-    const deletedReward = createReward('Old Prize', 50);
-    const keepReward = createReward('Ice Cream', 100);
-    await db.rewards.put(deletedReward);
-    await db.rewards.put(keepReward);
-
-    await seedFromDriveFile(baseFile({ rewards: [keepReward] }), {
-      preserveLocalOrphans: false,
-    });
-
-    const stored = await db.rewards.getAll();
-    expect(stored).toHaveLength(1);
-    expect(stored[0].id).toBe(keepReward.id); // deleted reward gone
-  });
-
-  it('merges Drive rewards with local rewards when preserveLocalOrphans = true', async () => {
-    // Both Drive and local have rewards. Drive reward updates local. Local-only survives.
-    const localOnlyReward = createReward('Local Prize', 50);
-    const sharedReward = createReward('Shared Prize', 100);
-    const driveUpdated = { ...sharedReward, cost: 150 }; // price changed on another device
-    await db.rewards.put(localOnlyReward);
-    await db.rewards.put(sharedReward);
-
-    await seedFromDriveFile(baseFile({ rewards: [driveUpdated] }), {
-      preserveLocalOrphans: true,
-    });
-
-    const stored = await db.rewards.getAll();
-    expect(stored).toHaveLength(2); // both survive
-    const sharedStored = stored.find((r) => r.id === sharedReward.id);
-    expect(sharedStored?.cost).toBe(150); // Drive version wins for existing items
-    const localStored = stored.find((r) => r.id === localOnlyReward.id);
-    expect(localStored?.cost).toBe(50); // local-only survives
-  });
-
-  it('keeps local tasks not in Drive when preserveLocalOrphans = true', async () => {
-    const tmpl = createTaskTemplate('Brush Teeth', 5, 'child-1');
-    const sched = createSchedule(tmpl.id, 'Morning', '07:00', '09:00');
-    await db.taskTemplates.put(tmpl);
-    await db.taskSchedules.put(sched);
-
-    await seedFromDriveFile(baseFile({ taskTemplates: [], taskSchedules: [] }), {
-      preserveLocalOrphans: true,
-    });
-
-    const templates = await db.taskTemplates.getAll();
-    const schedules = await db.taskSchedules.getAll();
-    expect(templates).toHaveLength(1); // local task survived
-    expect(schedules).toHaveLength(1); // local schedule survived
-  });
-});
-
 // ─── DEF-010 scenario — the exact race that caused data loss ─────────────────
 
 describe('DEF-010 exact scenario: rewards survive cross-device sync', () => {
@@ -321,7 +238,6 @@ describe('DEF-010 exact scenario: rewards survive cross-device sync', () => {
     // Wait — that's not right. The destructive behaviour was:
     //   Device B pushes its stale 0-reward state to Drive BEFORE pulling.
     //   Then Drive has 0 rewards. Device A pulls 0 rewards.
-    // The seed function itself was correct for replacing from Drive.
     // The race was in the push path. This test verifies the seed layer
     // correctly receives and stores rewards from Drive.
     const r1 = createReward('Ice Cream', 100);

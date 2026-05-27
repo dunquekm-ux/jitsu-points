@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import Avatar, { AVATAR_CONFIG } from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore } from '../../core/store/appStore';
+import { useAuthStore } from '../../core/auth';
 import type { AvatarId } from '../../domain';
 import styles from './ManageKidsScreen.module.css';
+
+const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 interface EditState {
   childId: string | null; // null = new
@@ -17,6 +20,9 @@ const AVATARS = Object.keys(AVATAR_CONFIG) as AvatarId[];
 export default function ManageKidsScreen() {
   const navigate = useNavigate();
   const { profiles, createChild, updateChild, deleteChild } = useAppStore();
+
+  const { status } = useAuthStore();
+  const isOffline = HAS_AUTH && status !== 'authenticated';
 
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -59,6 +65,12 @@ export default function ManageKidsScreen() {
       </div>
 
       <div className={styles.body}>
+        {isOffline && (
+          <div className={styles.offlineBanner}>
+            ☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button.
+          </div>
+        )}
+
         {/* Add / edit form */}
         {editing !== null ? (
           <div className={styles.form}>
@@ -99,7 +111,7 @@ export default function ManageKidsScreen() {
               <ChunkyButton
                 variant="primary"
                 size="sm"
-                disabled={!editing.name.trim() || saving}
+                disabled={!editing.name.trim() || saving || isOffline}
                 onClick={handleSave}
               >
                 {saving ? 'Saving…' : 'Save'}
@@ -107,7 +119,7 @@ export default function ManageKidsScreen() {
             </div>
           </div>
         ) : (
-          <ChunkyButton variant="primary" size="sm" onClick={startNew}>
+          <ChunkyButton variant="primary" size="sm" disabled={isOffline} onClick={startNew}>
             + Add Kid
           </ChunkyButton>
         )}
@@ -127,7 +139,11 @@ export default function ManageKidsScreen() {
                   </span>
                 </div>
                 <div className={styles.rowActions}>
-                  <button className={styles.editBtn} onClick={() => startEdit(p.id)}>
+                  <button
+                    className={styles.editBtn}
+                    disabled={isOffline}
+                    onClick={() => startEdit(p.id)}
+                  >
                     Edit
                   </button>
                   {confirmDelete === p.id ? (
@@ -140,7 +156,11 @@ export default function ManageKidsScreen() {
                       </button>
                     </div>
                   ) : (
-                    <button className={styles.deleteBtn} onClick={() => setConfirmDelete(p.id)}>
+                    <button
+                      className={styles.deleteBtn}
+                      disabled={isOffline}
+                      onClick={() => setConfirmDelete(p.id)}
+                    >
                       🗑
                     </button>
                   )}

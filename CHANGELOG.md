@@ -5,6 +5,34 @@
 
 ---
 
+## 2026.05.26.3 — Online-first parent writes; reverted DEF-011 backend complexity
+
+**Phase:** Post-launch
+
+**What's in this build:**
+
+- **DEF-011 resolved — approach changed to online-first mutations (simpler, more robust)**
+
+  DEF-011 described locally-created structural data (rewards, tasks) being wiped when a dirty device reconnected Drive and pulled. The previous build (2026.05.26.2) fixed this with a `preserveLocalOrphans` flag in `seedFromDriveFile`. That fix is correct but complex — it requires the sync engine to reason about whether to protect local orphans on every pull.
+
+  A simpler and more correct solution: **all parent writes are online-only**. If Google Drive is not connected, parents cannot create, edit, or delete anything. This means there can never be unpushed structural orphans — every write is immediately synced, so Drive is always authoritative.
+
+  **Changes:**
+  - `seed.ts`: reverted `SeedOptions` / `preserveLocalOrphans` branching. Structural stores (profiles, taskTemplates, taskSchedules, rewards) are always full-replace (Drive authoritative).
+  - `engine.ts`: reverted `preserveLocalOrphans` pass-through. `seedFromDriveFile(file)` called directly.
+  - All 5 parent write screens now show an offline banner and disable all write actions when Drive is not connected (`HAS_AUTH && status !== 'authenticated'`):
+    - `TaskFormScreen.tsx` — Save, Delete disabled
+    - `ManageRewardsScreen.tsx` — Save, "+ New Reward", Edit, Delete, Toggle disabled
+    - `ManageKidsScreen.tsx` — Save, "+ Add Kid", Edit, Delete disabled
+    - `BonusComposer.tsx` — "Give Bonus!" disabled
+    - `DemeritComposer.tsx` — "Apply Demerit" disabled
+  - Banner text: "☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button."
+  - Offline banner CSS added to each screen's module (amber #fff3cd, yellow border).
+
+**Build:** 138 unit tests passing (removed 5 preserveLocalOrphans tests — no longer applicable)
+
+---
+
 ## 2026.05.26.2 — DEF-011: locally-created data survives pull after auth reconnect
 
 **Phase:** Post-launch

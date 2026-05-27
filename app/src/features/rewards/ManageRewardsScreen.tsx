@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore } from '../../core/store/appStore';
+import { useAuthStore } from '../../core/auth';
 import styles from './ManageRewardsScreen.module.css';
+
+const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 interface EditState {
   rewardId: string | null; // null = new
@@ -13,6 +16,9 @@ interface EditState {
 export default function ManageRewardsScreen() {
   const navigate = useNavigate();
   const { rewards, createRewardItem, updateRewardItem, toggleReward, deleteReward } = useAppStore();
+
+  const { status } = useAuthStore();
+  const isOffline = HAS_AUTH && status !== 'authenticated';
 
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -58,6 +64,12 @@ export default function ManageRewardsScreen() {
       </div>
 
       <div className={styles.body}>
+        {isOffline && (
+          <div className={styles.offlineBanner}>
+            ☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button.
+          </div>
+        )}
+
         {/* Add / edit form */}
         {editing !== null ? (
           <div className={styles.form}>
@@ -86,7 +98,7 @@ export default function ManageRewardsScreen() {
               <ChunkyButton
                 variant="secondary"
                 size="sm"
-                disabled={!editing.title.trim() || Number(editing.cost) <= 0 || saving}
+                disabled={!editing.title.trim() || Number(editing.cost) <= 0 || saving || isOffline}
                 onClick={handleSave}
               >
                 {saving ? 'Saving…' : 'Save'}
@@ -94,7 +106,7 @@ export default function ManageRewardsScreen() {
             </div>
           </div>
         ) : (
-          <ChunkyButton variant="primary" size="sm" onClick={startNew}>
+          <ChunkyButton variant="primary" size="sm" disabled={isOffline} onClick={startNew}>
             + New Reward
           </ChunkyButton>
         )}
@@ -117,13 +129,18 @@ export default function ManageRewardsScreen() {
                   {/* Toggle enabled */}
                   <button
                     className={[styles.toggle, r.enabled ? styles.toggleOn : ''].join(' ')}
-                    onClick={() => toggleReward(r.id)}
+                    onClick={() => !isOffline && toggleReward(r.id)}
+                    disabled={isOffline}
                     aria-label={r.enabled ? 'Disable' : 'Enable'}
                     title={r.enabled ? 'Active — tap to disable' : 'Disabled — tap to enable'}
                   >
                     <span className={styles.toggleThumb} />
                   </button>
-                  <button className={styles.editBtn} onClick={() => startEdit(r.id)}>
+                  <button
+                    className={styles.editBtn}
+                    disabled={isOffline}
+                    onClick={() => startEdit(r.id)}
+                  >
                     Edit
                   </button>
                   {confirmDelete === r.id ? (
@@ -136,7 +153,11 @@ export default function ManageRewardsScreen() {
                       </button>
                     </div>
                   ) : (
-                    <button className={styles.deleteBtn} onClick={() => setConfirmDelete(r.id)}>
+                    <button
+                      className={styles.deleteBtn}
+                      disabled={isOffline}
+                      onClick={() => setConfirmDelete(r.id)}
+                    >
                       🗑
                     </button>
                   )}

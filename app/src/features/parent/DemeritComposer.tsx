@@ -3,13 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import Avatar from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore } from '../../core/store/appStore';
+import { useAuthStore } from '../../core/auth';
 import styles from './DemeritComposer.module.css';
+
+const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const MAX_DEMERIT = 20;
 
 export default function DemeritComposer() {
   const navigate = useNavigate();
   const { profiles, addDemerit } = useAppStore();
+
+  const { status } = useAuthStore();
+  const isOffline = HAS_AUTH && status !== 'authenticated';
 
   const [childId, setChildId] = useState('');
   const [amount, setAmount] = useState(5);
@@ -37,6 +43,12 @@ export default function DemeritComposer() {
       </div>
 
       <div className={styles.body}>
+        {isOffline && (
+          <div className={styles.offlineBanner}>
+            ☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button.
+          </div>
+        )}
+
         {/* Child picker */}
         <label className={styles.label}>Who is this for?</label>
         <div className={styles.kidGrid}>
@@ -102,7 +114,7 @@ export default function DemeritComposer() {
           variant="ghost"
           size="lg"
           fullWidth
-          disabled={!childId || amount <= 0 || saving}
+          disabled={!childId || amount <= 0 || saving || isOffline}
           onClick={handleSave}
         >
           {saving ? 'Saving...' : '💙 Apply Demerit'}

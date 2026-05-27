@@ -6,6 +6,17 @@
   background: var(--color-bg);
 }
 
+.offlineBanner {
+  background: #fff3cd;
+  border: 1.5px solid #ffc107;
+  border-radius: var(--radius-md);
+  color: #7a5700;
+  font-size: var(--font-size-sm);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  text-align: center;
+}
+
 .header {
   background: linear-gradient(135deg, var(--color-primary), var(--color-info));
   padding: calc(var(--safe-top) + var(--space-4)) var(--space-5) var(--space-5);

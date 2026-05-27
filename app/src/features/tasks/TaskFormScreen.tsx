@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore, type ScheduleSlot } from '../../core/store/appStore';
+import { useAuthStore } from '../../core/auth';
 import { getPermissionStatus, requestNotificationPermission } from '../../core/notifications';
 import styles from './TaskFormScreen.module.css';
+
+const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const ICON_PRESETS = ['📚', '🦷', '🛏️', '🐶', '🧹', '🍽️', '🏃', '🎵', '📖', '🌱', '🚿', '👟'];
 
@@ -51,6 +54,9 @@ export default function TaskFormScreen() {
     isLoaded,
     load,
   } = useAppStore();
+
+  const { status } = useAuthStore();
+  const isOffline = HAS_AUTH && status !== 'authenticated';
 
   // Form state
   const [title, setTitle] = useState('');
@@ -170,7 +176,8 @@ export default function TaskFormScreen() {
     navigate('/parent');
   }
 
-  const canSave = title.trim().length > 0 && assignedChildId && slots.length > 0 && !saving;
+  const canSave =
+    title.trim().length > 0 && assignedChildId && slots.length > 0 && !saving && !isOffline;
 
   return (
     <div className={styles.screen}>
@@ -182,6 +189,12 @@ export default function TaskFormScreen() {
       </div>
 
       <div className={styles.body}>
+        {isOffline && (
+          <div className={styles.offlineBanner}>
+            ☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button.
+          </div>
+        )}
+
         {/* Icon picker */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Icon</label>
@@ -385,7 +398,13 @@ export default function TaskFormScreen() {
         </ChunkyButton>
 
         {isEdit && !confirmDelete && (
-          <ChunkyButton variant="ghost" size="sm" fullWidth onClick={() => setConfirmDelete(true)}>
+          <ChunkyButton
+            variant="ghost"
+            size="sm"
+            fullWidth
+            disabled={isOffline}
+            onClick={() => setConfirmDelete(true)}
+          >
             🗑 Delete this task
           </ChunkyButton>
         )}

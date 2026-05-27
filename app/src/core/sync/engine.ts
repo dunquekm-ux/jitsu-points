@@ -67,13 +67,9 @@ export async function sync(accessToken: string): Promise<SyncResult> {
 
       // Replace local if Drive is newer
       if (shouldPull(file.lastUpdated, meta?.lastSyncedAt ?? null)) {
-        // If local has unpushed data (isDirty), preserve local-only structural items
-        // (rewards, tasks, profiles) during the merge — they haven't reached Drive yet
-        // and must not be deleted by a pull triggered because another device pushed.
-        // When local is clean (isDirty = false), Drive is fully authoritative and
-        // parent-deleted items propagate normally.
-        const preserveLocalOrphans = meta?.isDirty === true;
-        await seedFromDriveFile(file, { preserveLocalOrphans });
+        // All parent writes are online-only, so there are never local structural
+        // orphans to protect. Drive is fully authoritative for structural data.
+        await seedFromDriveFile(file);
         // Persist lastSyncedAt using Drive's own timestamp so that subsequent
         // syncs correctly compare against Drive's lastUpdated and don't re-pull
         // unnecessarily when nothing has changed.

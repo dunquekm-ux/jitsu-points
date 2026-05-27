@@ -238,7 +238,7 @@ Root cause is the sync algorithm design, not the Google Drive + single JSON choi
 
 **Severity:** High  
 **Screen:** All — data integrity issue in sync engine  
-**Status:** ✅ Closed — Fixed in build 2026.05.26.2
+**Status:** ✅ Closed — Resolved in build 2026.05.26.3 (online-first mutations)
 
 **Steps to reproduce:**
 1. Set up family on Laptop (Google auth succeeds, Drive file created)
@@ -253,13 +253,12 @@ The pull in step 6 is correct — Drive *is* genuinely newer (the phone pushed).
 
 The guard in DEF-010 (union-merge for `pointsEvents` and `taskInstances`) did not cover structural stores.
 
-**Fix (implemented in build 2026.05.26.2):**
-`seedFromDriveFile` now accepts a `preserveLocalOrphans` flag. The sync engine reads `isDirty` from `syncMeta` *before* the pull and passes `preserveLocalOrphans: true` when the device has unpushed data.
+**Fix (implemented in build 2026.05.26.3):**
+Resolved by a design change rather than a sync-engine workaround: **all parent writes are now online-only**. If Google Drive is not connected (auth status ≠ `authenticated`), all 5 parent write screens disable their create/edit/delete actions and show a clear banner directing the parent to reconnect.
 
-- `preserveLocalOrphans = true` (dirty local): structural stores union-merge — Drive items upserted, local-only items kept. Local rewards/tasks/profiles not in Drive survive the pull and are included in the subsequent push.
-- `preserveLocalOrphans = false` (clean local): full-replace — Drive is authoritative, parent-deleted items propagate. This is the safe path when everything local has already been pushed.
+This eliminates the root condition entirely — local structural orphans (rewards/tasks/profiles that exist locally but haven't been pushed) can never be created, so Drive is always the authoritative source on every pull. The `preserveLocalOrphans` logic added in 2026.05.26.2 was reverted.
 
-**Trade-off acknowledged:** When `preserveLocalOrphans = true`, a reward deleted on Device A (and pushed) will survive on a dirty Device B until Device B explicitly deletes it. This is acceptable for MVP — rare explicit deletes are less harmful than silent data loss on reconnect.
+The 2026.05.26.2 `preserveLocalOrphans` fix was technically correct but added complexity. Online-first mutations are simpler and remove an entire category of potential data loss.
 
 ---
 
