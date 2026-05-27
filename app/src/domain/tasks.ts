@@ -2,7 +2,15 @@
  * Task state machine and instance generation — pure functions.
  * No side effects, no imports from outside domain/.
  */
-import type { TaskInstance, TaskTemplate, TaskSchedule, TaskState, ISODate } from './types';
+import type {
+  TaskInstance,
+  TaskTemplate,
+  TaskSchedule,
+  TaskState,
+  ISODate,
+  Recurrence,
+  DayOfWeek,
+} from './types';
 import { generateId } from './id';
 
 // ─── State Machine ───────────────────────────────────────────────────────────
@@ -83,6 +91,25 @@ export function dateRange(today: ISODate, days: number): ISODate[] {
   return result;
 }
 
+// ─── Recurrence filter ───────────────────────────────────────────────────────
+
+/**
+ * Return true if the given ISO date satisfies the recurrence rule.
+ */
+export function matchesRecurrence(date: ISODate, recurrence: Recurrence): boolean {
+  switch (recurrence.type) {
+    case 'daily':
+      return true;
+    case 'weekly': {
+      const [y, m, d] = date.split('-').map(Number);
+      const dow = new Date(y, m - 1, d).getDay() as DayOfWeek;
+      return recurrence.days.includes(dow);
+    }
+    case 'once':
+      return date === recurrence.date;
+  }
+}
+
 // ─── Instance Generator ──────────────────────────────────────────────────────
 
 /**
@@ -116,6 +143,7 @@ export function generateInstances(
 
   for (const date of dates) {
     if (existingKeys.has(date)) continue;
+    if (!matchesRecurrence(date, schedule.recurrence)) continue;
 
     const inst: TaskInstance = {
       id: generateId(),

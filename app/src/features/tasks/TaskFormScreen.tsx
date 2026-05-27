@@ -4,19 +4,24 @@ import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore, type ScheduleSlot } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
 import { getPermissionStatus, requestNotificationPermission } from '../../core/notifications';
+import { todayISO } from '../../domain';
+import type { Recurrence, DayOfWeek } from '../../domain';
 import styles from './TaskFormScreen.module.css';
 
 const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as const;
+
 const ICON_PRESETS = ['📚', '🦷', '🛏️', '🐶', '🧹', '🍽️', '🏃', '🎵', '📖', '🌱', '🚿', '👟'];
 
-// Local form type — adds allDay flag (UI only; maps to 00:00–23:59 before saving)
+// Local form type — adds UI-only fields that get stripped before saving
 interface FormSlot {
   label: string;
   startTime: string;
   endTime: string;
   reminderTime: string | null;
-  allDay: boolean;
+  allDay: boolean; // maps to 00:00–23:59 on save; UI only
+  recurrence: Recurrence;
 }
 
 function defaultSlot(): FormSlot {
@@ -26,6 +31,7 @@ function defaultSlot(): FormSlot {
     endTime: '09:00',
     reminderTime: null,
     allDay: false,
+    recurrence: { type: 'daily' },
   };
 }
 
@@ -95,6 +101,7 @@ export default function TaskFormScreen() {
             endTime: s.endTime,
             reminderTime: s.reminderTime,
             allDay: isAllDay(s.startTime, s.endTime),
+            recurrence: s.recurrence,
           })),
         );
       }
@@ -128,12 +135,32 @@ export default function TaskFormScreen() {
   function addSlot() {
     setSlots((prev) => [
       ...prev,
-      { label: 'Evening', startTime: '18:00', endTime: '20:00', reminderTime: null, allDay: false },
+      {
+        label: 'Evening',
+        startTime: '18:00',
+        endTime: '20:00',
+        reminderTime: null,
+        allDay: false,
+        recurrence: { type: 'daily' },
+      },
     ]);
   }
 
   function removeSlot(index: number) {
     setSlots((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function setRecurrence(index: number, r: Recurrence) {
+    updateSlot(index, { recurrence: r });
+  }
+
+  function toggleWeekDay(index: number, dow: DayOfWeek) {
+    const slot = slots[index];
+    const current = slot.recurrence.type === 'weekly' ? slot.recurrence.days : [];
+    const next = current.includes(dow) ? current.filter((d) => d !== dow) : [...current, dow];
+    // require at least one day selected
+    if (next.length === 0) return;
+    updateSlot(index, { recurrence: { type: 'weekly', days: next as DayOfWeek[] } });
   }
 
   async function handleSave() {
@@ -327,7 +354,88 @@ export default function TaskFormScreen() {
                 )}
               </div>
 
-              {/* All day toggle */}
+              {/* Recurrence picker */}
+              <div className={styles.recurrenceRow}>
+                <span className={styles.recurrenceLabel}>Repeats</span>
+                <div className={styles.recurrenceTabs}>
+                  {(
+                    [
+                      { type: 'daily', label: 'Every day' },
+                      { type: 'weekly', label: 'Days of week' },
+                      { type: 'once', label: 'One time' },
+                    ] as const
+                  ).map(({ type, label }) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={[
+                        styles.recurrenceTab,
+                        slot.recurrence.type === type ? styles.recurrenceTabActive : '',
+                      ].join(' ')}
+                      onClick={() => {
+                        if (type === 'daily') setRecurrence(i, { type: 'daily' });
+                        else if (type === 'weekly')
+                          setRecurrence(i, {
+                            type: 'weekly',
+                            days:
+                              slot.recurrence.type === 'weekly'
+                                ? slot.recurrence.days
+                                : [1, 2, 3, 4, 5], // default Mon–Fri
+                          });
+                        else
+                          setRecurrence(i, {
+                            type: 'once',
+                            date:
+                              slot.recurrence.type === 'once'
+                                ? slot.recurrence.date
+                                : todayISO(),
+                          });
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Day-of-week picker — shown when weekly */}
+              {slot.recurrence.type === 'weekly' && (
+                <div className={styles.dayGrid}>
+                  {DAY_LABELS.map((dayLabel, dow) => (
+                    <button
+                      key={dow}
+                      type="button"
+                      className={[
+                        styles.dayBtn,
+                        slot.recurrence.type === 'weekly' &&
+                        slot.recurrence.days.includes(dow as DayOfWeek)
+                          ? styles.daySelected
+                          : '',
+                      ].join(' ')}
+                      onClick={() => toggleWeekDay(i, dow as DayOfWeek)}
+                    >
+                      {dayLabel}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Date picker — shown when once */}
+              {slot.recurrence.type === 'once' && (
+                <div className={styles.timeField}>
+                  <span className={styles.timeLabel}>On date</span>
+                  <input
+                    type="date"
+                    className={styles.inputSm}
+                    value={slot.recurrence.date}
+                    onChange={(e) =>
+                      setRecurrence(i, { type: 'once', date: e.target.value || todayISO() })
+                    }
+                  />
+                </div>
+              )}
+
+              {/* All day toggle — hidden for once tasks (implied all-day or use time below) */}
               <div className={styles.allDayRow}>
                 <span className={styles.allDayLabel}>All day</span>
                 <button
@@ -340,7 +448,7 @@ export default function TaskFormScreen() {
                   <span className={styles.toggleThumb} />
                 </button>
                 <span className={styles.allDayHint}>
-                  {slot.allDay ? 'Available any time today' : 'Set a time window'}
+                  {slot.allDay ? 'Available any time' : 'Set a time window'}
                 </span>
               </div>
 

@@ -15,6 +15,8 @@ import type {
   AvatarId,
   TaskState,
   PointsEventType,
+  Recurrence,
+  DayOfWeek,
 } from './types';
 
 export class DriveFileValidationError extends Error {
@@ -104,12 +106,40 @@ function validateTaskTemplate(raw: unknown, idx: number): TaskTemplate {
   };
 }
 
+function validateRecurrence(raw: unknown, field: string): Recurrence {
+  // Backward compat: old files stored recurrence as the plain string "daily"
+  if (raw === 'daily') return { type: 'daily' };
+
+  const o = isObject(raw, field);
+  const type = isString(o.type, `${field}.type`);
+
+  if (type === 'daily') return { type: 'daily' };
+
+  if (type === 'weekly') {
+    if (!Array.isArray(o.days) || o.days.length === 0) {
+      throw new DriveFileValidationError(`${field}.days must be a non-empty array`);
+    }
+    const days = o.days.map((d: unknown, i: number) => {
+      if (typeof d !== 'number' || d < 0 || d > 6 || !Number.isInteger(d)) {
+        throw new DriveFileValidationError(`${field}.days[${i}] must be 0–6`);
+      }
+      return d as DayOfWeek;
+    });
+    return { type: 'weekly', days };
+  }
+
+  if (type === 'once') {
+    const date = isString(o.date, `${field}.date`);
+    return { type: 'once', date };
+  }
+
+  throw new DriveFileValidationError(
+    `${field}.type must be "daily", "weekly", or "once" — got "${type}"`,
+  );
+}
+
 function validateTaskSchedule(raw: unknown, idx: number): TaskSchedule {
   const o = isObject(raw, `taskSchedules[${idx}]`);
-  const recurrence = isString(o.recurrence, `taskSchedules[${idx}].recurrence`);
-  if (recurrence !== 'daily') {
-    throw new DriveFileValidationError(`taskSchedules[${idx}].recurrence must be "daily"`);
-  }
   return {
     id: isString(o.id, `taskSchedules[${idx}].id`),
     taskTemplateId: isString(o.taskTemplateId, `taskSchedules[${idx}].taskTemplateId`),
@@ -117,7 +147,7 @@ function validateTaskSchedule(raw: unknown, idx: number): TaskSchedule {
     startTime: isString(o.startTime, `taskSchedules[${idx}].startTime`),
     endTime: isString(o.endTime, `taskSchedules[${idx}].endTime`),
     reminderTime: isStringOrNull(o.reminderTime ?? null, `taskSchedules[${idx}].reminderTime`),
-    recurrence: 'daily',
+    recurrence: validateRecurrence(o.recurrence, `taskSchedules[${idx}].recurrence`),
   };
 }
 

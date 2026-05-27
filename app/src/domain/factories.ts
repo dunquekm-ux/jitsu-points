@@ -69,7 +69,7 @@ export function createSchedule(
     startTime,
     endTime,
     reminderTime: null,
-    recurrence: 'daily',
+    recurrence: { type: 'daily' },
     ...overrides,
   };
 }

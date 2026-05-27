@@ -51,7 +51,7 @@ describe('createSchedule', () => {
     expect(s.startTime).toBe('07:00');
     expect(s.endTime).toBe('09:00');
     expect(s.reminderTime).toBeNull();
-    expect(s.recurrence).toBe('daily');
+    expect(s.recurrence).toEqual({ type: 'daily' });
   });
 });
 

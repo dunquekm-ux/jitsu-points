@@ -119,10 +119,44 @@ describe('validateDriveFile', () => {
     expect(() => validateDriveFile(raw)).toThrow(/PointsEventType/);
   });
 
-  it('throws when schedule recurrence is not daily', () => {
+  it('throws when schedule recurrence type is unknown', () => {
     const raw = makeValidFile() as Record<string, unknown>;
-    (raw.taskSchedules as Record<string, unknown>[])[0].recurrence = 'weekly';
-    expect(() => validateDriveFile(raw)).toThrow(/daily/);
+    (raw.taskSchedules as Record<string, unknown>[])[0].recurrence = { type: 'monthly' };
+    expect(() => validateDriveFile(raw)).toThrow(/monthly/);
+  });
+
+  it('accepts legacy string "daily" for backward compat', () => {
+    // Old Drive files stored recurrence as the plain string "daily"
+    const raw = makeValidFile() as Record<string, unknown>;
+    (raw.taskSchedules as Record<string, unknown>[])[0].recurrence = 'daily';
+    const result = validateDriveFile(raw);
+    expect(result.taskSchedules[0].recurrence).toEqual({ type: 'daily' });
+  });
+
+  it('accepts weekly recurrence with valid days array', () => {
+    const raw = makeValidFile() as Record<string, unknown>;
+    (raw.taskSchedules as Record<string, unknown>[])[0].recurrence = {
+      type: 'weekly',
+      days: [0, 6],
+    };
+    const result = validateDriveFile(raw);
+    expect(result.taskSchedules[0].recurrence).toEqual({ type: 'weekly', days: [0, 6] });
+  });
+
+  it('throws when weekly recurrence has empty days array', () => {
+    const raw = makeValidFile() as Record<string, unknown>;
+    (raw.taskSchedules as Record<string, unknown>[])[0].recurrence = { type: 'weekly', days: [] };
+    expect(() => validateDriveFile(raw)).toThrow(/non-empty/);
+  });
+
+  it('accepts once recurrence with a valid date', () => {
+    const raw = makeValidFile() as Record<string, unknown>;
+    (raw.taskSchedules as Record<string, unknown>[])[0].recurrence = {
+      type: 'once',
+      date: '2026-06-07',
+    };
+    const result = validateDriveFile(raw);
+    expect(result.taskSchedules[0].recurrence).toEqual({ type: 'once', date: '2026-06-07' });
   });
 
   it('throws when profiles is not an array', () => {

@@ -24,7 +24,7 @@ function makeSchedule(overrides: Partial<TaskSchedule>): TaskSchedule {
     startTime: '07:00',
     endTime: '09:00',
     reminderTime: null,
-    recurrence: 'daily',
+    recurrence: { type: 'daily' },
     ...overrides,
   };
 }

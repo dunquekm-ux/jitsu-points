@@ -3,7 +3,13 @@
  * Fills coverage gaps from Phase 0 + validates the instance generator.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { recalculateInstanceStates, generateInstances, todayISO, dateToISO } from '../tasks';
+import {
+  recalculateInstanceStates,
+  generateInstances,
+  matchesRecurrence,
+  todayISO,
+  dateToISO,
+} from '../tasks';
 import type { TaskInstance, TaskSchedule, TaskTemplate } from '../types';
 
 function makeInstance(overrides: Partial<TaskInstance> = {}): TaskInstance {
@@ -28,7 +34,7 @@ function makeSchedule(overrides: Partial<TaskSchedule> = {}): TaskSchedule {
     startTime: '07:00',
     endTime: '09:00',
     reminderTime: null,
-    recurrence: 'daily',
+    recurrence: { type: 'daily' },
     ...overrides,
   };
 }
@@ -182,5 +188,96 @@ describe('generateInstances', () => {
     const result = generateInstances(template, schedule, ['2026-05-23'], [], now);
     expect(result[0].completedAt).toBeNull();
     expect(result[0].selfiePhotoPath).toBeNull();
+  });
+});
+
+// ─── matchesRecurrence ───────────────────────────────────────────────────────
+
+// shared now for generateInstances calls in recurrence tests
+const recurrenceNow = new Date(2026, 4, 23, 8, 0); // Sat 2026-05-23 08:00
+
+describe('matchesRecurrence — daily', () => {
+  it('matches every date', () => {
+    expect(matchesRecurrence('2026-05-23', { type: 'daily' })).toBe(true);
+    expect(matchesRecurrence('2026-05-24', { type: 'daily' })).toBe(true);
+  });
+});
+
+describe('matchesRecurrence — weekly', () => {
+  // 2026-05-23 is a Saturday (dow=6), 2026-05-24 is Sunday (dow=0),
+  // 2026-05-25 is Monday (dow=1)
+  it('matches dates whose day-of-week is in the list', () => {
+    expect(matchesRecurrence('2026-05-23', { type: 'weekly', days: [6] })).toBe(true); // Sat
+    expect(matchesRecurrence('2026-05-24', { type: 'weekly', days: [0, 6] })).toBe(true); // Sun
+  });
+
+  it('does not match dates whose day-of-week is not in the list', () => {
+    expect(matchesRecurrence('2026-05-25', { type: 'weekly', days: [0, 6] })).toBe(false); // Mon
+    expect(matchesRecurrence('2026-05-23', { type: 'weekly', days: [1, 2, 3, 4, 5] })).toBe(
+      false, // Sat excluded
+    );
+  });
+
+  it('Mon–Fri schedule generates 5 instances across a week', () => {
+    const weekSched = makeSchedule({ recurrence: { type: 'weekly', days: [1, 2, 3, 4, 5] } });
+    const dates = [
+      '2026-05-18', // Mon
+      '2026-05-19', // Tue
+      '2026-05-20', // Wed
+      '2026-05-21', // Thu
+      '2026-05-22', // Fri
+      '2026-05-23', // Sat — excluded
+      '2026-05-24', // Sun — excluded
+    ];
+    const result = generateInstances(makeTemplate(), weekSched, dates, [], recurrenceNow);
+    expect(result).toHaveLength(5);
+    expect(result.map((r) => r.date)).toEqual([
+      '2026-05-18',
+      '2026-05-19',
+      '2026-05-20',
+      '2026-05-21',
+      '2026-05-22',
+    ]);
+  });
+
+  it('weekend schedule generates 2 instances across a week', () => {
+    const weekendSched = makeSchedule({ recurrence: { type: 'weekly', days: [0, 6] } });
+    const dates = ['2026-05-18', '2026-05-19', '2026-05-20', '2026-05-21', '2026-05-22', '2026-05-23', '2026-05-24'];
+    const result = generateInstances(makeTemplate(), weekendSched, dates, [], recurrenceNow);
+    expect(result).toHaveLength(2);
+    expect(result.map((r) => r.date)).toEqual(['2026-05-23', '2026-05-24']); // Sat + Sun
+  });
+});
+
+describe('matchesRecurrence — once', () => {
+  it('matches only the exact date', () => {
+    expect(matchesRecurrence('2026-06-07', { type: 'once', date: '2026-06-07' })).toBe(true);
+  });
+
+  it('does not match any other date', () => {
+    expect(matchesRecurrence('2026-06-06', { type: 'once', date: '2026-06-07' })).toBe(false);
+    expect(matchesRecurrence('2026-06-08', { type: 'once', date: '2026-06-07' })).toBe(false);
+  });
+
+  it('generates exactly one instance for the target date', () => {
+    const onceSched = makeSchedule({ recurrence: { type: 'once', date: '2026-06-07' } });
+    const dates = ['2026-06-06', '2026-06-07', '2026-06-08'];
+    const result = generateInstances(makeTemplate(), onceSched, dates, [], recurrenceNow);
+    expect(result).toHaveLength(1);
+    expect(result[0].date).toBe('2026-06-07');
+  });
+
+  it('generates no instances if the target date is not in the window', () => {
+    const onceSched = makeSchedule({ recurrence: { type: 'once', date: '2026-07-01' } });
+    const dates = ['2026-06-06', '2026-06-07', '2026-06-08'];
+    const result = generateInstances(makeTemplate(), onceSched, dates, [], recurrenceNow);
+    expect(result).toHaveLength(0);
+  });
+
+  it('does not regenerate a once instance that already exists', () => {
+    const onceSched = makeSchedule({ recurrence: { type: 'once', date: '2026-06-07' } });
+    const existing = [makeInstance({ date: '2026-06-07', scheduleId: 'sched-1' })];
+    const result = generateInstances(makeTemplate(), onceSched, ['2026-06-07'], existing, recurrenceNow);
+    expect(result).toHaveLength(0);
   });
 });

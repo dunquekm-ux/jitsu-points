@@ -35,6 +35,7 @@ import type {
   TaskInstance,
   PointsEvent,
   Reward,
+  Recurrence,
 } from '../../domain';
 
 // ─── Parent form types ────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export interface ScheduleSlot {
   startTime: string;
   endTime: string;
   reminderTime: string | null;
+  recurrence: Recurrence;
 }
 
 export interface NewTaskData {
@@ -376,6 +378,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const schedules = data.schedules.map((s) =>
       createSchedule(template.id, s.label, s.startTime, s.endTime, {
         reminderTime: s.reminderTime,
+        recurrence: s.recurrence,
       }),
     );
     await db.taskTemplates.put(template);
@@ -415,6 +418,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const newSchedules = data.schedules.map((s) =>
       createSchedule(templateId, s.label, s.startTime, s.endTime, {
         reminderTime: s.reminderTime,
+        recurrence: s.recurrence,
       }),
     );
     await Promise.all(newSchedules.map((s) => db.taskSchedules.put(s)));

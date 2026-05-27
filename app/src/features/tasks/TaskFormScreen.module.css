@@ -244,6 +244,71 @@
   border-color: var(--color-state-missed) !important;
 }
 
+/* Recurrence picker */
+.recurrenceRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.recurrenceLabel {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.recurrenceTabs {
+  display: flex;
+  gap: 4px;
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+.recurrenceTab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  white-space: nowrap;
+}
+.recurrenceTabActive {
+  background: var(--color-bg-card);
+  color: var(--color-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* Day-of-week picker */
+.dayGrid {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+}
+.dayBtn {
+  flex: 1;
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-1) 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.daySelected {
+  background: var(--color-secondary);
+  color: var(--color-text-on-secondary);
+}
+
 /* All day row */
 .allDayRow {
   display: flex;

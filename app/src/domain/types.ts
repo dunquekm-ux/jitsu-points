@@ -43,6 +43,14 @@ export interface TaskTemplate {
   assignedChildId: UUID;
 }
 
+// 0 = Sunday … 6 = Saturday (matches Date.getDay())
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type Recurrence =
+  | { type: 'daily' } // every day
+  | { type: 'weekly'; days: DayOfWeek[] } // specific days, e.g. [0,6] = weekends
+  | { type: 'once'; date: ISODate }; // single occurrence on this exact date
+
 export interface TaskSchedule {
   id: UUID;
   taskTemplateId: UUID;
@@ -50,7 +58,7 @@ export interface TaskSchedule {
   startTime: HHMMTime;
   endTime: HHMMTime;
   reminderTime: HHMMTime | null;
-  recurrence: 'daily'; // Only daily for MVP
+  recurrence: Recurrence;
 }
 
 export type TaskState = 'locked' | 'available' | 'completed' | 'missed';

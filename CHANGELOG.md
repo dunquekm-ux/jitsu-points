@@ -5,6 +5,42 @@
 
 ---
 
+## 2026.05.26.4 — Task recurrence: weekly (days-of-week) + one-time
+
+**Phase:** Post-launch
+
+**What's in this build:**
+
+- **`Recurrence` union type added to domain** (`types.ts`)
+  - `{ type: 'daily' }` — every day (existing behaviour, backward compat)
+  - `{ type: 'weekly'; days: DayOfWeek[] }` — specific days, e.g. `[0,6]` = weekends, `[1,2,3,4,5]` = weekdays
+  - `{ type: 'once'; date: ISODate }` — single occurrence on an exact date
+  - `DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6` (0 = Sunday, matches `Date.getDay()`)
+
+- **`generateInstances()` updated** (`tasks.ts`)
+  - Calls new `matchesRecurrence(date, recurrence)` before creating each instance
+  - Daily: all dates pass (unchanged); Weekly: only dates whose `.getDay()` is in `days`; Once: only the exact target date
+
+- **`validateDriveFile()` updated** (`validate.ts`)
+  - Accepts all three recurrence shapes
+  - Backward compat: plain string `"daily"` (old Drive files) migrated to `{ type: 'daily' }` automatically
+  - Throws descriptively on unknown type, empty `days` array, missing `date`
+
+- **`createSchedule()` factory default** changed from `recurrence: 'daily'` to `recurrence: { type: 'daily' }`
+
+- **`ScheduleSlot` type updated** (`appStore.ts`) — added `recurrence: Recurrence`; passed through in `createTask` / `updateTask`
+
+- **Task form UI** (`TaskFormScreen.tsx`)
+  - Each schedule slot now has a **Repeats** segmented control: Every day / Days of week / One time
+  - *Days of week*: Su Mo Tu We Th Fr Sa toggle buttons; at least one must stay selected
+  - *One time*: native `<input type="date">` date picker; defaults to today
+  - Defaults to Mon–Fri when switching to weekly, today when switching to once
+  - All-day toggle and time-window still apply for all recurrence types
+
+**Tests:** 152 passing (+14 new recurrence tests)
+
+---
+
 ## 2026.05.26.3 — Online-first parent writes; reverted DEF-011 backend complexity
 
 **Phase:** Post-launch
