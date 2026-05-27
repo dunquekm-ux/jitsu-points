@@ -242,7 +242,15 @@ describe('matchesRecurrence — weekly', () => {
 
   it('weekend schedule generates 2 instances across a week', () => {
     const weekendSched = makeSchedule({ recurrence: { type: 'weekly', days: [0, 6] } });
-    const dates = ['2026-05-18', '2026-05-19', '2026-05-20', '2026-05-21', '2026-05-22', '2026-05-23', '2026-05-24'];
+    const dates = [
+      '2026-05-18',
+      '2026-05-19',
+      '2026-05-20',
+      '2026-05-21',
+      '2026-05-22',
+      '2026-05-23',
+      '2026-05-24',
+    ];
     const result = generateInstances(makeTemplate(), weekendSched, dates, [], recurrenceNow);
     expect(result).toHaveLength(2);
     expect(result.map((r) => r.date)).toEqual(['2026-05-23', '2026-05-24']); // Sat + Sun
@@ -277,7 +285,13 @@ describe('matchesRecurrence — once', () => {
   it('does not regenerate a once instance that already exists', () => {
     const onceSched = makeSchedule({ recurrence: { type: 'once', date: '2026-06-07' } });
     const existing = [makeInstance({ date: '2026-06-07', scheduleId: 'sched-1' })];
-    const result = generateInstances(makeTemplate(), onceSched, ['2026-06-07'], existing, recurrenceNow);
+    const result = generateInstances(
+      makeTemplate(),
+      onceSched,
+      ['2026-06-07'],
+      existing,
+      recurrenceNow,
+    );
     expect(result).toHaveLength(0);
   });
 });

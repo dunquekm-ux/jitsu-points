@@ -276,7 +276,9 @@
   font-weight: var(--font-weight-bold);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
   white-space: nowrap;
 }
 .recurrenceTabActive {
@@ -302,7 +304,9 @@
   font-weight: var(--font-weight-bold);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
 }
 .daySelected {
   background: var(--color-secondary);

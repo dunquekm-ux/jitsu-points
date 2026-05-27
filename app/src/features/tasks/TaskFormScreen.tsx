@@ -386,9 +386,7 @@ export default function TaskFormScreen() {
                           setRecurrence(i, {
                             type: 'once',
                             date:
-                              slot.recurrence.type === 'once'
-                                ? slot.recurrence.date
-                                : todayISO(),
+                              slot.recurrence.type === 'once' ? slot.recurrence.date : todayISO(),
                           });
                       }}
                     >
