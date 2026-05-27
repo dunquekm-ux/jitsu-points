@@ -113,7 +113,7 @@ describe('sync()', () => {
     expect(useSyncStore.getState().status).toBe('idle');
   });
 
-  it('pulls when Drive file is newer', async () => {
+  it('pulls when Drive file is newer — clean local, Drive is authoritative', async () => {
     const driveFile = makeDriveFile('2026-05-24T00:00:00Z'); // newer than local
     vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue({ file: driveFile, fileId: 'f-1' });
     const seedSpy = vi.spyOn(seedModule, 'seedFromDriveFile').mockResolvedValue(undefined);
@@ -122,12 +122,33 @@ describe('sync()', () => {
     await db.syncMeta.set({
       driveFileId: 'f-1',
       lastSyncedAt: '2026-05-23T00:00:00Z', // older than Drive
-      isDirty: false,
+      isDirty: false, // local is clean
     });
 
     const result = await sync('test-token');
     expect(result.pulled).toBe(true);
-    expect(seedSpy).toHaveBeenCalledWith(driveFile);
+    // Local is clean — Drive is fully authoritative, orphan deletes propagate
+    expect(seedSpy).toHaveBeenCalledWith(driveFile, { preserveLocalOrphans: false });
+  });
+
+  it('pulls when Drive file is newer — dirty local, preserves local orphans', async () => {
+    // Scenario: rewards were created on this device but never pushed (auth was
+    // expired). Another device pushed task completions, making Drive newer.
+    // The pull must NOT delete locally-created rewards that haven't reached Drive.
+    const driveFile = makeDriveFile('2026-05-24T00:00:00Z');
+    vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue({ file: driveFile, fileId: 'f-1' });
+    const seedSpy = vi.spyOn(seedModule, 'seedFromDriveFile').mockResolvedValue(undefined);
+    vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
+
+    await db.syncMeta.set({
+      driveFileId: 'f-1',
+      lastSyncedAt: '2026-05-23T00:00:00Z',
+      isDirty: true, // local has unpushed changes (rewards, tasks, etc.)
+    });
+
+    await sync('test-token');
+    // preserveLocalOrphans = true — local-only items survive the pull
+    expect(seedSpy).toHaveBeenCalledWith(driveFile, { preserveLocalOrphans: true });
   });
 
   it('pushes when local is dirty', async () => {

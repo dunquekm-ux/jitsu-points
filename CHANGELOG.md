@@ -5,6 +5,27 @@
 
 ---
 
+## 2026.05.26.2 — DEF-011: locally-created data survives pull after auth reconnect
+
+**Phase:** Post-launch
+
+**What's in this build:**
+- **DEF-011 closed — rewards/tasks lost when reconnecting Drive after auth expiry**
+
+  **The scenario that exposed this:** Laptop creates rewards → auth expires before push → phone completes a task and pushes (updating `Drive.lastUpdated`) → Laptop reconnects Drive → sync pulls (Drive IS newer, pull is correct) → `seedFromDriveFile` full-replaces rewards with Drive's version (0 rewards) → rewards lost.
+
+  DEF-010 fixed the blind-push race but this is a different failure mode: a correct, legitimate pull that wipes locally-created data that was never pushed because auth was unavailable.
+
+  **Fix — `seedFromDriveFile` now accepts `preserveLocalOrphans` option:**
+  - `seed.ts`: Structural stores (profiles, taskTemplates, taskSchedules, rewards) have two behaviours:
+    - `preserveLocalOrphans = false` (default): full-replace. Drive is authoritative, parent-deleted items propagate. Used when local is clean (all data was already in Drive).
+    - `preserveLocalOrphans = true`: union-merge. Drive items are upserted, local-only items kept. Used when local is dirty — locally-created data that hasn't reached Drive yet is preserved and included in the subsequent push.
+  - `engine.ts`: reads `meta.isDirty` before the pull and passes `preserveLocalOrphans: isDirty === true` to `seedFromDriveFile`.
+
+**Build:** 143 unit tests passing
+
+---
+
 ## 2026.05.26.1 — DEF-010: sync data-loss race condition fixed
 
 **Phase:** Post-launch

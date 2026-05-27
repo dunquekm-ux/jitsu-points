@@ -2,58 +2,117 @@
  * seed — write a JitsuDriveFile into IndexedDB after a Drive pull.
  *
  * Strategy per store type:
+ *
  *   Structural data (profiles, taskTemplates, taskSchedules, rewards):
- *     Full replace — upsert all Drive entities, delete local orphans.
- *     These are parent-managed and Drive is authoritative.
+ *     Default (preserveLocalOrphans = false):
+ *       Full replace — upsert all Drive entities, delete local orphans.
+ *       Use this when local is clean (everything was already pushed to Drive).
+ *       Drive is the source of truth; parent-deleted items on another device propagate.
+ *
+ *     When preserveLocalOrphans = true:
+ *       Union — upsert Drive entities, keep local orphans.
+ *       Use this when local is dirty (has data that was never pushed).
+ *       A local reward/task/profile that isn't in Drive yet must not be deleted;
+ *       it will be included in the push that follows the pull.
  *
  *   Append-only event data (pointsEvents):
- *     Union — add Drive events we don't have locally; never delete local events.
+ *     Always union — add Drive events we don't have locally; never delete local events.
  *     A local event not yet in Drive is an unpushed write; deleting it loses data.
  *
  *   Completion state (taskInstances):
- *     Union + prefer-completed — keep all instances from both sides;
+ *     Always union + prefer-completed — keep all instances from both sides;
  *     if Drive has an instance as 'available' but local has it 'completed',
  *     keep the local 'completed' (child completed it but it hasn't synced yet).
  */
 import { openJitsuDb } from './schema';
 import type { JitsuDriveFile, TaskInstance } from '../../domain';
 
-export async function seedFromDriveFile(file: JitsuDriveFile): Promise<void> {
+export interface SeedOptions {
+  /**
+   * When true, local items not present in the Drive file are preserved (union merge).
+   * When false (default), local items absent from Drive are deleted (full replace).
+   *
+   * Pass true when local has unpushed changes (isDirty = true at the time of the pull).
+   * This prevents locally-created data (rewards, tasks, etc.) from being wiped by a
+   * pull triggered because another device pushed in the meantime.
+   */
+  preserveLocalOrphans?: boolean;
+}
+
+export async function seedFromDriveFile(
+  file: JitsuDriveFile,
+  opts: SeedOptions = {},
+): Promise<void> {
+  const { preserveLocalOrphans = false } = opts;
   const db = await openJitsuDb();
 
-  // Helper: sync one store (upsert all incoming, delete orphans)
+  // ─── Structural stores ───────────────────────────────────────────────────────
+  // Behaviour switches based on preserveLocalOrphans.
+
   async function syncProfiles(): Promise<void> {
     const tx = db.transaction('profiles', 'readwrite');
-    const incomingIds = new Set(file.profiles.map((p) => p.id));
-    const existingKeys = await tx.store.getAllKeys();
-    await Promise.all([
-      ...file.profiles.map((p) => tx.store.put(p)),
-      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
-      tx.done,
-    ]);
+    if (preserveLocalOrphans) {
+      // Union: upsert Drive items, keep local orphans (unpushed profile creations)
+      await Promise.all([...file.profiles.map((p) => tx.store.put(p)), tx.done]);
+    } else {
+      const incomingIds = new Set(file.profiles.map((p) => p.id));
+      const existingKeys = await tx.store.getAllKeys();
+      await Promise.all([
+        ...file.profiles.map((p) => tx.store.put(p)),
+        ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
+        tx.done,
+      ]);
+    }
   }
 
   async function syncTaskTemplates(): Promise<void> {
     const tx = db.transaction('taskTemplates', 'readwrite');
-    const incomingIds = new Set(file.taskTemplates.map((t) => t.id));
-    const existingKeys = await tx.store.getAllKeys();
-    await Promise.all([
-      ...file.taskTemplates.map((t) => tx.store.put(t)),
-      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
-      tx.done,
-    ]);
+    if (preserveLocalOrphans) {
+      await Promise.all([...file.taskTemplates.map((t) => tx.store.put(t)), tx.done]);
+    } else {
+      const incomingIds = new Set(file.taskTemplates.map((t) => t.id));
+      const existingKeys = await tx.store.getAllKeys();
+      await Promise.all([
+        ...file.taskTemplates.map((t) => tx.store.put(t)),
+        ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
+        tx.done,
+      ]);
+    }
   }
 
   async function syncTaskSchedules(): Promise<void> {
     const tx = db.transaction('taskSchedules', 'readwrite');
-    const incomingIds = new Set(file.taskSchedules.map((s) => s.id));
-    const existingKeys = await tx.store.getAllKeys();
-    await Promise.all([
-      ...file.taskSchedules.map((s) => tx.store.put(s)),
-      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
-      tx.done,
-    ]);
+    if (preserveLocalOrphans) {
+      await Promise.all([...file.taskSchedules.map((s) => tx.store.put(s)), tx.done]);
+    } else {
+      const incomingIds = new Set(file.taskSchedules.map((s) => s.id));
+      const existingKeys = await tx.store.getAllKeys();
+      await Promise.all([
+        ...file.taskSchedules.map((s) => tx.store.put(s)),
+        ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
+        tx.done,
+      ]);
+    }
   }
+
+  async function syncRewards(): Promise<void> {
+    const tx = db.transaction('rewards', 'readwrite');
+    if (preserveLocalOrphans) {
+      // Union: upsert Drive items, keep local orphans (rewards created locally
+      // but never pushed because auth was expired or unavailable).
+      await Promise.all([...file.rewards.map((r) => tx.store.put(r)), tx.done]);
+    } else {
+      const incomingIds = new Set(file.rewards.map((r) => r.id));
+      const existingKeys = await tx.store.getAllKeys();
+      await Promise.all([
+        ...file.rewards.map((r) => tx.store.put(r)),
+        ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
+        tx.done,
+      ]);
+    }
+  }
+
+  // ─── Event / completion stores (always union) ─────────────────────────────
 
   async function syncTaskInstances(): Promise<void> {
     const tx = db.transaction('taskInstances', 'readwrite');
@@ -97,17 +156,6 @@ export async function seedFromDriveFile(file: JitsuDriveFile): Promise<void> {
     const toAdd = file.pointsEvents.filter((e) => !localIds.has(e.id));
 
     await Promise.all([...toAdd.map((e) => tx.store.put(e)), tx.done]);
-  }
-
-  async function syncRewards(): Promise<void> {
-    const tx = db.transaction('rewards', 'readwrite');
-    const incomingIds = new Set(file.rewards.map((r) => r.id));
-    const existingKeys = await tx.store.getAllKeys();
-    await Promise.all([
-      ...file.rewards.map((r) => tx.store.put(r)),
-      ...existingKeys.filter((k) => !incomingIds.has(k)).map((k) => tx.store.delete(k)),
-      tx.done,
-    ]);
   }
 
   // Run all store syncs in parallel

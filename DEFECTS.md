@@ -234,6 +234,35 @@ Root cause is the sync algorithm design, not the Google Drive + single JSON choi
 
 ---
 
+## DEF-011 — Locally-created rewards/tasks lost when reconnecting Drive after auth expiry
+
+**Severity:** High  
+**Screen:** All — data integrity issue in sync engine  
+**Status:** ✅ Closed — Fixed in build 2026.05.26.2
+
+**Steps to reproduce:**
+1. Set up family on Laptop (Google auth succeeds, Drive file created)
+2. Create rewards on Laptop
+3. Laptop auth expires before the rewards are pushed (sync never fires, or token lapses)
+4. Phone opens and uses the app (child completes a task → phone pushes to Drive → `Drive.lastUpdated` advances past `T0`)
+5. Laptop user notices "sync not set up" / reconnect banner → taps Reconnect
+6. After reconnecting: sync triggers, laptop **pulls** from Drive (Drive is newer than `lastSyncedAt`) → `seedFromDriveFile` full-replaces rewards store → **0 rewards**. Push then sends 0-reward state to Drive.
+
+**Root cause:**
+The pull in step 6 is correct — Drive *is* genuinely newer (the phone pushed). But `seedFromDriveFile`'s full-replace strategy for structural data (rewards, tasks, profiles) treated Drive as the single source of truth even when the local device had unpushed data. The rewards existed only in the laptop's IndexedDB and had never reached Drive; the pull wiped them.
+
+The guard in DEF-010 (union-merge for `pointsEvents` and `taskInstances`) did not cover structural stores.
+
+**Fix (implemented in build 2026.05.26.2):**
+`seedFromDriveFile` now accepts a `preserveLocalOrphans` flag. The sync engine reads `isDirty` from `syncMeta` *before* the pull and passes `preserveLocalOrphans: true` when the device has unpushed data.
+
+- `preserveLocalOrphans = true` (dirty local): structural stores union-merge — Drive items upserted, local-only items kept. Local rewards/tasks/profiles not in Drive survive the pull and are included in the subsequent push.
+- `preserveLocalOrphans = false` (clean local): full-replace — Drive is authoritative, parent-deleted items propagate. This is the safe path when everything local has already been pushed.
+
+**Trade-off acknowledged:** When `preserveLocalOrphans = true`, a reward deleted on Device A (and pushed) will survive on a dirty Device B until Device B explicitly deletes it. This is acceptable for MVP — rare explicit deletes are less harmful than silent data loss on reconnect.
+
+---
+
 ## DEF-007 — Scroll / swipe still not working on some screens
 
 **Severity:** High  
