@@ -2,28 +2,28 @@
 
 ## What This Is
 
-Jitsu Points is a **gamified responsibility and rewards app** for children ages 5–12. Parents create tasks and rewards; kids complete missions, earn points, and redeem prizes. Runs as a PWA — no app store, no backend server, data lives in the family's own Google Drive.
+Jitsu Points is a **gamified responsibility and rewards app** for children ages 5–12. Parents create tasks and rewards; kids complete missions, earn points, and redeem prizes. Runs as a PWA — no app store, no backend server, data synced via Cloudflare Workers + D1.
 
 ---
 
 ## Current State
 
-**Last build:** `2026.05.26.4` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–011 all closed. Online-first parent writes enforced. Task recurrence: weekly + one-time. Rive mascot integration pending designer asset.
+**Last build:** `2026.05.27.2` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–012 closed; DEF-013 open (task counter vs list mismatch — scheduled for next session). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
 | Live interactive prototype | `index.html` | ✅ Complete — open in any browser |
 | Requirements spec | `jitsu_points_requirements.md` | ✅ Complete |
-| Architecture decisions | `DECISIONS.md` | ✅ 15 ADRs logged (ADR-015: security review) |
-| Defect log | `DEFECTS.md` | ✅ 11 defects logged (DEF-001–011 all closed) |
+| Architecture decisions | `DECISIONS.md` | ✅ 17 ADRs logged (ADR-017: multi-child tasks) |
+| Defect log | `DEFECTS.md` | ✅ 13 defects logged (DEF-001–012 closed, DEF-013 open) |
 | Domain reference | `DOMAIN.md` | ✅ Types, rules, state machine |
-| Changelog | `CHANGELOG.md` | ✅ Build log through 2026.05.26.4 |
+| Changelog | `CHANGELOG.md` | ✅ Build log through 2026.05.27.2 |
 | PWA app — Phase 0 | `app/` | ✅ Vite + React + TS, design tokens, CI pipeline |
 | PWA app — Phase 1 | `app/src/domain/` | ✅ Full domain layer, 79 tests, 100% line/fn coverage |
-| PWA app — Phase 2 | `app/src/core/` | ✅ IndexedDB, Auth, Drive, Sync — 119 tests passing |
+| PWA app — Phase 2 | `app/src/core/` | ✅ IndexedDB, Auth, Workers+D1, Sync — 151 tests passing |
 | PWA app — Phase 3 | `app/src/features/` | ✅ Child UI — 6 screens, design system, overlays |
 | PWA app — Phase 4 | `app/src/features/parent/` | ✅ Parent mode — dashboard, task/reward/kid management, bonus/demerit |
-| PWA app — Phase 5 | `app/src/features/onboarding/` | ✅ Onboarding — welcome, family setup, join flow, reconnect Drive |
+| PWA app — Phase 5 | `app/src/features/onboarding/` | ✅ Onboarding — welcome, family setup, join flow |
 | PWA app — Phase 6 | `app/src/core/notifications/` | ✅ Local notifications — scheduling, permission, iOS/Android install banners |
 | PWA app — Phase 7 | `app/src/core/audio/`, `ThemeSwitcher`, Playwright | ✅ Web Audio, theme switcher, install prompts, E2E tests, security ADR |
 
@@ -39,14 +39,14 @@ Open `index.html` directly in a browser. All JSX is inlined, React/Babel load fr
 |---|---|---|
 | UI | **React PWA** | Prototype is already React; zero distribution cost; no $99/yr Apple fee |
 | Local storage | **IndexedDB** (via `idb` wrapper) | On-device cache; app works fully offline |
-| Cloud sync | **Google Drive API** (one JSON file) | Free forever on family's own quota; no server; no vendor DB |
-| Auth | **Google OAuth 2.0** (refresh token, parent only) | One-time sign-in; silent refresh after that |
-| State | **React Context + useReducer** (or Zustand) | Sufficient for this scale; no extra framework needed |
+| Cloud sync | **Cloudflare Workers + D1** | Free tier (100k req/day, 5 GB); no Google account required; credential-based auth |
+| Auth | **Secret token** (32-byte random, `localStorage`) | Generated at family creation; never expires; no OAuth, no sign-in screen |
+| State | **Zustand** | Sufficient for this scale; no extra framework needed |
 | Animations | **CSS animations + Rive** | CSS for confetti/effects; Rive for Jitsu mascot state machine |
 | Notifications | **Web Push API** | Built into browsers; works on Android fully; iOS 16.4+ when installed to home screen |
 | Audio | **Web Audio API** | Built in; zero dependencies |
 
-**No backend server. No database subscription. No deployment pipeline. Nothing to host.**
+**No backend server (Workers is edge functions, not a server). No database subscription. No Google account required. Nothing to host beyond Cloudflare Pages + Workers (both free).**
 
 ---
 
@@ -63,22 +63,22 @@ Open `index.html` directly in a browser. All JSX is inlined, React/Babel load fr
                │  background sync
                │  (on app open + periodic + on change)
 ┌──────────────▼──────────────────────┐
-│  Google Drive  (family's account)   │  ← one JSON file: jitsu-points.json
-│  Single source of truth             │  ← ~few KB, never fills quota
-│  Free on family's existing quota    │
+│  Cloudflare Worker + D1             │  ← REST API; one JSON blob per family row
+│  Single source of truth             │  ← ~few KB, free tier is enormous
+│  Free on Cloudflare's infrastructure│
 └─────────────────────────────────────┘
 ```
 
 ### Sync behaviour
 
-- **App open** → pull latest from Drive → merge into IndexedDB
-- **Data change** → write to IndexedDB immediately → push to Drive (debounced 2s)
+- **App open** → pull latest from Worker → merge into IndexedDB
+- **Data change** → write to IndexedDB immediately → push to Worker (debounced 2s)
 - **No internet** → write to IndexedDB, flag as dirty → sync when connection returns
 - **Conflict** → last-write-wins per field using timestamps (sufficient for a family app)
 
-### The Drive file
+### The family record
 
-One file: `jitsu-points.json` in the app's Drive folder. Contains the full app state:
+One D1 row per family. The `data` column holds the full family JSON blob:
 
 ```json
 {
@@ -100,32 +100,32 @@ One file: `jitsu-points.json` in the app's Drive folder. Contains the full app s
 
 ## Auth Model
 
-### Google OAuth — parent only
+### Credential token — no Google required
 
-Children never see a sign-in screen. Google auth is entirely the parent's concern.
+Nobody sees a sign-in screen. Authentication is invisible.
 
 **Token behaviour:**
-- Parent signs in once → Google issues an **access token** (1hr) + **refresh token** (persistent)
-- Refresh token stored in `localStorage` on that device
-- Every app open: silent token refresh in background (< 1 second, invisible)
-- Children interact only with IndexedDB — never blocked by auth state
+- Family creation → Worker generates a random 32-byte `secret` → stored in `localStorage` as `jitsu-creds: { familyId, secret }`
+- Every app open: `hydrate()` reads credentials instantly from `localStorage` → status `'connected'` immediately
+- No expiry, no refresh, no OAuth dance
+- Children interact only with IndexedDB — never blocked by any auth state
 
-**When re-authentication is needed (rare):**
+**When credentials are lost (rare):**
 
 | Trigger | Action |
 |---|---|
-| App unused > 6 months | Parent sees "Reconnect Drive" prompt; one tap fixes it |
-| Parent revokes access manually | Intentional — parent re-connects in settings |
-| Browser/PWA data cleared | Parent re-connects; family data restored from Drive |
+| Browser/PWA data cleared | Use "Reset / Switch family" → re-join with join code |
+| New device | Enter join code → Worker returns credentials for that device |
+| Intentional reset | "🔄 Reset / Switch family" button in Parent Dashboard → wipes IndexedDB + localStorage |
 
-**Children are never affected by any of the above.** They continue using the local IndexedDB cache. The "Reconnect Drive" prompt only appears in Parent Mode.
+**Children are never affected.** They always read from the local IndexedDB cache.
 
 ### Multi-device join flow
 
-1. Parent sets up on their phone (signs into Google, creates family)
-2. Drive file created — join code generated (e.g. `TIGER-42`)
-3. On each additional device: open the PWA → enter join code → sign into Google (parent does this once on the device)
-4. Device downloads the Drive file into its IndexedDB
+1. Parent sets up on their phone — family created on Worker, credentials saved to `localStorage`
+2. Join code generated (e.g. `TIGER-42`) — displayed at end of setup
+3. On each additional device: open the PWA → "Join our family" → enter join code
+4. Worker returns `familyId + secret + full family JSON` → device seeds its IndexedDB
 5. Child just taps their avatar from then on — no auth, ever
 
 ---
@@ -137,13 +137,10 @@ Children never see a sign-in screen. Google auth is entirely the parent's concer
 ```
 1. Open PWA → "Welcome to Jitsu Points"
 2. Tap "Set up our family"
-3. Google Sign-In popup (10–60 seconds, once only)
-   → Grant: "See, edit, create files in your Google Drive"
-4. Enter family name
-5. Create first child profile (name + avatar)
-6. Optionally add more children
-7. View join code ("TIGER-42") — share with other devices
-8. → Parent dashboard
+3. Enter family name + first child profile (name + avatar)
+4. App creates family on Worker (instant, no sign-in)
+5. View join code ("TIGER-42") — share with other devices
+6. → Parent dashboard
 ```
 
 ### Adding a device (child's tablet, second parent)
@@ -152,16 +149,15 @@ Children never see a sign-in screen. Google auth is entirely the parent's concer
 1. Open PWA → "Welcome to Jitsu Points"
 2. Tap "Join our family"
 3. Enter join code
-4. Google Sign-In (parent enters credentials on this device, once)
-5. App syncs family data from Drive
-6. → Profile picker (child taps their avatar)
+4. App fetches family data + credentials from Worker
+5. → Profile picker (child taps their avatar)
 ```
 
 ### Subsequent opens (everyone)
 
 ```
-Children:   tap avatar → straight into app  (no auth, no wait)
-Parents:    tap "Parent Mode" → straight in  (silent token refresh, invisible)
+Children:   tap avatar → straight into app  (reads IndexedDB, no auth)
+Parents:    tap "Parent Mode" → straight in  (credentials already in localStorage)
 ```
 
 ---
@@ -181,7 +177,7 @@ Parents:    tap "Parent Mode" → straight in  (silent token refresh, invisible)
 
 - **Zero infrastructure cost** — no servers, no paid APIs; data lives in family's own Google Drive
 - **Children never blocked by auth** — IndexedDB cache means the app always works
-- **No PII transmitted** — names/data go only to the family's own Drive; no third-party analytics
+- **No PII transmitted** — names/data go only to the family's own Worker/D1; no third-party analytics
 - **No level/XP decrease** — current points can go down; lifetime XP and level never do
 - **Child safety first** — demerits must feel calm and corrective, never shaming
 
@@ -206,13 +202,14 @@ Parents:    tap "Parent Mode" → straight in  (silent token refresh, invisible)
 {
   "id": "uuid",
   "title": "Brush Teeth",
-  "icon": "toothbrush",
+  "icon": "🦷",
   "points": 5,
   "allowEarlyCompletion": false,
   "requiresPhoto": false,
-  "assignedChildId": "child_uuid"
+  "assignedChildIds": ["child_uuid_1", "child_uuid_2"]
 }
 ```
+> `assignedChildIds` is an array — one task can be assigned to multiple children simultaneously. One `TaskInstance` is generated per child per schedule per day.
 
 ### TaskSchedule
 One template generates multiple scheduled instances (e.g. "Brush Teeth – Morning" and "Brush Teeth – Evening").
@@ -224,7 +221,7 @@ One template generates multiple scheduled instances (e.g. "Brush Teeth – Morni
   "startTime": "07:00",
   "endTime": "09:00",
   "reminderTime": "06:45",
-  "recurrence": "daily"
+  "recurrence": { "type": "daily" }
 }
 ```
 

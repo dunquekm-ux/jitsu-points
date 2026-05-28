@@ -272,6 +272,52 @@ Synthesize all sounds at runtime using the Web Audio API. Three synthesized tone
 
 ---
 
+## ADR-016 — Replace Google Drive + OAuth with Cloudflare Workers + D1
+
+**Date:** 2026-05-27  
+**Status:** Accepted
+
+**Context:**  
+Google OAuth 2.0 required parent sign-in on every device, token refresh management, the GIS script, and `drive.file` scope consent. In practice this created real friction: tokens expired silently, the GIS library was a CDN dependency, and the reconnect flow confused users. The zero-cost constraint ruled out most alternatives.
+
+**Decision:**  
+Replace Google Drive sync and OAuth entirely with:
+- A **Cloudflare Worker** (`worker/`) — 4-route REST API (`POST /families`, `GET /families/join/:code`, `GET /families/:id`, `PUT /families/:id`)
+- A **Cloudflare D1** SQLite database — one table: `families(id, join_code, secret, data, updated_at)`
+- **Credential model**: random 32-byte secret generated at family creation; stored in `localStorage`; sent as `Bearer` token on writes. No expiry. No OAuth. No Google account required.
+
+Cloudflare Workers + D1 are free on the Workers free plan (100k requests/day, 5 GB D1 storage) — well within zero-cost constraints for a family app.
+
+**Consequences:**
+- Parents never see a sign-in screen. Family creation is instant (no OAuth popup).
+- Credentials are valid forever — no reconnect banner, no silent token refresh.
+- Multi-device join still works: enter join code → device receives familyId + secret → syncs data.
+- Google account no longer required for any user.
+- Local-only mode remains supported when `VITE_WORKER_URL` is not set (dev/offline).
+- Data leaves the family's own Google account and now lives on Cloudflare's infrastructure — acceptable trade-off given the simplicity gained and the zero-PII design (names/data are stored, but no Google identity is linked).
+- `core/drive/` and `core/auth/gis.ts` deleted; `core/api/` added.
+
+---
+
+## ADR-017 — Multi-child task assignment (`assignedChildIds: string[]`)
+
+**Date:** 2026-05-27  
+**Status:** Accepted
+
+**Context:**  
+`TaskTemplate` originally had `assignedChildId: string` — a single child per template. Parents wanted to assign the same task (e.g. "Tidy Up Room") to multiple children simultaneously without duplicating the template.
+
+**Decision:**  
+Change `TaskTemplate.assignedChildId: UUID` → `assignedChildIds: UUID[]`. `generateInstances` now loops over all assigned children, generating one `TaskInstance` per child per schedule per day. `validateDriveFile` includes backward-compat coercion: if a Drive file has the old singular field, it is wrapped in an array automatically.
+
+**Consequences:**
+- Parents can assign a task to any subset of children in one action.
+- Instance count scales with assigned children — no data structure change needed.
+- Old IndexedDB records (pre-migration devices) required a runtime coercion in `load()` (see DEF-012).
+- Task form shows a multi-select checkbox list instead of a single dropdown.
+
+---
+
 ## ADR-015 — Security posture review (Phase 7)
 
 **Date:** 2026-05-24  

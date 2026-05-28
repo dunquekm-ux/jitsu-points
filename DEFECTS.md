@@ -262,6 +262,48 @@ The 2026.05.26.2 `preserveLocalOrphans` fix was technically correct but added co
 
 ---
 
+## DEF-013 — Task counter and task list are out of sync for a child
+
+**Severity:** Medium  
+**Screen:** HomeScreen (`/child/:childId`)  
+**Status:** 🔍 Open — investigation scheduled for next session
+
+**Steps to reproduce:**
+1. Open app as Child 2 in the Test22 family
+2. Home screen shows only 1 task card in the list
+3. The counter in the top-left reads `1/5` — implying 5 tasks are expected but only 1is visible
+
+**Observed:** Task list shows 1 task; progress counter shows 1/5.
+
+**Suspected areas:**
+- `generateInstances` may be generating instances for all assigned children but `selectTodaysTasks` or the `HomeScreen` filter may be excluding some (wrong `childId` match, wrong date, wrong state filter)
+- Instances may have been generated with a stale `childId` from the old `assignedChildId` (singular) field before the migration fix — child assignment on stored templates may not match the correct child profile ID
+- The counter and the list may be filtering on different criteria
+
+**Next step:** Inspect IndexedDB task instances for Child 2 on Test22 to see what `childId` values are stored vs. what the profile ID actually is.
+
+---
+
+## DEF-012 — Blank screen (loading 🥷 never resolves) after domain model migration
+
+**Severity:** Critical  
+**Screen:** App-wide — stuck on ProfilePicker loading state  
+**Status:** ✅ Closed — Fixed in build 2026.05.27.2
+
+**Steps to reproduce:**
+1. Deploy build that changes `TaskTemplate.assignedChildId` (string) → `assignedChildIds` (string[])
+2. Open app on a device that already has family data in IndexedDB (e.g. laptop)
+3. App shows the 🥷 loading emoji and never progresses
+
+**Root cause:**
+`load()` in `appStore.ts` calls `generateInstances(template, schedule, ...)` for each stored template. `generateInstances` does `for (const childId of template.assignedChildIds)`. Old IndexedDB records stored `assignedChildId` (singular string); the field `assignedChildIds` was `undefined` on these records. `for...of undefined` throws `TypeError: undefined is not iterable`. The error propagated out of the uncaught `async load()` call, so `isLoaded` was never set to `true`. ProfilePicker's `if (!isLoaded)` branch returned the loading state forever.
+
+**Fix:**
+- `load()` now maps over raw templates from IndexedDB: if `assignedChildIds` is not an array, it coerces from the old `assignedChildId` field (or defaults to `[]`), and re-persists the healed record via `db.taskTemplates.put(healed)` (best-effort, runs once).
+- Entire `load()` body wrapped in `try/catch`: on any thrown error, sets `{ isLoaded: true, hasFamilyData: false }` so the user is redirected to the welcome screen rather than hanging on the loading state.
+
+---
+
 ## DEF-007 — Scroll / swipe still not working on some screens
 
 **Severity:** High  

@@ -5,6 +5,30 @@
 
 ---
 
+## 2026.05.27.2 — Data migration fix + onboarding scroll + CI clean-up
+
+**Phase:** Post-launch
+
+**What's in this build:**
+
+- **DEF-012 closed — blank screen after domain model migration**
+  - Devices that had old IndexedDB records with `assignedChildId` (singular string) crashed silently inside `load()` when `generateInstances` tried to iterate `template.assignedChildIds` (now an array). `isLoaded` never became `true`, leaving the 🥷 loading screen permanently.
+  - `load()` now coerces old records to the array format and re-persists the healed template (migration runs once, self-healing).
+  - `load()` is now wrapped in `try/catch` — any future load failure sets `isLoaded: true, hasFamilyData: false` so the user lands on the welcome screen instead of hanging.
+
+- **Onboarding scroll fixed (DEF-007 pattern)**
+  - `WelcomeScreen`, `FamilySetup`, `JoinFamily`, `ProfilePicker` all used `min-height: 100%` on `.screen` — the same root cause as DEF-007. Changed to `height: 100%` so `overflow-y: auto` triggers correctly on long content.
+
+- **CI type errors resolved**
+  - `queries.test.ts`: `createTaskTemplate('Brush Teeth', 5, 'child-1')` → `(['child-1'])` (string[])
+  - `demoData.ts`: all 5 `createTaskTemplate` calls updated to array form (committed from previous session)
+
+- **Prettier formatting fix** — try/catch body in `load()` was not indented; format check was failing CI.
+
+**Tests:** 151 passing
+
+---
+
 ## 2026.05.27.1 — Replace Google Drive sync with Cloudflare Workers + D1
 
 **Phase:** Post-launch
