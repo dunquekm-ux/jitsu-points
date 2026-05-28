@@ -44,7 +44,7 @@ jobs:
       - name: Build
         env:
           VITE_BUILD_NUMBER: ${{ github.run_number }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_WORKER_URL: ${{ secrets.VITE_WORKER_URL }}
         run: npm run build
 
       # Upload the dist/ folder so the deploy job can use it without rebuilding
