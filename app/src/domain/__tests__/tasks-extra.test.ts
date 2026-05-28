@@ -47,7 +47,7 @@ function makeTemplate(overrides: Partial<TaskTemplate> = {}): TaskTemplate {
     points: 5,
     allowEarlyCompletion: false,
     requiresPhoto: false,
-    assignedChildId: 'child-1',
+    assignedChildIds: ['child-1'],
     ...overrides,
   };
 }

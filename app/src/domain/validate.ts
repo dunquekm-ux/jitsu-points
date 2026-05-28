@@ -102,7 +102,12 @@ function validateTaskTemplate(raw: unknown, idx: number): TaskTemplate {
       `taskTemplates[${idx}].allowEarlyCompletion`,
     ),
     requiresPhoto: isBoolean(o.requiresPhoto, `taskTemplates[${idx}].requiresPhoto`),
-    assignedChildId: isString(o.assignedChildId, `taskTemplates[${idx}].assignedChildId`),
+    // Backward compat: old Drive files stored assignedChildId (string); new format is assignedChildIds (string[])
+    assignedChildIds: Array.isArray(o.assignedChildIds)
+      ? (o.assignedChildIds as unknown[]).filter((x): x is string => typeof x === 'string')
+      : typeof o.assignedChildId === 'string'
+        ? [o.assignedChildId]
+        : [],
   };
 }
 

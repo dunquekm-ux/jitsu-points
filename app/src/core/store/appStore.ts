@@ -52,7 +52,7 @@ export interface NewTaskData {
   title: string;
   icon: string;
   points: number;
-  assignedChildId: string;
+  assignedChildIds: string[];
   allowEarlyCompletion: boolean;
   schedules: ScheduleSlot[];
 }
@@ -382,7 +382,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   // ─── createTask ───────────────────────────────────────────────────────────
 
   createTask: async (data) => {
-    const template = createTaskTemplate(data.title, data.points, data.assignedChildId, {
+    const template = createTaskTemplate(data.title, data.points, data.assignedChildIds, {
       icon: data.icon,
       allowEarlyCompletion: data.allowEarlyCompletion,
     });
@@ -416,7 +416,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       title: data.title,
       icon: data.icon,
       points: data.points,
-      assignedChildId: data.assignedChildId,
+      assignedChildIds: data.assignedChildIds,
       allowEarlyCompletion: data.allowEarlyCompletion,
     };
     const oldSchedules = Object.values(get().taskSchedules).filter(

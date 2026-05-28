@@ -25,7 +25,7 @@ function makeValidFile(overrides: Partial<JitsuDriveFile> = {}): unknown {
         points: 5,
         allowEarlyCompletion: false,
         requiresPhoto: false,
-        assignedChildId: 'child-1',
+        assignedChildIds: ['child-1'],
       },
     ],
     taskSchedules: [

@@ -13,7 +13,78 @@ const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as const;
 
-const ICON_PRESETS = ['📚', '🦷', '🛏️', '🐶', '🧹', '🍽️', '🏃', '🎵', '📖', '🌱', '🚿', '👟'];
+const ICON_PRESETS = [
+  // Morning / hygiene
+  '🦷',
+  '🚿',
+  '🛁',
+  '🪥',
+  '🧴',
+  '👕',
+  '👟',
+  '🧦',
+  // School / learning
+  '📚',
+  '📖',
+  '✏️',
+  '🎒',
+  '🖊️',
+  '📐',
+  '🔬',
+  '🧮',
+  // Chores / home
+  '🧹',
+  '🧺',
+  '🍽️',
+  '🧽',
+  '🗑️',
+  '🛏️',
+  '🪣',
+  '🪴',
+  // Exercise / play
+  '🏃',
+  '🚲',
+  '⚽',
+  '🏊',
+  '🤸',
+  '🎾',
+  '🏋️',
+  '🧘',
+  // Pets
+  '🐶',
+  '🐱',
+  '🐾',
+  '🐠',
+  // Food / health
+  '🍎',
+  '🥦',
+  '🥕',
+  '🍳',
+  '💊',
+  '🥛',
+  // Creative
+  '🎵',
+  '🎨',
+  '📝',
+  '🎭',
+  '🎸',
+  // Bedtime / rest
+  '😴',
+  '🌙',
+  '⏰',
+  '📵',
+  // Nature / outside
+  '🌱',
+  '🌳',
+  '🌻',
+  '☀️',
+  // Achievement
+  '⭐',
+  '🏆',
+  '💪',
+  '🌟',
+  '🤝',
+];
 
 // Local form type — adds UI-only fields that get stripped before saving
 interface FormSlot {
@@ -69,8 +140,9 @@ export default function TaskFormScreen() {
   // Form state
   const [title, setTitle] = useState('');
   const [icon, setIcon] = useState('📋');
+  const [iconInputVal, setIconInputVal] = useState(''); // separate from preset selection
   const [points, setPoints] = useState(10);
-  const [assignedChildId, setAssignedChildId] = useState('');
+  const [assignedChildIds, setAssignedChildIds] = useState<string[]>([]);
   const [allowEarlyCompletion, setAllowEarlyCompletion] = useState(false);
   const [slots, setSlots] = useState<FormSlot[]>([defaultSlot()]);
   const [saving, setSaving] = useState(false);
@@ -90,9 +162,17 @@ export default function TaskFormScreen() {
         return;
       }
       setTitle(t.title);
-      setIcon(t.icon || '📋');
+      // If saved icon is a preset, select it in the grid (clear the text box).
+      // If it's a custom emoji, put it in the text box instead.
+      if (ICON_PRESETS.includes(t.icon)) {
+        setIcon(t.icon);
+        setIconInputVal('');
+      } else {
+        setIcon(t.icon || '📋');
+        setIconInputVal(t.icon || '');
+      }
       setPoints(t.points);
-      setAssignedChildId(t.assignedChildId);
+      setAssignedChildIds(t.assignedChildIds ?? []);
       setAllowEarlyCompletion(t.allowEarlyCompletion);
       const schedList = Object.values(taskSchedules).filter((s) => s.taskTemplateId === templateId);
       if (schedList.length > 0) {
@@ -107,8 +187,10 @@ export default function TaskFormScreen() {
           })),
         );
       }
-    } else if (!isEdit && profiles.length > 0 && !assignedChildId) {
-      setAssignedChildId(profiles[0].id);
+    } else if (!isEdit && profiles.length > 0 && assignedChildIds.length === 0) {
+      // Pre-select all children for new tasks when there's only one child;
+      // leave unchecked otherwise so the parent makes an explicit choice.
+      if (profiles.length === 1) setAssignedChildIds([profiles[0].id]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, templateId, isLoaded]);
@@ -166,7 +248,7 @@ export default function TaskFormScreen() {
   }
 
   async function handleSave() {
-    if (!title.trim() || !assignedChildId || slots.length === 0) return;
+    if (!title.trim() || assignedChildIds.length === 0 || slots.length === 0) return;
 
     // Validate: for non-all-day slots, end time must be strictly after start time
     const invalid = slots.find((s) => !s.allDay && s.startTime >= s.endTime);
@@ -182,7 +264,7 @@ export default function TaskFormScreen() {
       title: title.trim(),
       icon,
       points,
-      assignedChildId,
+      assignedChildIds,
       allowEarlyCompletion,
       schedules: slots.map(toScheduleSlot),
     };
@@ -206,7 +288,11 @@ export default function TaskFormScreen() {
   }
 
   const canSave =
-    title.trim().length > 0 && assignedChildId && slots.length > 0 && !saving && !isOffline;
+    title.trim().length > 0 &&
+    assignedChildIds.length > 0 &&
+    slots.length > 0 &&
+    !saving &&
+    !isOffline;
 
   return (
     <div className={styles.screen}>
@@ -227,13 +313,24 @@ export default function TaskFormScreen() {
         {/* Icon picker */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Icon</label>
+          <p className={styles.fieldHint}>Tap to select · or type any emoji below (1 emoji max)</p>
+          <div className={styles.iconPreviewRow}>
+            <span className={styles.iconPreview}>{icon}</span>
+            <span className={styles.iconPreviewLabel}>Selected</span>
+          </div>
           <div className={styles.iconGrid}>
             {ICON_PRESETS.map((e) => (
               <button
                 key={e}
                 type="button"
-                className={[styles.iconBtn, icon === e ? styles.iconSelected : ''].join(' ')}
-                onClick={() => setIcon(e)}
+                className={[
+                  styles.iconBtn,
+                  icon === e && !iconInputVal ? styles.iconSelected : '',
+                ].join(' ')}
+                onClick={() => {
+                  setIcon(e);
+                  setIconInputVal(''); // clear custom input when preset chosen
+                }}
               >
                 {e}
               </button>
@@ -241,9 +338,14 @@ export default function TaskFormScreen() {
           </div>
           <input
             className={styles.input}
-            placeholder="Or type any emoji…"
-            value={icon}
-            onChange={(e) => setIcon(e.target.value)}
+            placeholder="Custom emoji (e.g. 🎯)"
+            value={iconInputVal}
+            onChange={(e) => {
+              const val = e.target.value;
+              setIconInputVal(val);
+              // Use the custom value as the icon if non-empty, else fall back to first preset
+              setIcon(val.trim() || ICON_PRESETS[0]);
+            }}
             maxLength={4}
           />
         </div>
@@ -285,21 +387,38 @@ export default function TaskFormScreen() {
           />
         </div>
 
-        {/* Assign to child */}
+        {/* Assign to children */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Assign to</label>
-          <select
-            className={styles.select}
-            value={assignedChildId}
-            onChange={(e) => setAssignedChildId(e.target.value)}
-          >
-            <option value="">— choose a child —</option>
-            {profiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          <p className={styles.fieldHint}>Select one or more children</p>
+          <div className={styles.childCheckList}>
+            {profiles.map((p) => {
+              const checked = assignedChildIds.includes(p.id);
+              return (
+                <label
+                  key={p.id}
+                  className={[styles.childCheckItem, checked ? styles.childCheckItemOn : ''].join(
+                    ' ',
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.childCheckbox}
+                    checked={checked}
+                    onChange={(e) => {
+                      setAssignedChildIds((prev) =>
+                        e.target.checked ? [...prev, p.id] : prev.filter((id) => id !== p.id),
+                      );
+                    }}
+                  />
+                  <span className={styles.childCheckName}>{p.name}</span>
+                </label>
+              );
+            })}
+          </div>
+          {assignedChildIds.length === 0 && (
+            <p className={styles.fieldError}>Select at least one child</p>
+          )}
         </div>
 
         {/* Allow early completion */}

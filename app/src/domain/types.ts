@@ -40,7 +40,7 @@ export interface TaskTemplate {
   points: number; // Must be > 0
   allowEarlyCompletion: boolean; // Default: false
   requiresPhoto: boolean; // Default: false
-  assignedChildId: UUID;
+  assignedChildIds: UUID[]; // one or more children; replaces singular assignedChildId
 }
 
 // 0 = Sunday … 6 = Saturday (matches Date.getDay())

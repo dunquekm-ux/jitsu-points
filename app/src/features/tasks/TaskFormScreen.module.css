@@ -108,19 +108,46 @@
   border-color: var(--color-primary);
 }
 
+/* Field hint + error */
+.fieldHint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+.fieldError {
+  font-size: var(--font-size-xs);
+  color: var(--color-state-missed);
+  margin: 0;
+}
+
 /* Icon picker */
-.iconGrid {
+.iconPreviewRow {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
+}
+.iconPreview {
+  font-size: 36px;
+  line-height: 1;
+}
+.iconPreviewLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.iconGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--space-1);
 }
 .iconBtn {
   background: var(--color-bg-card);
   border: 2px solid transparent;
   border-radius: var(--radius-md);
-  width: 44px;
-  height: 44px;
-  font-size: 22px;
+  width: 100%;
+  aspect-ratio: 1;
+  font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -133,6 +160,41 @@
 .iconSelected {
   border-color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-card));
+}
+
+/* Child multi-select */
+.childCheckList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.childCheckItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-bg-card);
+  border: 2px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: border-color var(--duration-fast);
+}
+.childCheckItemOn {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-card));
+}
+.childCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.childCheckName {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
 }
 
 /* Points chips */

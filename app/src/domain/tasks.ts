@@ -132,32 +132,38 @@ export function generateInstances(
   existing: TaskInstance[],
   now: Date,
 ): TaskInstance[] {
-  // Build a set of dates that already have an instance for this schedule
-  const existingKeys = new Set(
-    existing
-      .filter((i) => i.scheduleId === schedule.id && i.templateId === template.id)
-      .map((i) => i.date),
-  );
-
   const newInstances: TaskInstance[] = [];
 
-  for (const date of dates) {
-    if (existingKeys.has(date)) continue;
-    if (!matchesRecurrence(date, schedule.recurrence)) continue;
+  // Generate one instance per assigned child × per date
+  for (const childId of template.assignedChildIds) {
+    // Build a set of dates already covered for this schedule+child combo
+    const existingKeys = new Set(
+      existing
+        .filter(
+          (i) =>
+            i.scheduleId === schedule.id && i.templateId === template.id && i.childId === childId,
+        )
+        .map((i) => i.date),
+    );
 
-    const inst: TaskInstance = {
-      id: generateId(),
-      templateId: template.id,
-      scheduleId: schedule.id,
-      childId: template.assignedChildId,
-      date,
-      state: 'locked', // will be resolved below
-      completedAt: null,
-      selfiePhotoPath: null,
-    };
+    for (const date of dates) {
+      if (existingKeys.has(date)) continue;
+      if (!matchesRecurrence(date, schedule.recurrence)) continue;
 
-    inst.state = resolveTaskState(inst, schedule, now);
-    newInstances.push(inst);
+      const inst: TaskInstance = {
+        id: generateId(),
+        templateId: template.id,
+        scheduleId: schedule.id,
+        childId,
+        date,
+        state: 'locked', // will be resolved below
+        completedAt: null,
+        selfiePhotoPath: null,
+      };
+
+      inst.state = resolveTaskState(inst, schedule, now);
+      newInstances.push(inst);
+    }
   }
 
   return newInstances;

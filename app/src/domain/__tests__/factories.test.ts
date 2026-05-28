@@ -35,10 +35,10 @@ describe('createProfile', () => {
 
 describe('createTaskTemplate', () => {
   it('creates a template with correct defaults', () => {
-    const t = createTaskTemplate('Brush Teeth', 5, 'child-1');
+    const t = createTaskTemplate('Brush Teeth', 5, ['child-1']);
     expect(t.title).toBe('Brush Teeth');
     expect(t.points).toBe(5);
-    expect(t.assignedChildId).toBe('child-1');
+    expect(t.assignedChildIds).toEqual(['child-1']);
     expect(t.allowEarlyCompletion).toBe(false);
     expect(t.requiresPhoto).toBe(false);
   });

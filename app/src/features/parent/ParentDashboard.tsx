@@ -216,7 +216,11 @@ export default function ParentDashboard() {
                 const schedCount = Object.values(taskSchedules).filter(
                   (s) => s.taskTemplateId === t.id,
                 ).length;
-                const assignee = profiles.find((p) => p.id === t.assignedChildId);
+                const assigneeNames =
+                  t.assignedChildIds
+                    .map((id) => profiles.find((p) => p.id === id)?.name)
+                    .filter(Boolean)
+                    .join(', ') || '?';
                 return (
                   <div key={t.id} className={styles.taskRow}>
                     <span className={styles.taskIcon}>{t.icon || '📋'}</span>
@@ -224,7 +228,7 @@ export default function ParentDashboard() {
                       <span className={styles.taskTitle}>{t.title}</span>
                       <span className={styles.taskMeta}>
                         ⭐ {t.points} · {schedCount} schedule{schedCount !== 1 ? 's' : ''} ·{' '}
-                        {assignee?.name ?? '?'}
+                        {assigneeNames}
                       </span>
                     </div>
                     <button

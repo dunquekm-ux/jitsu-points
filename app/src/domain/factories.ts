@@ -38,17 +38,17 @@ export function createProfile(
 export function createTaskTemplate(
   title: string,
   points: number,
-  assignedChildId: string,
+  assignedChildIds: string[],
   overrides?: Partial<TaskTemplate>,
 ): TaskTemplate {
   return {
     id: generateId(),
     title,
-    icon: 'star',
+    icon: '📋',
     points,
     allowEarlyCompletion: false,
     requiresPhoto: false,
-    assignedChildId,
+    assignedChildIds,
     ...overrides,
   };
 }
