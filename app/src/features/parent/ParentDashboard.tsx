@@ -45,10 +45,12 @@ export default function ParentDashboard() {
     load,
     familyName,
     joinCode,
+    resetFamily,
   } = useAppStore();
   const { status } = useAuthStore();
   const { status: syncStatus, lastSyncedAt, triggerSync } = useSync();
   const [codeCopied, setCodeCopied] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) load();
@@ -64,6 +66,17 @@ export default function ParentDashboard() {
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [load, triggerSync]);
+
+  async function handleReset() {
+    if (
+      window.confirm(
+        'This will remove all local data from this device.\n\nYou can rejoin using your family code from another device.\n\nContinue?',
+      )
+    ) {
+      setResetting(true);
+      await resetFamily(); // navigates away; resetting stays true until page reloads
+    }
+  }
 
   async function copyJoinCode() {
     try {
@@ -251,6 +264,13 @@ export default function ParentDashboard() {
         {/* Settings */}
         <div className={styles.settingsSection}>
           <ThemeSwitcher />
+          <button
+            className={styles.resetBtn}
+            onClick={() => void handleReset()}
+            disabled={resetting}
+          >
+            {resetting ? '⏳ Resetting…' : '🔄 Reset / Switch family'}
+          </button>
         </div>
       </div>
     </div>

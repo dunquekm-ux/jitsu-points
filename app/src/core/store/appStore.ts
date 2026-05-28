@@ -4,12 +4,12 @@
  * Sync (Worker) happens in the background via markDirty/schedulePush.
  */
 import { create } from 'zustand';
-import { db } from '../db';
+import { db, DB_NAME } from '../db';
 import { seedFromDriveFile } from '../db/seed';
 import { markDirty, schedulePush } from '../sync/engine';
 import { useAuthStore } from '../auth/store';
 import { createFamily, fetchByJoinCode } from '../api';
-import { saveCredentials } from '../auth/tokens';
+import { saveCredentials, clearCredentials } from '../auth/tokens';
 import {
   currentPoints,
   lifetimeXp,
@@ -120,6 +120,8 @@ interface AppState {
   // Actions — onboarding (no longer need accessToken params)
   initFamily: (familyName: string, childName: string, childAvatar: AvatarId) => Promise<string>;
   joinFamily: (rawCode: string) => Promise<void>;
+  /** Wipe all local data + credentials and reload to the Welcome screen. */
+  resetFamily: () => Promise<void>;
 
   // Dev helper
   _seedDemo: (file: Parameters<typeof seedFromDriveFile>[0]) => Promise<void>;
@@ -539,21 +541,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     const joinCode = generateJoinCode();
     const driveFile = createFamilyFile(familyName, joinCode, profile);
 
-    // Create on Worker — returns familyId + secret
-    let familyId: string;
-    let secret: string;
-    try {
+    // Create on Worker — returns server-assigned familyId + secret.
+    // If VITE_WORKER_URL is set (production), this MUST succeed — errors surface to the UI.
+    // If not set (local dev), skip and continue with local-only data.
+    let familyId: string = driveFile.familyId;
+    let secret = '';
+
+    if (import.meta.env.VITE_WORKER_URL) {
       const result = await createFamily(driveFile);
       familyId = result.familyId;
       secret = result.secret;
-    } catch (err) {
-      console.warn('[initFamily] Worker unavailable, continuing local-only', err);
-      // Fallback: local-only (no VITE_WORKER_URL or network error)
-      familyId = driveFile.familyId;
-      secret = '';
     }
 
-    // Store credentials
+    // Store credentials (only present when Worker was reached)
     if (secret) {
       const creds = { familyId, secret };
       saveCredentials(creds);
@@ -597,6 +597,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       isDirty: false,
     });
     await get().load();
+  },
+
+  // ─── resetFamily ─────────────────────────────────────────────────────────
+
+  resetFamily: async () => {
+    // Clear credentials from localStorage
+    clearCredentials();
+    useAuthStore.getState().clearAuth();
+    // Wipe entire IndexedDB — simplest full reset, avoids needing clear() per store
+    await indexedDB.deleteDatabase(DB_NAME);
+    // Hard reload: React state resets, ProfilePicker redirects to /welcome
+    window.location.href = '/';
   },
 
   // ─── Dev helper ───────────────────────────────────────────────────────────

@@ -8,7 +8,7 @@ import styles from './FamilySetup.module.css';
 
 const AVATARS = Object.keys(AVATAR_CONFIG) as AvatarId[];
 
-type Step = 'details' | 'done';
+type Step = 'details' | 'error' | 'done';
 
 export default function FamilySetup() {
   const navigate = useNavigate();
@@ -21,18 +21,25 @@ export default function FamilySetup() {
   const [joinCode, setJoinCode] = useState('');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   // ── Create family ─────────────────────────────────────────────────────────
 
   async function handleCreate() {
     if (!familyName.trim() || !childName.trim()) return;
     setSaving(true);
+    setErrorMsg('');
     try {
       const code = await initFamily(familyName.trim(), childName.trim(), childAvatar);
       setJoinCode(code);
       setStep('done');
     } catch (err) {
-      console.error('[FamilySetup] initFamily failed', err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'Could not connect to server. Check your internet and try again.';
+      setErrorMsg(msg);
+      setStep('error');
     } finally {
       setSaving(false);
     }
@@ -63,21 +70,23 @@ export default function FamilySetup() {
         ← Back
       </button>
 
-      {/* Step indicator */}
+      {/* Step indicator — only show for the happy path steps */}
       <div className={styles.steps}>
-        {(['details', 'done'] as Step[]).map((s, i) => (
-          <div
-            key={s}
-            className={[
-              styles.dot,
-              s === step
-                ? styles.dotActive
-                : i < (['details', 'done'] as Step[]).indexOf(step)
-                  ? styles.dotDone
-                  : '',
-            ].join(' ')}
-          />
-        ))}
+        {(['details', 'done'] as const).map((s, i) => {
+          const activeIdx =
+            step === 'error'
+              ? 0
+              : (['details', 'done'] as const).indexOf(step as 'details' | 'done');
+          return (
+            <div
+              key={s}
+              className={[
+                styles.dot,
+                i === activeIdx ? styles.dotActive : i < activeIdx ? styles.dotDone : '',
+              ].join(' ')}
+            />
+          );
+        })}
       </div>
 
       {/* ── Details step ─────────────────────────────────────────────────── */}
@@ -140,6 +149,26 @@ export default function FamilySetup() {
             onClick={handleCreate}
           >
             {saving ? 'Creating…' : '🚀 Create Family!'}
+          </ChunkyButton>
+        </div>
+      )}
+
+      {/* ── Error step ───────────────────────────────────────────────────── */}
+      {step === 'error' && (
+        <div className={styles.card}>
+          <span className={styles.cardIcon}>😕</span>
+          <h1 className={styles.cardTitle}>Couldn't create family</h1>
+          <p className={styles.error}>{errorMsg}</p>
+          <ChunkyButton
+            variant="ghost"
+            size="md"
+            fullWidth
+            onClick={() => {
+              setStep('details');
+              setErrorMsg('');
+            }}
+          >
+            ← Try again
           </ChunkyButton>
         </div>
       )}
