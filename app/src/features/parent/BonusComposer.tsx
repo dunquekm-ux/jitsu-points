@@ -6,7 +6,7 @@ import { useAppStore } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
 import styles from './BonusComposer.module.css';
 
-const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
 
 export default function BonusComposer() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function BonusComposer() {
   const { profiles, addBonus } = useAppStore();
 
   const { status } = useAuthStore();
-  const isOffline = HAS_AUTH && status !== 'authenticated';
+  const isOffline = HAS_WORKER && status !== 'connected';
 
   const preselected = (location.state as { childId?: string } | null)?.childId ?? '';
   const [childId, setChildId] = useState(preselected);

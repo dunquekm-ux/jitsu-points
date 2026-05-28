@@ -8,7 +8,7 @@ import { todayISO } from '../../domain';
 import type { Recurrence, DayOfWeek } from '../../domain';
 import styles from './TaskFormScreen.module.css';
 
-const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as const;
 
@@ -62,7 +62,7 @@ export default function TaskFormScreen() {
   } = useAppStore();
 
   const { status } = useAuthStore();
-  const isOffline = HAS_AUTH && status !== 'authenticated';
+  const isOffline = HAS_WORKER && status !== 'connected';
 
   // Form state
   const [title, setTitle] = useState('');

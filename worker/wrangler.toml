@@ -1,0 +1,10 @@
+name = "jitsu-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# Run `wrangler d1 create jitsu-points` to provision the database,
+# then paste the returned database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "jitsu-points"
+database_id = "placeholder-run-wrangler-d1-create-jitsu-points"

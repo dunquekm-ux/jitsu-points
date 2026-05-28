@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Avatar from '../../shared/components/Avatar';
 import { useAppStore, selectChildPoints } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth/store';
-import { loadGIS, signIn, silentRefresh } from '../../core/auth/gis';
 import { useSync } from '../../core/sync';
 import { calculateStreak, todayISO } from '../../domain';
 import ThemeSwitcher from './ThemeSwitcher';
@@ -32,7 +31,7 @@ const ACTIONS: ActionTile[] = [
   { icon: '😔', label: 'Give Demerit', to: '/parent/demerit', color: 'var(--color-state-missed)' },
 ];
 
-const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
@@ -47,9 +46,8 @@ export default function ParentDashboard() {
     familyName,
     joinCode,
   } = useAppStore();
-  const { status, setTokens } = useAuthStore();
+  const { status } = useAuthStore();
   const { status: syncStatus, lastSyncedAt, triggerSync } = useSync();
-  const [reconnecting, setReconnecting] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
 
   useEffect(() => {
@@ -84,20 +82,6 @@ export default function ParentDashboard() {
     setTimeout(() => setCodeCopied(false), 2000);
   }
 
-  async function handleReconnect() {
-    setReconnecting(true);
-    try {
-      await loadGIS();
-      // Try silent first, fall back to consent
-      const tokens = await silentRefresh().catch(() => signIn());
-      setTokens(tokens);
-    } catch (err) {
-      console.error('[Reconnect]', err);
-    } finally {
-      setReconnecting(false);
-    }
-  }
-
   const today = todayISO();
   const templateList = Object.values(taskTemplates);
 
@@ -117,7 +101,7 @@ export default function ParentDashboard() {
           ← Back
         </button>
         <h1 className={styles.title}>⚙️ Parent Mode</h1>
-        {HAS_AUTH && status === 'authenticated' && (
+        {HAS_WORKER && status === 'connected' && (
           <button
             className={[
               styles.syncChip,
@@ -141,22 +125,13 @@ export default function ParentDashboard() {
       </div>
 
       <div className={styles.body}>
-        {/* Connect / Reconnect Drive banner */}
-        {HAS_AUTH && (status === 'unauthenticated' || status === 'unknown') && (
+        {/* Offline warning */}
+        {HAS_WORKER && syncStatus === 'offline' && (
           <div className={styles.reconnectBanner}>
-            <span className={styles.reconnectIcon}>☁️</span>
+            <span className={styles.reconnectIcon}>📵</span>
             <span className={styles.reconnectText}>
-              {status === 'unknown'
-                ? 'Connect Google Drive to sync across devices'
-                : 'Drive sync paused'}
+              Offline — changes saved locally and will sync when you reconnect
             </span>
-            <button
-              className={styles.reconnectBtn}
-              disabled={reconnecting}
-              onClick={handleReconnect}
-            >
-              {reconnecting ? 'Connecting…' : status === 'unknown' ? 'Connect' : 'Reconnect'}
-            </button>
           </div>
         )}
         {/* Action grid */}

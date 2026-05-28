@@ -1,21 +1,30 @@
 /**
- * Auth Zustand store — global auth state shared across the app.
- * React components subscribe here; never read localStorage directly in components.
+ * Auth Zustand store — global connection state shared across the app.
+ * Replaces the previous Google OAuth store; no tokens to refresh.
+ *
+ * Status:
+ *   'unknown'      — app just started; haven't checked credentials yet
+ *   'connected'    — credentials found in localStorage (family is set up)
+ *   'disconnected' — no credentials (new install or after sign-out)
+ *   'error'        — unexpected failure
  */
 import { create } from 'zustand';
-import { loadTokens, saveTokens, clearTokens, hasValidToken } from './tokens';
-import type { AuthTokens } from './types';
+import { loadCredentials, saveCredentials, clearCredentials } from './tokens';
+import type { FamilyCredentials } from './types';
 
-export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated' | 'refreshing' | 'error';
+export type AuthStatus = 'unknown' | 'connected' | 'disconnected' | 'error';
 
 interface AuthState {
   status: AuthStatus;
-  tokens: AuthTokens | null;
+  familyId: string | null;
+  secret: string | null;
   error: string | null;
 
-  // Actions
+  /** Load credentials from localStorage on app start. */
   hydrate: () => void;
-  setTokens: (tokens: AuthTokens) => void;
+  /** Save credentials and mark as connected (called after create/join family). */
+  setCredentials: (creds: FamilyCredentials) => void;
+  /** Clear credentials and mark as disconnected. */
   clearAuth: () => void;
   setStatus: (status: AuthStatus) => void;
   setError: (error: string | null) => void;
@@ -23,39 +32,40 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   status: 'unknown',
-  tokens: null,
+  familyId: null,
+  secret: null,
   error: null,
 
-  /** Load tokens from localStorage on app start. */
   hydrate: () => {
-    const tokens = loadTokens();
-    if (tokens && hasValidToken()) {
-      set({ status: 'authenticated', tokens, error: null });
+    const creds = loadCredentials();
+    if (creds) {
+      set({ status: 'connected', familyId: creds.familyId, secret: creds.secret, error: null });
     } else {
-      set({ status: 'unauthenticated', tokens: null, error: null });
+      set({ status: 'disconnected', familyId: null, secret: null, error: null });
     }
   },
 
-  setTokens: (tokens: AuthTokens) => {
-    saveTokens(tokens);
-    set({ status: 'authenticated', tokens, error: null });
+  setCredentials: (creds: FamilyCredentials) => {
+    saveCredentials(creds);
+    set({ status: 'connected', familyId: creds.familyId, secret: creds.secret, error: null });
   },
 
   clearAuth: () => {
-    clearTokens();
-    set({ status: 'unauthenticated', tokens: null, error: null });
+    clearCredentials();
+    set({ status: 'disconnected', familyId: null, secret: null, error: null });
   },
 
   setStatus: (status: AuthStatus) => set({ status }),
   setError: (error: string | null) => set({ error }),
 }));
 
-/** Convenience selector — true if there's a valid access token. */
+/** True if family credentials are present. */
 export function selectIsAuthenticated(state: AuthState): boolean {
-  return state.status === 'authenticated' && state.tokens !== null;
+  return state.status === 'connected';
 }
 
-/** Convenience selector — the current access token, or null. */
-export function selectAccessToken(state: AuthState): string | null {
-  return state.tokens?.accessToken ?? null;
+/** Returns { familyId, secret } or null — used by the sync engine. */
+export function selectCredentials(state: AuthState): { familyId: string; secret: string } | null {
+  if (state.status !== 'connected' || !state.familyId || !state.secret) return null;
+  return { familyId: state.familyId, secret: state.secret };
 }

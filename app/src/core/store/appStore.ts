@@ -1,14 +1,15 @@
 /**
  * Global app store — the single source of state for the child experience.
  * Loads from IndexedDB on open, writes back on every mutation.
- * Sync (Drive) happens in the background via markDirty/schedulePush.
+ * Sync (Worker) happens in the background via markDirty/schedulePush.
  */
 import { create } from 'zustand';
 import { db } from '../db';
 import { seedFromDriveFile } from '../db/seed';
 import { markDirty, schedulePush } from '../sync/engine';
 import { useAuthStore } from '../auth/store';
-import { pushDriveFile, pullDriveFile } from '../drive';
+import { createFamily, fetchByJoinCode, pushFamily } from '../api';
+import { saveCredentials } from '../auth/tokens';
 import {
   currentPoints,
   lifetimeXp,
@@ -22,9 +23,8 @@ import {
   createReward,
   createProfile,
   createFamilyFile,
-  generateJoinCode,
   normaliseJoinCode,
-  dateRange,
+  generateJoinCode,
   todayISO,
 } from '../../domain';
 import type {
@@ -117,14 +117,9 @@ interface AppState {
   updateChild: (childId: string, changes: Partial<ChildProfile>) => Promise<void>;
   deleteChild: (childId: string) => Promise<void>;
 
-  // Actions — onboarding
-  initFamily: (
-    familyName: string,
-    childName: string,
-    childAvatar: AvatarId,
-    accessToken: string,
-  ) => Promise<string>;
-  joinFamily: (rawCode: string, accessToken: string) => Promise<void>;
+  // Actions — onboarding (no longer need accessToken params)
+  initFamily: (familyName: string, childName: string, childAvatar: AvatarId) => Promise<string>;
+  joinFamily: (rawCode: string) => Promise<void>;
 
   // Dev helper
   _seedDemo: (file: Parameters<typeof seedFromDriveFile>[0]) => Promise<void>;
@@ -133,6 +128,21 @@ interface AppState {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const STREAK_WINDOW_DAYS = 30;
+const LOOKAHEAD_DAYS = 14;
+
+/** Build the date window: past 30 days + next 14 days. */
+function buildDateWindow(today: string): string[] {
+  const [y, m, d] = today.split('-').map(Number);
+  const base = new Date(y, m - 1, d);
+  const dates: string[] = [];
+  for (let i = -(STREAK_WINDOW_DAYS - 1); i <= LOOKAHEAD_DAYS; i++) {
+    const dt = new Date(base);
+    dt.setDate(dt.getDate() + i);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    dates.push(`${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`);
+  }
+  return dates;
+}
 
 async function flushToDB(
   newInstances: TaskInstance[],
@@ -145,8 +155,7 @@ async function flushToDB(
     ...updatedInstances.map((i) => db.taskInstances.put(i)),
   ]);
   await markDirty();
-  const token = useAuthStore.getState().tokens?.accessToken;
-  if (token) schedulePush(token);
+  schedulePush(); // no token argument — credentials read from auth store inside engine
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -174,7 +183,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   load: async () => {
     const now = new Date();
     const today = todayISO();
-    const window = dateRange(today, STREAK_WINDOW_DAYS);
+    const window = buildDateWindow(today);
 
     // Load everything from DB in parallel
     const [
@@ -202,7 +211,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const scheduleMap: Record<string, TaskSchedule> = {};
     for (const s of schedulesList) scheduleMap[s.id] = s;
 
-    // Generate missing instances for the streak window
+    // Generate missing instances for the full window (past + future)
     const newInstances: TaskInstance[] = [];
     for (const template of templatesList) {
       const schedules = schedulesList.filter((s) => s.taskTemplateId === template.id);
@@ -384,8 +393,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await db.taskTemplates.put(template);
     await Promise.all(schedules.map((s) => db.taskSchedules.put(s)));
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({
       taskTemplates: { ...s.taskTemplates, [template.id]: template },
       taskSchedules: {
@@ -409,7 +417,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       assignedChildId: data.assignedChildId,
       allowEarlyCompletion: data.allowEarlyCompletion,
     };
-    // Delete old schedules for this template
     const oldSchedules = Object.values(get().taskSchedules).filter(
       (s) => s.taskTemplateId === templateId,
     );
@@ -423,8 +430,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     );
     await Promise.all(newSchedules.map((s) => db.taskSchedules.put(s)));
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     const newSchedMap = { ...get().taskSchedules };
     for (const s of oldSchedules) delete newSchedMap[s.id];
     for (const s of newSchedules) newSchedMap[s.id] = s;
@@ -443,8 +449,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await db.taskTemplates.delete(templateId);
     await Promise.all(schedules.map((s) => db.taskSchedules.delete(s.id)));
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     const newTemplates = { ...get().taskTemplates };
     delete newTemplates[templateId];
     const newSchedules = { ...get().taskSchedules };
@@ -458,8 +463,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const reward = createReward(title, cost);
     await db.rewards.put(reward);
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({ rewards: [...s.rewards, reward] }));
   },
 
@@ -471,8 +475,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updated = { ...existing, ...changes };
     await db.rewards.put(updated);
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({ rewards: s.rewards.map((r) => (r.id === rewardId ? updated : r)) }));
   },
 
@@ -484,8 +487,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updated = { ...existing, enabled: !existing.enabled };
     await db.rewards.put(updated);
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({ rewards: s.rewards.map((r) => (r.id === rewardId ? updated : r)) }));
   },
 
@@ -494,8 +496,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   deleteReward: async (rewardId) => {
     await db.rewards.delete(rewardId);
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({ rewards: s.rewards.filter((r) => r.id !== rewardId) }));
   },
 
@@ -505,8 +506,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const profile = createProfile(name, avatar);
     await db.profiles.put(profile);
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({ profiles: [...s.profiles, profile] }));
     return profile;
   },
@@ -519,8 +519,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updated = { ...existing, ...changes };
     await db.profiles.put(updated);
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({ profiles: s.profiles.map((p) => (p.id === childId ? updated : p)) }));
   },
 
@@ -529,35 +528,45 @@ export const useAppStore = create<AppState>((set, get) => ({
   deleteChild: async (childId) => {
     await db.profiles.delete(childId);
     await markDirty();
-    const token = useAuthStore.getState().tokens?.accessToken;
-    if (token) schedulePush(token);
+    schedulePush();
     set((s) => ({ profiles: s.profiles.filter((p) => p.id !== childId) }));
   },
 
   // ─── initFamily ──────────────────────────────────────────────────────────
 
-  initFamily: async (familyName, childName, childAvatar, accessToken) => {
-    const joinCode = generateJoinCode();
+  initFamily: async (familyName, childName, childAvatar) => {
     const profile = createProfile(childName, childAvatar);
+    const joinCode = generateJoinCode();
     const driveFile = createFamilyFile(familyName, joinCode, profile);
 
-    // Seed IndexedDB (also writes familyMeta)
-    await seedFromDriveFile(driveFile);
-
-    // Push to Drive if we have a token
-    if (accessToken) {
-      try {
-        const fileId = await pushDriveFile(driveFile, accessToken);
-        await db.syncMeta.set({
-          driveFileId: fileId,
-          lastSyncedAt: new Date().toISOString(),
-          isDirty: false,
-        });
-      } catch (err) {
-        console.warn('[initFamily] Drive push failed, will retry on next sync', err);
-        await markDirty();
-      }
+    // Create on Worker — returns familyId + secret
+    let familyId: string;
+    let secret: string;
+    try {
+      const result = await createFamily(driveFile);
+      familyId = result.familyId;
+      secret = result.secret;
+    } catch (err) {
+      console.warn('[initFamily] Worker unavailable, continuing local-only', err);
+      // Fallback: local-only (no VITE_WORKER_URL or network error)
+      familyId = driveFile.familyId;
+      secret = '';
     }
+
+    // Store credentials
+    if (secret) {
+      const creds = { familyId, secret };
+      saveCredentials(creds);
+      useAuthStore.getState().setCredentials(creds);
+    }
+
+    // Seed IndexedDB
+    await seedFromDriveFile(driveFile);
+    await db.syncMeta.set({
+      driveFileId: null,
+      lastSyncedAt: new Date().toISOString(),
+      isDirty: false,
+    });
 
     await get().load();
     return joinCode;
@@ -565,19 +574,25 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ─── joinFamily ───────────────────────────────────────────────────────────
 
-  joinFamily: async (rawCode, accessToken) => {
-    const result = await pullDriveFile(accessToken);
+  joinFamily: async (rawCode) => {
+    const result = await fetchByJoinCode(rawCode);
     if (!result) {
       throw new Error(
-        'No Jitsu Points data found on this Google account. Make sure you sign in with the same account the family was created on.',
+        'Family not found. Check the join code and make sure you have an internet connection.',
       );
     }
     if (normaliseJoinCode(result.file.joinCode) !== normaliseJoinCode(rawCode)) {
-      throw new Error('Join code does not match. Check the code and try again.');
+      throw new Error('Join code does not match the family data. Check the code and try again.');
     }
+
+    // Store credentials
+    const creds = { familyId: result.familyId, secret: result.secret };
+    saveCredentials(creds);
+    useAuthStore.getState().setCredentials(creds);
+
     await seedFromDriveFile(result.file);
     await db.syncMeta.set({
-      driveFileId: result.fileId,
+      driveFileId: null,
       lastSyncedAt: new Date().toISOString(),
       isDirty: false,
     });
@@ -590,6 +605,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     await seedFromDriveFile(file);
     await get().load();
   },
+
+  // ─── Immediate push (for ReconnectDrive / settings) ───────────────────────
 }));
 
 // ─── Selectors ────────────────────────────────────────────────────────────────

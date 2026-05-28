@@ -5,13 +5,13 @@
 import { useCallback } from 'react';
 import { useSyncStore } from './store';
 import { sync } from './engine';
-import { useAuthStore, selectAccessToken } from '../auth';
+import { useAuthStore, selectIsAuthenticated } from '../auth';
 
 export interface UseSyncReturn {
   status: ReturnType<typeof useSyncStore.getState>['status'];
   lastSyncedAt: string | null;
   error: string | null;
-  /** Trigger an immediate sync. No-op if not authenticated. */
+  /** Trigger an immediate sync. No-op if family is not set up. */
   triggerSync: () => Promise<void>;
 }
 
@@ -19,12 +19,12 @@ export function useSync(): UseSyncReturn {
   const status = useSyncStore((s) => s.status);
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
   const error = useSyncStore((s) => s.error);
-  const accessToken = useAuthStore(selectAccessToken);
+  const isConnected = useAuthStore(selectIsAuthenticated);
 
   const triggerSync = useCallback(async () => {
-    if (!accessToken) return;
-    await sync(accessToken);
-  }, [accessToken]);
+    if (!isConnected) return;
+    await sync();
+  }, [isConnected]);
 
   return { status, lastSyncedAt, error, triggerSync };
 }

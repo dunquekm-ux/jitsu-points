@@ -1,8 +1,8 @@
 /**
  * Sync engine tests — focus on the pure decision logic (shouldPull)
- * and the engine's behaviour with mocked DB/Drive dependencies.
+ * and the engine's behaviour with mocked DB/API dependencies.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { shouldPull } from '../engine';
 
 // ─── shouldPull ───────────────────────────────────────────────────────────────
@@ -12,15 +12,15 @@ describe('shouldPull', () => {
     expect(shouldPull('2026-05-23T10:00:00Z', null)).toBe(true);
   });
 
-  it('returns true when Drive is newer than last sync', () => {
+  it('returns true when Worker data is newer than last sync', () => {
     expect(shouldPull('2026-05-23T10:00:00Z', '2026-05-23T09:00:00Z')).toBe(true);
   });
 
-  it('returns false when Drive is older than last sync', () => {
+  it('returns false when Worker data is older than last sync', () => {
     expect(shouldPull('2026-05-23T08:00:00Z', '2026-05-23T09:00:00Z')).toBe(false);
   });
 
-  it('returns false when Drive timestamp equals last sync (no change)', () => {
+  it('returns false when Worker timestamp equals last sync (no change)', () => {
     const ts = '2026-05-23T09:00:00Z';
     expect(shouldPull(ts, ts)).toBe(false);
   });
@@ -32,7 +32,6 @@ describe('shouldPull', () => {
 });
 
 // ─── markDirty + schedulePush ─────────────────────────────────────────────────
-// These interact with IndexedDB and timers — test with fakes.
 
 import { _useTestDb } from '../../db/schema';
 import { db } from '../../db';
@@ -54,20 +53,20 @@ describe('markDirty', () => {
   });
 
   it('initialises syncMeta if it does not exist', async () => {
-    // syncMeta store is empty — setDirty should create it
     await markDirty();
     const meta = await db.syncMeta.get();
     expect(meta?.isDirty).toBe(true);
   });
 });
 
-// ─── sync() integration (mocked Drive + DB) ───────────────────────────────────
+// ─── sync() integration (mocked API + DB) ────────────────────────────────────
 
 import { sync } from '../engine';
 import { useSyncStore } from '../store';
-import * as driveModule from '../../drive';
+import * as apiModule from '../../api';
 import * as seedModule from '../../db/seed';
 import * as serializeModule from '../../db/serialize';
+import { useAuthStore } from '../../auth/store';
 import type { JitsuDriveFile } from '../../../domain';
 
 function makeDriveFile(lastUpdated: string): JitsuDriveFile {
@@ -92,118 +91,133 @@ describe('sync()', () => {
     _cancelPendingPush();
     vi.restoreAllMocks();
     useSyncStore.setState({ status: 'idle', lastSyncedAt: null, error: null });
+    // Set up fake credentials so sync() doesn't exit early
+    useAuthStore.setState({
+      status: 'connected',
+      familyId: 'fam-1',
+      secret: 'test-secret',
+      error: null,
+    });
   });
 
   it('sets status to idle after a successful sync with nothing to do', async () => {
-    // Drive has older file — no pull; local is clean — no push
-    const driveFile = makeDriveFile('2026-05-22T00:00:00Z');
-    vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue({ file: driveFile, fileId: 'f-1' });
+    const workerFile = makeDriveFile('2026-05-22T00:00:00Z');
+    vi.spyOn(apiModule, 'pullFamily').mockResolvedValue({
+      file: workerFile,
+      updatedAt: '2026-05-22T00:00:00Z',
+    });
     vi.spyOn(seedModule, 'seedFromDriveFile').mockResolvedValue(undefined);
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
 
-    // Mark as synced so shouldPull returns false
     await db.syncMeta.set({
-      driveFileId: 'f-1',
-      lastSyncedAt: '2026-05-23T00:00:00Z',
+      driveFileId: null,
+      lastSyncedAt: '2026-05-23T00:00:00Z', // local is newer — no pull
       isDirty: false,
     });
 
-    const result = await sync('test-token');
+    const result = await sync();
     expect(result.pulled).toBe(false);
     expect(useSyncStore.getState().status).toBe('idle');
   });
 
-  it('pulls when Drive file is newer', async () => {
-    const driveFile = makeDriveFile('2026-05-24T00:00:00Z'); // newer than local
-    vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue({ file: driveFile, fileId: 'f-1' });
+  it('pulls when Worker data is newer', async () => {
+    const workerFile = makeDriveFile('2026-05-24T00:00:00Z');
+    vi.spyOn(apiModule, 'pullFamily').mockResolvedValue({
+      file: workerFile,
+      updatedAt: '2026-05-24T00:00:00Z',
+    });
     const seedSpy = vi.spyOn(seedModule, 'seedFromDriveFile').mockResolvedValue(undefined);
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
 
     await db.syncMeta.set({
-      driveFileId: 'f-1',
-      lastSyncedAt: '2026-05-23T00:00:00Z', // older than Drive
+      driveFileId: null,
+      lastSyncedAt: '2026-05-23T00:00:00Z', // older than Worker
       isDirty: false,
     });
 
-    const result = await sync('test-token');
+    const result = await sync();
     expect(result.pulled).toBe(true);
-    // Drive is fully authoritative — all parent writes are online-only
-    expect(seedSpy).toHaveBeenCalledWith(driveFile);
+    expect(seedSpy).toHaveBeenCalledWith(workerFile);
   });
 
   it('pushes when local is dirty', async () => {
-    const driveFile = makeDriveFile('2026-05-22T00:00:00Z');
-    vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue({ file: driveFile, fileId: 'f-1' });
+    const workerFile = makeDriveFile('2026-05-22T00:00:00Z');
+    vi.spyOn(apiModule, 'pullFamily').mockResolvedValue({
+      file: workerFile,
+      updatedAt: '2026-05-22T00:00:00Z',
+    });
     vi.spyOn(seedModule, 'seedFromDriveFile').mockResolvedValue(undefined);
 
     const localFile = makeDriveFile('2026-05-23T12:00:00Z');
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(localFile);
-    const pushSpy = vi.spyOn(driveModule, 'pushDriveFile').mockResolvedValue('f-1');
+    const pushSpy = vi.spyOn(apiModule, 'pushFamily').mockResolvedValue(undefined);
 
     await db.syncMeta.set({
-      driveFileId: 'f-1',
+      driveFileId: null,
       lastSyncedAt: '2026-05-23T00:00:00Z',
       isDirty: true, // dirty!
     });
 
-    const result = await sync('test-token');
+    const result = await sync();
     expect(result.pushed).toBe(true);
-    expect(pushSpy).toHaveBeenCalledWith(localFile, 'test-token', 'f-1');
+    expect(pushSpy).toHaveBeenCalledWith('fam-1', 'test-secret', localFile);
   });
 
   it('sets status to offline on network error', async () => {
-    // Simulate a network error (TypeError from fetch, no HTTP status)
-    vi.spyOn(driveModule, 'pullDriveFile').mockRejectedValue(
+    vi.spyOn(apiModule, 'pullFamily').mockRejectedValue(
       Object.assign(new TypeError('Failed to fetch'), {}),
     );
 
-    const result = await sync('test-token');
+    const result = await sync();
     expect(result.pulled).toBe(false);
     expect(useSyncStore.getState().status).toBe('offline');
   });
 
-  it('sets status to error on Drive API error', async () => {
-    vi.spyOn(driveModule, 'pullDriveFile').mockRejectedValue(
-      new driveModule.DriveError('Unauthorized', 401),
+  it('sets status to error on API error', async () => {
+    vi.spyOn(apiModule, 'pullFamily').mockRejectedValue(
+      new apiModule.ApiError('Unauthorized', 401),
     );
 
-    await sync('test-token');
+    await sync();
     expect(useSyncStore.getState().status).toBe('error');
     expect(useSyncStore.getState().error).toContain('Unauthorized');
   });
 
-  it('does nothing when Drive returns no file and local has no data', async () => {
-    vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue(null);
+  it('does nothing when Worker returns no data and local has nothing to push', async () => {
+    vi.spyOn(apiModule, 'pullFamily').mockResolvedValue(null);
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
 
-    const result = await sync('test-token');
+    const result = await sync();
     expect(result.pulled).toBe(false);
     expect(result.pushed).toBe(false);
   });
 
+  it('exits early (no-op) when no credentials are set', async () => {
+    useAuthStore.setState({ status: 'disconnected', familyId: null, secret: null, error: null });
+    const pullSpy = vi.spyOn(apiModule, 'pullFamily');
+
+    const result = await sync();
+    expect(result.pulled).toBe(false);
+    expect(pullSpy).not.toHaveBeenCalled();
+  });
+
   it('is a no-op when called concurrently (only one sync runs at a time)', async () => {
-    // Simulates mount + visibility-change firing simultaneously.
-    // First call starts; second call should return immediately without pulling/pushing.
     let pullCallCount = 0;
-    vi.spyOn(driveModule, 'pullDriveFile').mockImplementation(async () => {
+    vi.spyOn(apiModule, 'pullFamily').mockImplementation(async () => {
       pullCallCount++;
-      await new Promise((r) => setTimeout(r, 10)); // simulate async Drive fetch
+      await new Promise((r) => setTimeout(r, 10));
       return null;
     });
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
 
-    // Fire both calls without awaiting the first
-    const [r1, r2] = await Promise.all([sync('tok'), sync('tok')]);
+    const [r1, r2] = await Promise.all([sync(), sync()]);
 
-    // One of them ran, the other was a no-op
     expect(pullCallCount).toBe(1);
-    // The one that ran may have returned pulled:false (Drive returned null)
-    // The concurrent no-op returns pulled:false, pushed:false
     expect([r1.pulled, r2.pulled]).toEqual(expect.arrayContaining([false]));
   });
 });
 
-// ─── schedulePush — triggers full sync not blind push ────────────────────────
+// ─── schedulePush ────────────────────────────────────────────────────────────
 
 import { schedulePush } from '../engine';
 
@@ -214,6 +228,12 @@ describe('schedulePush', () => {
     vi.restoreAllMocks();
     vi.useFakeTimers();
     useSyncStore.setState({ status: 'idle', lastSyncedAt: null, error: null });
+    useAuthStore.setState({
+      status: 'connected',
+      familyId: 'fam-1',
+      secret: 'test-secret',
+      error: null,
+    });
   });
 
   afterEach(() => {
@@ -221,28 +241,25 @@ describe('schedulePush', () => {
     _cancelPendingPush();
   });
 
-  it('triggers sync() (pull-then-push) after 2 seconds, not a blind push', async () => {
-    // This is the core DEF-010 fix: schedulePush must call sync(), not push().
-    // We verify by checking that pullDriveFile is called (pull step) when the
-    // debounce fires — a blind push would only call pushDriveFile.
-    const pullSpy = vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue(null);
+  it('triggers sync() (pull-then-push) after 2 seconds', async () => {
+    const pullSpy = vi.spyOn(apiModule, 'pullFamily').mockResolvedValue(null);
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
 
-    schedulePush('test-token');
-    expect(pullSpy).not.toHaveBeenCalled(); // not yet
+    schedulePush();
+    expect(pullSpy).not.toHaveBeenCalled();
 
     await vi.runAllTimersAsync();
 
-    expect(pullSpy).toHaveBeenCalledOnce(); // sync()'s pull step ran
+    expect(pullSpy).toHaveBeenCalledOnce();
   });
 
   it('debounces — only one sync fires when called multiple times within 2 s', async () => {
-    const pullSpy = vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue(null);
+    const pullSpy = vi.spyOn(apiModule, 'pullFamily').mockResolvedValue(null);
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
 
-    schedulePush('tok');
-    schedulePush('tok');
-    schedulePush('tok'); // only this one should fire
+    schedulePush();
+    schedulePush();
+    schedulePush();
 
     await vi.runAllTimersAsync();
 
@@ -250,21 +267,14 @@ describe('schedulePush', () => {
   });
 
   it('sync() cancels a pending schedulePush timer', async () => {
-    // Fake timers conflict with fake-indexeddb for this test: fake-indexeddb uses
-    // setTimeout(fn, 0) internally, so its Promise chains stall when fake timers
-    // are active and nothing is advancing the 0ms ticks. Switch to real timers for
-    // this one test so that `await sync()` can complete normally.
     vi.useRealTimers();
 
-    const pullSpy = vi.spyOn(driveModule, 'pullDriveFile').mockResolvedValue(null);
+    const pullSpy = vi.spyOn(apiModule, 'pullFamily').mockResolvedValue(null);
     vi.spyOn(serializeModule, 'serializeToFile').mockResolvedValue(null);
 
-    schedulePush('tok'); // arms a real 2-second timer
-    await sync('tok'); // calls _cancelPendingPush() at entry, then runs pull
+    schedulePush();
+    await sync();
 
-    // The scheduled push was cancelled — pullDriveFile should have been called
-    // exactly once (from the explicit sync above), not again when the timer fires.
-    // afterEach also calls _cancelPendingPush() as belt-and-suspenders.
     expect(pullSpy).toHaveBeenCalledOnce();
     pullSpy.mockRestore();
   });

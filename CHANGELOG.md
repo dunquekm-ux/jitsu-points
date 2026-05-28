@@ -5,6 +5,63 @@
 
 ---
 
+## 2026.05.27.1 — Replace Google Drive sync with Cloudflare Workers + D1
+
+**Phase:** Post-launch
+
+**What's in this build:**
+
+- **Google Drive + OAuth removed entirely**
+  - `core/drive/` deleted; `core/auth/gis.ts` deleted
+  - No more refresh tokens, GIS script, or OAuth consent screens
+  - Children and parents experience zero auth friction — ever
+
+- **Cloudflare Worker + D1 added** (`worker/`)
+  - New `worker/src/index.ts` — 4-route REST API: `POST /families`, `GET /families/join/:code`, `GET /families/:id`, `PUT /families/:id`
+  - New `worker/src/db.ts` — typed D1 queries (`insertFamily`, `selectByJoinCode`, `selectById`, `updateData`)
+  - New `worker/schema.sql` — one table: `families (id, join_code, secret, data, updated_at)`
+  - Auth: random 32-byte secret generated at family creation; stored in `localStorage`; sent as `Bearer` token on writes
+  - `worker/wrangler.toml` + `package.json` + `tsconfig.json` — ready to `wrangler deploy`
+
+- **`core/api/` added** (replaces `core/drive/`)
+  - `client.ts` — `createFamily()`, `fetchByJoinCode()`, `pullFamily()`, `pushFamily()`, `ApiError`
+  - `credentials.ts` — `saveCredentials()`, `loadCredentials()`, `clearCredentials()`
+
+- **`core/auth/` rewritten** — now stores `{ familyId, secret }` instead of Google tokens
+  - `AuthStatus`: `'unknown' | 'connected' | 'disconnected' | 'error'`
+  - `hydrate()` reads credentials from localStorage on app start → instant `'connected'` state if family exists
+  - No token expiry: credentials are valid forever
+
+- **`core/sync/engine.ts` rewritten** — no access token argument
+  - `sync()` and `schedulePush()` take no arguments; read credentials from auth store internally
+  - Replaces `pullDriveFile`/`pushDriveFile` with `pullFamily`/`pushFamily`
+
+- **`core/store/appStore.ts` updated**
+  - `initFamily()` / `joinFamily()` no longer take `accessToken` params
+  - `initFamily` creates family on Worker, saves credentials, falls back to local-only if Worker unavailable
+  - `joinFamily` fetches family + credentials from Worker by join code
+  - `schedulePush()` called without token argument throughout
+
+- **Onboarding simplified** — Google Sign-In step removed
+  - `FamilySetup.tsx`: 3 steps → 2 steps (details → done; no auth step)
+  - `JoinFamily.tsx`: 3 steps → 2 steps (code → syncing; no auth step)
+
+- **Parent screens updated** — `HAS_AUTH` / `'authenticated'` → `HAS_WORKER` / `'connected'`
+  - Affected: `TaskFormScreen`, `ManageRewardsScreen`, `ManageKidsScreen`, `BonusComposer`, `DemeritComposer`, `ParentDashboard`
+  - Reconnect Drive banner removed; replaced with simple offline warning
+
+- **Date window extended** — `buildDateWindow()` now generates past 30 days **+ future 14 days**
+  - Future task instances are pre-generated on app open
+  - One-time tasks and weekly tasks show up in upcoming views before the day arrives
+
+- **`.env.example` updated** — `VITE_GOOGLE_CLIENT_ID` → `VITE_WORKER_URL`
+
+- **Tests updated** — 151 passing; engine tests now mock `apiModule` instead of `driveModule`
+
+**Tests:** 151 passing
+
+---
+
 ## 2026.05.26.4 — Task recurrence: weekly (days-of-week) + one-time
 
 **Phase:** Post-launch

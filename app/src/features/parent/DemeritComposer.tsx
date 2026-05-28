@@ -6,7 +6,7 @@ import { useAppStore } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
 import styles from './DemeritComposer.module.css';
 
-const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
 
 const MAX_DEMERIT = 20;
 
@@ -15,7 +15,7 @@ export default function DemeritComposer() {
   const { profiles, addDemerit } = useAppStore();
 
   const { status } = useAuthStore();
-  const isOffline = HAS_AUTH && status !== 'authenticated';
+  const isOffline = HAS_WORKER && status !== 'connected';
 
   const [childId, setChildId] = useState('');
   const [amount, setAmount] = useState(5);

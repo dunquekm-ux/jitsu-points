@@ -7,7 +7,7 @@ import { useAuthStore } from '../../core/auth';
 import type { AvatarId } from '../../domain';
 import styles from './ManageKidsScreen.module.css';
 
-const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
 
 interface EditState {
   childId: string | null; // null = new
@@ -22,7 +22,7 @@ export default function ManageKidsScreen() {
   const { profiles, createChild, updateChild, deleteChild } = useAppStore();
 
   const { status } = useAuthStore();
-  const isOffline = HAS_AUTH && status !== 'authenticated';
+  const isOffline = HAS_WORKER && status !== 'connected';
 
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);

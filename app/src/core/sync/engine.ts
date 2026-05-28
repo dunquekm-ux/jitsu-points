@@ -1,16 +1,17 @@
 /**
- * Sync engine — coordinates pulling from and pushing to Google Drive.
+ * Sync engine — coordinates pulling from and pushing to the Cloudflare Worker.
  *
  * Strategy:
- *   Pull:  Drive lastUpdated > local lastSyncedAt → replace local with Drive data
- *   Push:  local isDirty → serialize local DB → write to Drive
+ *   Pull:  Worker updatedAt > local lastSyncedAt → replace local with Worker data
+ *   Push:  local isDirty → serialize local DB → PUT to Worker
  *
- * The engine never touches auth directly; callers pass the access token.
+ * Credentials are read directly from the auth store; callers don't pass tokens.
  */
 import { seedFromDriveFile } from '../db/seed';
 import { serializeToFile } from '../db/serialize';
 import { db } from '../db';
-import { pullDriveFile, pushDriveFile, DriveError } from '../drive';
+import { pullFamily, pushFamily, ApiError } from '../api';
+import { useAuthStore } from '../auth/store';
 import { useSyncStore } from './store';
 
 export interface SyncResult {
@@ -19,12 +20,12 @@ export interface SyncResult {
 }
 
 /**
- * Decide whether the Drive file is newer than our local cache.
- * Returns true if we should replace local with Drive data.
+ * Decide whether the Worker data is newer than our local cache.
+ * Returns true if we should replace local with Worker data.
  */
-export function shouldPull(driveLastUpdated: string, localLastSyncedAt: string | null): boolean {
+export function shouldPull(workerUpdatedAt: string, localLastSyncedAt: string | null): boolean {
   if (!localLastSyncedAt) return true; // First sync on this device
-  return new Date(driveLastUpdated) > new Date(localLastSyncedAt);
+  return new Date(workerUpdatedAt) > new Date(localLastSyncedAt);
 }
 
 // Guard against concurrent sync runs (e.g. mount + visibility change firing together)
@@ -33,16 +34,14 @@ let _syncInProgress = false;
 /**
  * Run a full sync cycle:
  *   1. Cancel any pending debounced push (this sync covers it)
- *   2. Pull from Drive if Drive is newer
- *   3. Push to Drive if local has changes
+ *   2. Pull from Worker if Worker data is newer
+ *   3. Push to Worker if local has changes
  *
  * Safe to call on every app open — exits early if nothing to do.
  * Concurrent calls are no-ops (only one sync runs at a time).
+ * No credentials needed as argument — reads from auth store.
  */
-export async function sync(accessToken: string): Promise<SyncResult> {
-  // Always cancel any pending debounced push — this sync will handle the push.
-  // Must happen before the _syncInProgress guard so that a push scheduled during
-  // a concurrent sync is also cancelled (it would be redundant once this sync lands).
+export async function sync(): Promise<SyncResult> {
   _cancelPendingPush();
 
   if (_syncInProgress) return { pulled: false, pushed: false };
@@ -53,46 +52,47 @@ export async function sync(accessToken: string): Promise<SyncResult> {
 
   const result: SyncResult = { pulled: false, pushed: false };
 
+  // Read credentials from store
+  const authState = useAuthStore.getState();
+  const creds =
+    authState.status === 'connected' && authState.familyId && authState.secret
+      ? { familyId: authState.familyId, secret: authState.secret }
+      : null;
+
+  if (!creds) {
+    // No credentials — nothing to sync (local-only mode or pre-setup)
+    syncState.setStatus('idle');
+    _syncInProgress = false;
+    return result;
+  }
+
   try {
     const meta = await db.syncMeta.get();
-    const pulled = await pullDriveFile(accessToken);
 
+    // ── Pull ───────────────────────────────────────────────────────────────
+    const pulled = await pullFamily(creds.familyId, creds.secret);
     if (pulled) {
-      const { file, fileId } = pulled;
-
-      // Store the Drive file ID if we didn't have it yet
-      if (!meta?.driveFileId) {
-        await db.syncMeta.setDriveFileId(fileId);
-      }
-
-      // Replace local if Drive is newer
-      if (shouldPull(file.lastUpdated, meta?.lastSyncedAt ?? null)) {
-        // All parent writes are online-only, so there are never local structural
-        // orphans to protect. Drive is fully authoritative for structural data.
-        await seedFromDriveFile(file);
-        // Persist lastSyncedAt using Drive's own timestamp so that subsequent
-        // syncs correctly compare against Drive's lastUpdated and don't re-pull
-        // unnecessarily when nothing has changed.
-        const afterSeedMeta = await db.syncMeta.get();
+      if (shouldPull(pulled.updatedAt, meta?.lastSyncedAt ?? null)) {
+        await seedFromDriveFile(pulled.file);
         await db.syncMeta.set({
-          driveFileId: afterSeedMeta?.driveFileId ?? fileId,
-          lastSyncedAt: file.lastUpdated,
-          isDirty: afterSeedMeta?.isDirty ?? true,
+          driveFileId: null, // not used in the Worker model; kept for schema compat
+          lastSyncedAt: pulled.updatedAt,
+          isDirty: (await db.syncMeta.get())?.isDirty ?? true,
         });
         result.pulled = true;
       }
     }
 
-    // Push if local is dirty OR we just set up (no Drive file yet)
+    // ── Push ───────────────────────────────────────────────────────────────
     const freshMeta = await db.syncMeta.get();
-    const needsPush = freshMeta?.isDirty !== false || !freshMeta?.driveFileId;
+    const needsPush = freshMeta?.isDirty !== false;
 
     if (needsPush) {
       const localFile = await serializeToFile();
       if (localFile) {
-        const fileId = await pushDriveFile(localFile, accessToken, freshMeta?.driveFileId ?? null);
+        await pushFamily(creds.familyId, creds.secret, localFile);
         await db.syncMeta.set({
-          driveFileId: fileId,
+          driveFileId: null,
           lastSyncedAt: new Date().toISOString(),
           isDirty: false,
         });
@@ -103,8 +103,8 @@ export async function sync(accessToken: string): Promise<SyncResult> {
     syncState.setLastSynced(new Date().toISOString());
   } catch (err) {
     const isNetworkError =
-      (err instanceof TypeError && err.message.includes('fetch')) ||
-      (err instanceof DriveError && err.status === undefined);
+      (err instanceof TypeError && err.message.toLowerCase().includes('fetch')) ||
+      (err instanceof ApiError && err.status === undefined);
 
     if (isNetworkError) {
       syncState.setStatus('offline');
@@ -132,48 +132,18 @@ export async function markDirty(): Promise<void> {
 // ─── Debounced push ───────────────────────────────────────────────────────────
 
 let _pushTimer: ReturnType<typeof setTimeout> | null = null;
-let _pendingAccessToken: string | null = null;
 
 /**
  * Schedule a full sync (pull-then-push) 2 seconds after the last call.
  * Replaces any pending timer — only the latest wins.
- * Using a full sync instead of a blind push prevents data loss: we always
- * incorporate the latest Drive state before overwriting it.
+ * No token argument needed — credentials read from store inside sync().
  */
-export function schedulePush(accessToken: string): void {
-  _pendingAccessToken = accessToken;
+export function schedulePush(): void {
   if (_pushTimer) clearTimeout(_pushTimer);
   _pushTimer = setTimeout(async () => {
     _pushTimer = null;
-    if (_pendingAccessToken) {
-      await sync(_pendingAccessToken);
-    }
+    await sync();
   }, 2_000);
-}
-
-/**
- * Immediate push — kept for tests and as an escape hatch.
- * Normal flow: use schedulePush (which now triggers a full sync).
- */
-export async function push(accessToken: string): Promise<void> {
-  const syncState = useSyncStore.getState();
-  syncState.setStatus('syncing');
-  try {
-    const meta = await db.syncMeta.get();
-    const localFile = await serializeToFile();
-    if (!localFile) return;
-
-    const fileId = await pushDriveFile(localFile, accessToken, meta?.driveFileId ?? null);
-    await db.syncMeta.set({
-      driveFileId: fileId,
-      lastSyncedAt: new Date().toISOString(),
-      isDirty: false,
-    });
-    syncState.setLastSynced(new Date().toISOString());
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Push failed';
-    syncState.setError(msg);
-  }
 }
 
 /** Cancel any pending debounced push — used in tests. */
@@ -182,5 +152,4 @@ export function _cancelPendingPush(): void {
     clearTimeout(_pushTimer);
     _pushTimer = null;
   }
-  _pendingAccessToken = null;
 }
