@@ -8,7 +8,7 @@ import { db } from '../db';
 import { seedFromDriveFile } from '../db/seed';
 import { markDirty, schedulePush } from '../sync/engine';
 import { useAuthStore } from '../auth/store';
-import { createFamily, fetchByJoinCode, pushFamily } from '../api';
+import { createFamily, fetchByJoinCode } from '../api';
 import { saveCredentials } from '../auth/tokens';
 import {
   currentPoints,
