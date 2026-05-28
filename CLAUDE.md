@@ -8,14 +8,14 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.05.27.2` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–012 closed; DEF-013 open (task counter vs list mismatch — scheduled for next session). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.05.27.2` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–012 closed; DEF-013–015 open (task counter mismatch, home scroll, icon picker UX — next session). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
 | Live interactive prototype | `index.html` | ✅ Complete — open in any browser |
 | Requirements spec | `jitsu_points_requirements.md` | ✅ Complete |
 | Architecture decisions | `DECISIONS.md` | ✅ 17 ADRs logged (ADR-017: multi-child tasks) |
-| Defect log | `DEFECTS.md` | ✅ 13 defects logged (DEF-001–012 closed, DEF-013 open) |
+| Defect log | `DEFECTS.md` | ✅ 15 defects logged (DEF-001–012 closed, DEF-013–015 open) |
 | Domain reference | `DOMAIN.md` | ✅ Types, rules, state machine |
 | Changelog | `CHANGELOG.md` | ✅ Build log through 2026.05.27.2 |
 | PWA app — Phase 0 | `app/` | ✅ Vite + React + TS, design tokens, CI pipeline |

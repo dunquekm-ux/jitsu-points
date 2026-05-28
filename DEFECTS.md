@@ -262,6 +262,43 @@ The 2026.05.26.2 `preserveLocalOrphans` fix was technically correct but added co
 
 ---
 
+## DEF-015 — Icon picker in Create Task consumes too much space
+
+**Severity:** Low/UX  
+**Screen:** TaskFormScreen (`/parent/task/new`, `/parent/task/:id/edit`)  
+**Status:** 🔍 Open — scheduled for next session
+
+**Steps to reproduce:**
+1. Enter Parent Mode → New Task
+2. Scroll to the Icon section
+3. The 57-icon grid takes up a large portion of the screen, making the main task form feel cluttered
+
+**Observed:** The icon grid occupies several viewport-heights of space inline in the form, requiring extensive scrolling past icons to reach the rest of the fields (points, schedule, etc.).
+
+**Proposed fix:**
+- Make icon cells smaller (currently 8 columns; can shrink cell size)
+- Move the full icon grid into a **modal / bottom-sheet picker** triggered by tapping the selected icon preview. The inline field shows only the currently selected icon + a "Change icon" button. The picker opens as an overlay.
+
+---
+
+## DEF-014 — Home screen does not allow scrolling for child
+
+**Severity:** High  
+**Screen:** HomeScreen (`/child/:childId`)  
+**Status:** 🔍 Open — scheduled for next session
+
+**Steps to reproduce:**
+1. Open app as any child
+2. Child has enough tasks that the list extends below the visible screen
+3. Attempt to scroll down — gesture does not work; tasks below the fold are unreachable
+
+**Suspected root cause:**
+Same CSS pattern as DEF-007: `HomeScreen.module.css` likely uses `min-height: 100%` on the task list container or is missing `overflow-y: auto` on the scrollable body section. The child screens were previously noted as "already correct" in DEF-007 — this may have regressed or was only partially correct.
+
+**Next step:** Inspect `HomeScreen.module.css` and confirm whether the task list body has `overflow-y: auto` + a height-constrained parent.
+
+---
+
 ## DEF-013 — Task counter and task list are out of sync for a child
 
 **Severity:** Medium  
