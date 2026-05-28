@@ -184,93 +184,94 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   load: async () => {
     try {
-    const now = new Date();
-    const today = todayISO();
-    const window = buildDateWindow(today);
+      const now = new Date();
+      const today = todayISO();
+      const window = buildDateWindow(today);
 
-    // Load everything from DB in parallel
-    const [
-      profilesList,
-      rawTemplatesList,
-      schedulesList,
-      existingInstances,
-      eventsList,
-      rewardsList,
-      meta,
-    ] = await Promise.all([
-      db.profiles.getAll(),
-      db.taskTemplates.getAll(),
-      db.taskSchedules.getAll(),
-      db.taskInstances.getAll(),
-      db.pointsEvents.getAll(),
-      db.rewards.getAll(),
-      db.familyMeta.get(),
-    ]);
+      // Load everything from DB in parallel
+      const [
+        profilesList,
+        rawTemplatesList,
+        schedulesList,
+        existingInstances,
+        eventsList,
+        rewardsList,
+        meta,
+      ] = await Promise.all([
+        db.profiles.getAll(),
+        db.taskTemplates.getAll(),
+        db.taskSchedules.getAll(),
+        db.taskInstances.getAll(),
+        db.pointsEvents.getAll(),
+        db.rewards.getAll(),
+        db.familyMeta.get(),
+      ]);
 
-    // ── Backward-compat migration ────────────────────────────────────────────
-    // Old IndexedDB data stored assignedChildId (string) instead of
-    // assignedChildIds (string[]). Coerce and re-persist so the DB is healed.
-    const templatesList: TaskTemplate[] = rawTemplatesList.map((t) => {
-      const raw = t as unknown as Record<string, unknown>;
-      if (!Array.isArray(raw.assignedChildIds)) {
-        const healed: TaskTemplate = {
-          ...t,
-          assignedChildIds:
-            typeof raw.assignedChildId === 'string' ? [raw.assignedChildId] : [],
-        };
-        // Persist the healed record back so this migration runs once
-        db.taskTemplates.put(healed).catch(() => {/* best-effort */});
-        return healed;
+      // ── Backward-compat migration ────────────────────────────────────────────
+      // Old IndexedDB data stored assignedChildId (string) instead of
+      // assignedChildIds (string[]). Coerce and re-persist so the DB is healed.
+      const templatesList: TaskTemplate[] = rawTemplatesList.map((t) => {
+        const raw = t as unknown as Record<string, unknown>;
+        if (!Array.isArray(raw.assignedChildIds)) {
+          const healed: TaskTemplate = {
+            ...t,
+            assignedChildIds: typeof raw.assignedChildId === 'string' ? [raw.assignedChildId] : [],
+          };
+          // Persist the healed record back so this migration runs once
+          db.taskTemplates.put(healed).catch(() => {
+            /* best-effort */
+          });
+          return healed;
+        }
+        return t;
+      });
+
+      // Build lookup maps
+      const templateMap: Record<string, TaskTemplate> = {};
+      for (const t of templatesList) templateMap[t.id] = t;
+
+      const scheduleMap: Record<string, TaskSchedule> = {};
+      for (const s of schedulesList) scheduleMap[s.id] = s;
+
+      // Generate missing instances for the full window (past + future)
+      const newInstances: TaskInstance[] = [];
+      for (const template of templatesList) {
+        const schedules = schedulesList.filter((s) => s.taskTemplateId === template.id);
+        for (const schedule of schedules) {
+          const generated = generateInstances(template, schedule, window, existingInstances, now);
+          newInstances.push(...generated);
+        }
       }
-      return t;
-    });
 
-    // Build lookup maps
-    const templateMap: Record<string, TaskTemplate> = {};
-    for (const t of templatesList) templateMap[t.id] = t;
-
-    const scheduleMap: Record<string, TaskSchedule> = {};
-    for (const s of schedulesList) scheduleMap[s.id] = s;
-
-    // Generate missing instances for the full window (past + future)
-    const newInstances: TaskInstance[] = [];
-    for (const template of templatesList) {
-      const schedules = schedulesList.filter((s) => s.taskTemplateId === template.id);
-      for (const schedule of schedules) {
-        const generated = generateInstances(template, schedule, window, existingInstances, now);
-        newInstances.push(...generated);
+      // Persist new instances
+      if (newInstances.length > 0) {
+        await Promise.all(newInstances.map((i) => db.taskInstances.put(i)));
       }
-    }
 
-    // Persist new instances
-    if (newInstances.length > 0) {
-      await Promise.all(newInstances.map((i) => db.taskInstances.put(i)));
-    }
+      const allInstances = [...existingInstances, ...newInstances];
 
-    const allInstances = [...existingInstances, ...newInstances];
+      // Recalculate states
+      const schedMapForRecalc = new Map(Object.entries(scheduleMap));
+      const recalculated = recalculateInstanceStates(allInstances, schedMapForRecalc, now);
 
-    // Recalculate states
-    const schedMapForRecalc = new Map(Object.entries(scheduleMap));
-    const recalculated = recalculateInstanceStates(allInstances, schedMapForRecalc, now);
+      // Persist any state changes
+      const changed = recalculated.filter((r, i) => r.state !== allInstances[i]?.state);
+      if (changed.length > 0) {
+        await Promise.all(changed.map((i) => db.taskInstances.put(i)));
+      }
 
-    // Persist any state changes
-    const changed = recalculated.filter((r, i) => r.state !== allInstances[i]?.state);
-    if (changed.length > 0) {
-      await Promise.all(changed.map((i) => db.taskInstances.put(i)));
-    }
-
-    set({
-      profiles: profilesList,
-      taskTemplates: templateMap,
-      taskSchedules: scheduleMap,
-      taskInstances: recalculated,
-      pointsEvents: eventsList,
-      rewards: rewardsList,
-      familyName: meta?.familyName ?? '',
-      joinCode: meta?.joinCode ?? '',
-      hasFamilyData: !!meta,
-      isLoaded: true,
-    });
+      set({
+        profiles: profilesList,
+        taskTemplates: templateMap,
+        taskSchedules: scheduleMap,
+        taskInstances: recalculated,
+        pointsEvents: eventsList,
+        rewards: rewardsList,
+        familyName: meta?.familyName ?? '',
+        joinCode: meta?.joinCode ?? '',
+        hasFamilyData: !!meta,
+        isLoaded: true,
+      });
     } catch (err) {
       // Safety net: if load() crashes (e.g. corrupt/old IndexedDB data), always
       // unblock the UI so the user lands on the welcome screen instead of hanging.
