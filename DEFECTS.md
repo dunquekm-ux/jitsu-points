@@ -266,36 +266,42 @@ The 2026.05.26.2 `preserveLocalOrphans` fix was technically correct but added co
 
 **Severity:** Low/UX  
 **Screen:** TaskFormScreen (`/parent/task/new`, `/parent/task/:id/edit`)  
-**Status:** 🔍 Open — scheduled for next session
+**Status:** ✅ Closed — Fixed in build 2026.05.28.1
 
 **Steps to reproduce:**
 1. Enter Parent Mode → New Task
 2. Scroll to the Icon section
 3. The 57-icon grid takes up a large portion of the screen, making the main task form feel cluttered
 
-**Observed:** The icon grid occupies several viewport-heights of space inline in the form, requiring extensive scrolling past icons to reach the rest of the fields (points, schedule, etc.).
+**Root cause:**
+The 57-icon emoji grid was rendered inline in the form body (8-column grid, `aspect-ratio: 1` buttons), occupying several viewport-heights of vertical space and forcing the parent to scroll past all icons before reaching task name, points, and schedule fields.
 
-**Proposed fix:**
-- Make icon cells smaller (currently 8 columns; can shrink cell size)
-- Move the full icon grid into a **modal / bottom-sheet picker** triggered by tapping the selected icon preview. The inline field shows only the currently selected icon + a "Change icon" button. The picker opens as an overlay.
+**Fix:**
+Replaced the inline grid with a **trigger button** (shows the selected icon + "Tap to choose icon" text) and a **bottom-sheet modal** (`position: fixed`, slides up from the bottom). The full icon grid and custom emoji input now live inside the sheet. Tapping an icon immediately selects it and closes the sheet. Tapping the backdrop also closes it. The form body now shows only a single-row icon selector.
 
 ---
 
 ## DEF-014 — Home screen does not allow scrolling for child
 
 **Severity:** High  
-**Screen:** HomeScreen (`/child/:childId`)  
-**Status:** 🔍 Open — scheduled for next session
+**Screen:** HomeScreen (`/child/:childId`) — and all other screens  
+**Status:** ✅ Closed — Fixed in build 2026.05.28.1
 
 **Steps to reproduce:**
 1. Open app as any child
 2. Child has enough tasks that the list extends below the visible screen
 3. Attempt to scroll down — gesture does not work; tasks below the fold are unreachable
 
-**Suspected root cause:**
-Same CSS pattern as DEF-007: `HomeScreen.module.css` likely uses `min-height: 100%` on the task list container or is missing `overflow-y: auto` on the scrollable body section. The child screens were previously noted as "already correct" in DEF-007 — this may have regressed or was only partially correct.
+**Root cause:**
+All 15 screen CSS modules used `height: 100%` on `.screen` but were missing `min-height: 0`. Flex items default to `min-height: auto`, which means a flex child will grow to fit its content rather than be capped at the flex container's explicit height. As a result, `.screen` expanded beyond viewport height, `.tasks { flex: 1 }` received unbounded height, and `overflow-y: auto` never triggered — the inner scroll area always fit its content.
 
-**Next step:** Inspect `HomeScreen.module.css` and confirm whether the task list body has `overflow-y: auto` + a height-constrained parent.
+This is the classic "nested flex scroll" gotcha. The fix is one line per screen.
+
+**Fix:**
+Added `min-height: 0` to `.screen` in all 15 screen CSS module files. A PowerShell batch script applied the change atomically and Prettier confirmed correct formatting.
+
+Affected files (all 15 screen modules):
+`HomeScreen`, `RewardsScreen`, `StreakScreen`, `AchievementsScreen`, `ParentDashboard`, `TaskFormScreen`, `TaskDetailScreen`, `BonusComposer`, `DemeritComposer`, `ManageRewardsScreen`, `ManageKidsScreen`, `WelcomeScreen`, `FamilySetup`, `JoinFamily`, `ProfilePicker`
 
 ---
 
@@ -303,21 +309,25 @@ Same CSS pattern as DEF-007: `HomeScreen.module.css` likely uses `min-height: 10
 
 **Severity:** Medium  
 **Screen:** HomeScreen (`/child/:childId`)  
-**Status:** 🔍 Open — investigation scheduled for next session
+**Status:** ✅ Closed — Fixed in build 2026.05.28.1
 
 **Steps to reproduce:**
 1. Open app as Child 2 in the Test22 family
 2. Home screen shows only 1 task card in the list
-3. The counter in the top-left reads `1/5` — implying 5 tasks are expected but only 1is visible
+3. The counter in the top-left reads `1/5` — implying 5 tasks are expected but only 1 is visible
 
-**Observed:** Task list shows 1 task; progress counter shows 1/5.
+**Root cause:**
+`deleteTask` and `updateTask` deleted the `TaskTemplate` and `TaskSchedule` records but **did not delete the associated `TaskInstance` records**. These orphaned instances still had the correct `childId` and `date`, so `taskInstances.filter(i => i.childId === childId && i.date === today)` counted them — inflating the counter. But `taskTemplates[instance.templateId]` returned `undefined` for orphans, causing `if (!template || !schedule) return null` in the render — so the cards were invisible. The result: counter says N, only 1 card visible.
 
-**Suspected areas:**
-- `generateInstances` may be generating instances for all assigned children but `selectTodaysTasks` or the `HomeScreen` filter may be excluding some (wrong `childId` match, wrong date, wrong state filter)
-- Instances may have been generated with a stale `childId` from the old `assignedChildId` (singular) field before the migration fix — child assignment on stored templates may not match the correct child profile ID
-- The counter and the list may be filtering on different criteria
+Every `updateTask` call that changes schedules compounds this: old `scheduleId` values are replaced with new IDs; instances with old IDs become orphans immediately.
 
-**Next step:** Inspect IndexedDB task instances for Child 2 on Test22 to see what `childId` values are stored vs. what the profile ID actually is.
+**Fix (four-part):**
+1. **`deleteTask`** — now calls `db.taskInstances.deleteByTemplateId(templateId)` and removes orphans from in-memory state.
+2. **`updateTask`** — now calls `db.taskInstances.deleteByScheduleIds(oldScheduleIds)` before creating new schedules; also removes from in-memory state.
+3. **`load()`** — added orphan pruning pass on every load: instances whose `templateId` or `scheduleId` is not in the current maps are deleted from IndexedDB. This is a one-time heal for existing families (e.g. Test22) and a safety net for future edge cases.
+4. **`HomeScreen`** — the inline filter now also guards `taskTemplates[i.templateId] && taskSchedules[i.scheduleId]` so the counter only counts visible tasks even if an orphan slips through.
+
+New helpers added to `db.taskInstances`: `deleteByTemplateId(templateId)` and `deleteByScheduleIds(scheduleIds[])`.
 
 ---
 

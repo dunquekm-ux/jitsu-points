@@ -233,12 +233,26 @@ export const useAppStore = create<AppState>((set, get) => ({
       const scheduleMap: Record<string, TaskSchedule> = {};
       for (const s of schedulesList) scheduleMap[s.id] = s;
 
+      // ── Orphan pruning ───────────────────────────────────────────────────────
+      // Instances whose templateId or scheduleId no longer exists (task deleted or
+      // schedule replaced) would inflate the task counter without showing a card.
+      // Prune them once on load so the DB stays clean.
+      const orphanedInstances = existingInstances.filter(
+        (i) => !templateMap[i.templateId] || !scheduleMap[i.scheduleId],
+      );
+      if (orphanedInstances.length > 0) {
+        await Promise.all(orphanedInstances.map((i) => db.taskInstances.delete(i.id)));
+      }
+      const cleanInstances = existingInstances.filter(
+        (i) => templateMap[i.templateId] && scheduleMap[i.scheduleId],
+      );
+
       // Generate missing instances for the full window (past + future)
       const newInstances: TaskInstance[] = [];
       for (const template of templatesList) {
         const schedules = schedulesList.filter((s) => s.taskTemplateId === template.id);
         for (const schedule of schedules) {
-          const generated = generateInstances(template, schedule, window, existingInstances, now);
+          const generated = generateInstances(template, schedule, window, cleanInstances, now);
           newInstances.push(...generated);
         }
       }
@@ -248,7 +262,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         await Promise.all(newInstances.map((i) => db.taskInstances.put(i)));
       }
 
-      const allInstances = [...existingInstances, ...newInstances];
+      const allInstances = [...cleanInstances, ...newInstances];
 
       // Recalculate states
       const schedMapForRecalc = new Map(Object.entries(scheduleMap));
@@ -450,6 +464,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     );
     await db.taskTemplates.put(updated);
     await Promise.all(oldSchedules.map((s) => db.taskSchedules.delete(s.id)));
+    // Delete instances for the old schedules — they are now orphaned since schedule IDs changed
+    await db.taskInstances.deleteByScheduleIds(oldSchedules.map((s) => s.id));
     const newSchedules = data.schedules.map((s) =>
       createSchedule(templateId, s.label, s.startTime, s.endTime, {
         reminderTime: s.reminderTime,
@@ -459,12 +475,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     await Promise.all(newSchedules.map((s) => db.taskSchedules.put(s)));
     await markDirty();
     schedulePush();
+    const oldScheduleIds = new Set(oldSchedules.map((s) => s.id));
     const newSchedMap = { ...get().taskSchedules };
     for (const s of oldSchedules) delete newSchedMap[s.id];
     for (const s of newSchedules) newSchedMap[s.id] = s;
     set((s) => ({
       taskTemplates: { ...s.taskTemplates, [templateId]: updated },
       taskSchedules: newSchedMap,
+      taskInstances: s.taskInstances.filter((i) => !oldScheduleIds.has(i.scheduleId)),
     }));
   },
 
@@ -476,13 +494,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     );
     await db.taskTemplates.delete(templateId);
     await Promise.all(schedules.map((s) => db.taskSchedules.delete(s.id)));
+    // Delete all instances for this template so orphaned records don't accumulate
+    await db.taskInstances.deleteByTemplateId(templateId);
     await markDirty();
     schedulePush();
     const newTemplates = { ...get().taskTemplates };
     delete newTemplates[templateId];
     const newSchedules = { ...get().taskSchedules };
     for (const s of schedules) delete newSchedules[s.id];
-    set({ taskTemplates: newTemplates, taskSchedules: newSchedules });
+    set({
+      taskTemplates: newTemplates,
+      taskSchedules: newSchedules,
+      taskInstances: get().taskInstances.filter((i) => i.templateId !== templateId),
+    });
   },
 
   // ─── createRewardItem ─────────────────────────────────────────────────────

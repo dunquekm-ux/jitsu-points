@@ -39,8 +39,14 @@ export default function HomeScreen() {
   // DEF-006: Filter inline — never use a selector that returns a new array reference.
   // selectTodaysTasks returned a new array on every call, causing useSyncExternalStore
   // to see an ever-changing snapshot → infinite re-render loop → React error #185.
+  // DEF-013: Also filter out orphaned instances (template/schedule deleted) so the
+  // counter matches the visible card count.
   const taskInstances = allTaskInstances.filter(
-    (i) => i.childId === (childId ?? '') && i.date === todayISO(),
+    (i) =>
+      i.childId === (childId ?? '') &&
+      i.date === todayISO() &&
+      taskTemplates[i.templateId] &&
+      taskSchedules[i.scheduleId],
   );
 
   // These selectors return numbers (primitive) — safe to use as selectors

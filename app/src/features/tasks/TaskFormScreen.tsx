@@ -141,6 +141,7 @@ export default function TaskFormScreen() {
   const [title, setTitle] = useState('');
   const [icon, setIcon] = useState('📋');
   const [iconInputVal, setIconInputVal] = useState(''); // separate from preset selection
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [points, setPoints] = useState(10);
   const [assignedChildIds, setAssignedChildIds] = useState<string[]>([]);
   const [allowEarlyCompletion, setAllowEarlyCompletion] = useState(false);
@@ -310,44 +311,18 @@ export default function TaskFormScreen() {
           </div>
         )}
 
-        {/* Icon picker */}
+        {/* Icon picker — trigger only; grid opens in bottom-sheet (DEF-015) */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Icon</label>
-          <p className={styles.fieldHint}>Tap to select · or type any emoji below (1 emoji max)</p>
-          <div className={styles.iconPreviewRow}>
-            <span className={styles.iconPreview}>{icon}</span>
-            <span className={styles.iconPreviewLabel}>Selected</span>
-          </div>
-          <div className={styles.iconGrid}>
-            {ICON_PRESETS.map((e) => (
-              <button
-                key={e}
-                type="button"
-                className={[
-                  styles.iconBtn,
-                  icon === e && !iconInputVal ? styles.iconSelected : '',
-                ].join(' ')}
-                onClick={() => {
-                  setIcon(e);
-                  setIconInputVal(''); // clear custom input when preset chosen
-                }}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-          <input
-            className={styles.input}
-            placeholder="Custom emoji (e.g. 🎯)"
-            value={iconInputVal}
-            onChange={(e) => {
-              const val = e.target.value;
-              setIconInputVal(val);
-              // Use the custom value as the icon if non-empty, else fall back to first preset
-              setIcon(val.trim() || ICON_PRESETS[0]);
-            }}
-            maxLength={4}
-          />
+          <button
+            type="button"
+            className={styles.iconTrigger}
+            onClick={() => setIconPickerOpen(true)}
+          >
+            <span className={styles.iconTriggerEmoji}>{icon}</span>
+            <span className={styles.iconTriggerText}>Tap to choose icon</span>
+            <span className={styles.iconTriggerArrow}>›</span>
+          </button>
         </div>
 
         {/* Title */}
@@ -649,6 +624,60 @@ export default function TaskFormScreen() {
           </div>
         )}
       </div>
+
+      {/* Icon picker bottom-sheet */}
+      {iconPickerOpen && (
+        <div className={styles.iconSheet}>
+          {/* Backdrop */}
+          <div className={styles.iconSheetBackdrop} onClick={() => setIconPickerOpen(false)} />
+          {/* Panel */}
+          <div className={styles.iconSheetPanel}>
+            <div className={styles.iconSheetHeader}>
+              <span className={styles.iconSheetTitle}>Choose an icon</span>
+              <button
+                type="button"
+                className={styles.iconSheetClose}
+                onClick={() => setIconPickerOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.iconGrid}>
+              {ICON_PRESETS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  className={[
+                    styles.iconBtn,
+                    icon === e && !iconInputVal ? styles.iconSelected : '',
+                  ].join(' ')}
+                  onClick={() => {
+                    setIcon(e);
+                    setIconInputVal('');
+                    setIconPickerOpen(false);
+                  }}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+            <input
+              className={styles.input}
+              placeholder="Or type a custom emoji (e.g. 🎯)"
+              value={iconInputVal}
+              onChange={(e) => {
+                const val = e.target.value;
+                setIconInputVal(val);
+                setIcon(val.trim() || ICON_PRESETS[0]);
+              }}
+              onBlur={() => {
+                if (iconInputVal.trim()) setIconPickerOpen(false);
+              }}
+              maxLength={4}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

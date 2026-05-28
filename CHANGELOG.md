@@ -5,6 +5,28 @@
 
 ---
 
+## 2026.05.28.1 — Scroll fix (all screens), orphan instance pruning, icon picker bottom-sheet
+
+**Phase:** Post-launch
+
+**What's in this build:**
+
+- **DEF-014 closed — all screens now scroll correctly**
+  - Root cause: all 15 screen CSS modules had `height: 100%` on `.screen` but were missing `min-height: 0`. Flex items default to `min-height: auto`, causing them to grow to fit content rather than cap at viewport height — so `overflow-y: auto` on the inner scroll area never triggered.
+  - Fix: added `min-height: 0` to `.screen` in all 15 screen CSS modules via a PowerShell batch.
+
+- **DEF-013 closed — task counter now matches visible task cards**
+  - Root cause: `deleteTask` and `updateTask` deleted `TaskTemplate` / `TaskSchedule` records but left their `TaskInstance` records orphaned in IndexedDB. Orphans had valid `childId` + `date` so the counter included them, but `taskTemplates[instance.templateId]` returned `undefined` so no card rendered.
+  - Fix (4-part): `deleteTask` now deletes instances for the template; `updateTask` deletes instances with replaced schedule IDs; `load()` prunes orphaned instances on every load (one-time heal for existing families); `HomeScreen` filter now guards `taskTemplates[i.templateId] && taskSchedules[i.scheduleId]` on the counter.
+  - New helpers: `db.taskInstances.deleteByTemplateId()` and `db.taskInstances.deleteByScheduleIds()`
+
+- **DEF-015 closed — icon picker moved to bottom-sheet**
+  - The 57-icon inline grid has been replaced by a single trigger button (shows selected icon + "Tap to choose icon"). Tapping opens a `position: fixed` bottom-sheet that contains the full icon grid and the custom emoji input. Selecting an icon closes the sheet automatically; backdrop tap also closes it.
+
+**Tests:** 151 passing
+
+---
+
 ## 2026.05.27.2 — Data migration fix + onboarding scroll + CI clean-up
 
 **Phase:** Post-launch

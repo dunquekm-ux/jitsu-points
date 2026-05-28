@@ -76,6 +76,24 @@ export const taskInstances = {
   delete: async (id: string): Promise<void> => {
     await (await openJitsuDb()).delete('taskInstances', id);
   },
+  /** Delete all instances for a given template (used when a task is deleted). */
+  deleteByTemplateId: async (templateId: string): Promise<void> => {
+    const idb = await openJitsuDb();
+    const all = await idb.getAll('taskInstances');
+    await Promise.all(
+      all.filter((i) => i.templateId === templateId).map((i) => idb.delete('taskInstances', i.id)),
+    );
+  },
+  /** Delete all instances whose scheduleId is in the given set (used when schedules are replaced). */
+  deleteByScheduleIds: async (scheduleIds: string[]): Promise<void> => {
+    if (scheduleIds.length === 0) return;
+    const idSet = new Set(scheduleIds);
+    const idb = await openJitsuDb();
+    const all = await idb.getAll('taskInstances');
+    await Promise.all(
+      all.filter((i) => idSet.has(i.scheduleId)).map((i) => idb.delete('taskInstances', i.id)),
+    );
+  },
 };
 
 // ─── Points Events ────────────────────────────────────────────────────────────
