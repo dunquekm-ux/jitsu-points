@@ -7,4 +7,4 @@ compatibility_date = "2025-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "jitsu-points"
-database_id = "placeholder-run-wrangler-d1-create-jitsu-points"
+database_id = "6d3ea8e7-adcc-48a4-b1b1-2d1e663efe58"
