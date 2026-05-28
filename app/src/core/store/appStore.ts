@@ -183,6 +183,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   // ─── load ─────────────────────────────────────────────────────────────────
 
   load: async () => {
+    try {
     const now = new Date();
     const today = todayISO();
     const window = buildDateWindow(today);
@@ -190,7 +191,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Load everything from DB in parallel
     const [
       profilesList,
-      templatesList,
+      rawTemplatesList,
       schedulesList,
       existingInstances,
       eventsList,
@@ -205,6 +206,24 @@ export const useAppStore = create<AppState>((set, get) => ({
       db.rewards.getAll(),
       db.familyMeta.get(),
     ]);
+
+    // ── Backward-compat migration ────────────────────────────────────────────
+    // Old IndexedDB data stored assignedChildId (string) instead of
+    // assignedChildIds (string[]). Coerce and re-persist so the DB is healed.
+    const templatesList: TaskTemplate[] = rawTemplatesList.map((t) => {
+      const raw = t as unknown as Record<string, unknown>;
+      if (!Array.isArray(raw.assignedChildIds)) {
+        const healed: TaskTemplate = {
+          ...t,
+          assignedChildIds:
+            typeof raw.assignedChildId === 'string' ? [raw.assignedChildId] : [],
+        };
+        // Persist the healed record back so this migration runs once
+        db.taskTemplates.put(healed).catch(() => {/* best-effort */});
+        return healed;
+      }
+      return t;
+    });
 
     // Build lookup maps
     const templateMap: Record<string, TaskTemplate> = {};
@@ -252,6 +271,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       hasFamilyData: !!meta,
       isLoaded: true,
     });
+    } catch (err) {
+      // Safety net: if load() crashes (e.g. corrupt/old IndexedDB data), always
+      // unblock the UI so the user lands on the welcome screen instead of hanging.
+      console.error('[load] failed, resetting to welcome state', err);
+      set({ isLoaded: true, hasFamilyData: false });
+    }
   },
 
   // ─── selectChild ─────────────────────────────────────────────────────────
