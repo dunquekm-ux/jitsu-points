@@ -22,11 +22,11 @@ const liam = createProfile('Liam', 'flame_fox', { level: 2, currentStreak: 1 });
 
 // ─── Task templates ──────────────────────────────────────────────────────────
 
-const brushTeethTemplate = createTaskTemplate('Brush Teeth', 5, emma.id, { icon: '🦷' });
-const makesBedTemplate = createTaskTemplate('Make Bed', 10, emma.id, { icon: '🛏️' });
-const homeworkTemplate = createTaskTemplate('Do Homework', 20, emma.id, { icon: '📚' });
-const feedPetTemplate = createTaskTemplate('Feed the Dog', 15, liam.id, { icon: '🐶' });
-const tidyRoomTemplate = createTaskTemplate('Tidy Up Room', 10, liam.id, { icon: '🧹' });
+const brushTeethTemplate = createTaskTemplate('Brush Teeth', 5, [emma.id], { icon: '🦷' });
+const makesBedTemplate = createTaskTemplate('Make Bed', 10, [emma.id], { icon: '🛏️' });
+const homeworkTemplate = createTaskTemplate('Do Homework', 20, [emma.id], { icon: '📚' });
+const feedPetTemplate = createTaskTemplate('Feed the Dog', 15, [liam.id], { icon: '🐶' });
+const tidyRoomTemplate = createTaskTemplate('Tidy Up Room', 10, [liam.id], { icon: '🧹' });
 
 // ─── Schedules ───────────────────────────────────────────────────────────────
 

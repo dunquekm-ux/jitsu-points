@@ -48,7 +48,7 @@ describe('profiles CRUD', () => {
 
 describe('taskSchedules — by-templateId index', () => {
   it('retrieves schedules by template ID', async () => {
-    const t = createTaskTemplate('Brush Teeth', 5, 'child-1');
+    const t = createTaskTemplate('Brush Teeth', 5, ['child-1']);
     const s1 = createSchedule(t.id, 'Morning', '07:00', '09:00');
     const s2 = createSchedule(t.id, 'Evening', '19:00', '21:00');
     const unrelated = createSchedule('other-template', 'Morning', '07:00', '09:00');
