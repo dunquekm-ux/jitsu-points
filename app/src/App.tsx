@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import { applyTheme, getStoredTheme } from './core/theme';
 import { useAuthStore } from './core/auth/store';
-import { loadGIS, silentRefresh } from './core/auth/gis';
-import { loadTokens, hasValidToken } from './core/auth/tokens';
 import { useAppStore } from './core/store/appStore';
 import { rescheduleAllReminders } from './core/notifications';
 import AppRouter from './core/router';
@@ -10,8 +8,6 @@ import IOSInstallBanner from './shared/components/IOSInstallBanner';
 import AndroidInstallBanner from './shared/components/AndroidInstallBanner';
 import { todayISO } from './domain';
 import './core/theme/tokens.css';
-
-const HAS_AUTH = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function App() {
   const { isLoaded, taskSchedules, taskTemplates, taskInstances } = useAppStore();
@@ -21,28 +17,8 @@ export default function App() {
     // Apply saved theme before first paint
     applyTheme(getStoredTheme());
 
-    // Hydrate auth tokens from localStorage (silent, no UI)
+    // Hydrate family credentials from localStorage (sets status → 'connected' if present)
     useAuthStore.getState().hydrate();
-
-    // If a token exists but has expired, try a background silent refresh so
-    // Drive sync works without requiring the parent to tap "Reconnect" manually.
-    // When setTokens() resolves, useSync() re-memoises triggerSync and any
-    // screens that have it in their effect deps (HomeScreen, ParentDashboard)
-    // will automatically re-run and trigger a pull.
-    if (HAS_AUTH) {
-      const stored = loadTokens();
-      if (stored && !hasValidToken()) {
-        void (async () => {
-          try {
-            await loadGIS();
-            const freshTokens = await silentRefresh();
-            useAuthStore.getState().setTokens(freshTokens);
-          } catch {
-            // Refresh failed — stay unauthenticated; reconnect banner will show
-          }
-        })();
-      }
-    }
 
     // Load all app data from IndexedDB
     useAppStore.getState().load();
