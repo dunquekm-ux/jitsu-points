@@ -4,6 +4,7 @@ import Avatar, { AVATAR_CONFIG } from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
+import { useSyncStore } from '../../core/sync/store';
 import type { AvatarId } from '../../domain';
 import styles from './ManageKidsScreen.module.css';
 
@@ -22,7 +23,8 @@ export default function ManageKidsScreen() {
   const { profiles, createChild, updateChild, deleteChild } = useAppStore();
 
   const { status } = useAuthStore();
-  const isOffline = HAS_WORKER && status !== 'connected';
+  const { status: syncStatus } = useSyncStore();
+  const isOffline = HAS_WORKER && (status !== 'connected' || syncStatus === 'offline');
 
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -67,7 +69,7 @@ export default function ManageKidsScreen() {
       <div className={styles.body}>
         {isOffline && (
           <div className={styles.offlineBanner}>
-            ☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button.
+            📵 You're offline — changes can't be saved until you reconnect.
           </div>
         )}
 

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore, type ScheduleSlot } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
+import { useSyncStore } from '../../core/sync/store';
 import { getPermissionStatus, requestNotificationPermission } from '../../core/notifications';
 import { todayISO } from '../../domain';
 import type { Recurrence, DayOfWeek } from '../../domain';
@@ -62,7 +63,8 @@ export default function TaskFormScreen() {
   } = useAppStore();
 
   const { status } = useAuthStore();
-  const isOffline = HAS_WORKER && status !== 'connected';
+  const { status: syncStatus } = useSyncStore();
+  const isOffline = HAS_WORKER && (status !== 'connected' || syncStatus === 'offline');
 
   // Form state
   const [title, setTitle] = useState('');
@@ -218,7 +220,7 @@ export default function TaskFormScreen() {
       <div className={styles.body}>
         {isOffline && (
           <div className={styles.offlineBanner}>
-            ☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button.
+            📵 You're offline — changes can't be saved until you reconnect.
           </div>
         )}
 

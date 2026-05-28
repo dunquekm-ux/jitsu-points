@@ -4,6 +4,7 @@ import Avatar from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
+import { useSyncStore } from '../../core/sync/store';
 import styles from './DemeritComposer.module.css';
 
 const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
@@ -15,7 +16,8 @@ export default function DemeritComposer() {
   const { profiles, addDemerit } = useAppStore();
 
   const { status } = useAuthStore();
-  const isOffline = HAS_WORKER && status !== 'connected';
+  const { status: syncStatus } = useSyncStore();
+  const isOffline = HAS_WORKER && (status !== 'connected' || syncStatus === 'offline');
 
   const [childId, setChildId] = useState('');
   const [amount, setAmount] = useState(5);
@@ -45,7 +47,7 @@ export default function DemeritComposer() {
       <div className={styles.body}>
         {isOffline && (
           <div className={styles.offlineBanner}>
-            ☁️ Connect Google Drive to save changes — tap ← Back and use the Reconnect button.
+            📵 You're offline — changes can't be saved until you reconnect.
           </div>
         )}
 
