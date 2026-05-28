@@ -31,3 +31,6 @@ pnpm-debug.log*
 
 # Coverage
 coverage/
+
+# Wrangler local dev state (D1, KV, R2 caches)
+worker/.wrangler/
