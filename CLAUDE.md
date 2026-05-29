@@ -8,7 +8,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.05.28.1` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.05.28.2` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
@@ -17,7 +17,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 | Architecture decisions | `DECISIONS.md` | ✅ 17 ADRs logged (ADR-017: multi-child tasks) |
 | Defect log | `DEFECTS.md` | ✅ 15 defects logged (DEF-001–015 all closed) |
 | Domain reference | `DOMAIN.md` | ✅ Types, rules, state machine |
-| Changelog | `CHANGELOG.md` | ✅ Build log through 2026.05.28.1 |
+| Changelog | `CHANGELOG.md` | ✅ Build log through 2026.05.28.2 |
 | PWA app — Phase 0 | `app/` | ✅ Vite + React + TS, design tokens, CI pipeline |
 | PWA app — Phase 1 | `app/src/domain/` | ✅ Full domain layer, 79 tests, 100% line/fn coverage |
 | PWA app — Phase 2 | `app/src/core/` | ✅ IndexedDB, Auth, Workers+D1, Sync — 151 tests passing |

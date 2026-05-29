@@ -5,6 +5,21 @@
 
 ---
 
+## 2026.05.28.2 — Icon picker cell sizing fix
+
+**Phase:** Post-launch
+
+**What's in this build:**
+
+- **Icon picker bottom-sheet cells were too large on desktop/wide screens**
+  - `position: fixed` sheet had no `max-width` constraint, so on a laptop the panel spanned the full viewport and the 8-column grid gave each cell ~200px with a 22px emoji inside (emoji appeared ~20% of cell).
+  - Fix: added `max-width: 480px; margin: 0 auto` to `.iconSheetPanel` to match `#root`'s mobile column.
+  - Also replaced `aspect-ratio: 1` with `padding: 5px 0` on icon buttons so cells hug the emoji height rather than being forced square.
+
+**Tests:** 151 passing
+
+---
+
 ## 2026.05.28.1 — Scroll fix (all screens), orphan instance pruning, icon picker bottom-sheet
 
 **Phase:** Post-launch
