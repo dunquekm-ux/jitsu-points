@@ -8,7 +8,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.06.24.3` — Phases 0–7 complete; Phase 8 (parent UX refinements) shipped: duplicate task, sortable task list, points input fix, "What's New" popup (Parent Mode, version-gated). Full E2E suite green (19 local + 5 production smoke). CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.06.24.4` — Phases 0–7 complete; Phase 8 (parent UX refinements) shipped: duplicate task, sortable task list, shared `NumberField` (points/bonus/demerit clearable + clamped), "What's New" popup (Parent Mode, version-gated). Full E2E suite green (21 local + 5 production smoke). CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
@@ -586,6 +586,7 @@ app/public/
 | 8.3 | **Points input fix** — manual points field can't be cleared (backspace snaps to `1`, typing prepends → e.g. `125`). Fix: back the input with transient string state allowing empty, select-all-on-focus for instant overtype, clamp to 1–500 only on blur. Verified broken via Playwright probe (2026.06.24). | ✅ |
 | 8.4 | **"What's New" popup** — version-gated release-notes modal in Parent Mode for returning users. Content/logic in `core/whatsNew/`; `WhatsNewModal` on `ParentDashboard`. New families excluded (onboarding + demo-seed call `markWhatsNewSeen()`). E2E `e2e/whats-new.spec.ts`. Shipped 2026.06.24.3. | ✅ |
 | 8.5 | **CI: GitHub Actions → Node 24** — bumped `checkout@v7`, `setup-node@v6`, `upload-artifact@v7`, `download-artifact@v8`; removed `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`. Shipped 2026.06.24.3. | ✅ |
+| 8.7 | **Shared `NumberField` + bonus/demerit input fixes** — extracted `shared/components/NumberField.tsx`; fixed the same live-clamp bug in BonusComposer & DemeritComposer; refactored TaskFormScreen points onto it; removed dead demerit cap-note. Input audit done (ManageRewards already safe). E2E `e2e/number-fields.spec.ts`. Shipped 2026.06.24.4. | ✅ |
 
 #### Planned — next build
 

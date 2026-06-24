@@ -5,6 +5,23 @@
 
 ---
 
+## 2026.06.24.4 — Shared NumberField; bonus & demerit input fixes
+
+**Phase:** 8 — Parent UX refinements
+
+**What's in this build:**
+
+- **Extracted `shared/components/NumberField.tsx`** — one correct numeric input (string-backed so it clears, select-all-on-focus for instant overtype, clamp to [min, max] only on blur, external values like quick-pick chips flow back in). Replaces three hand-rolled copies.
+- **Fixed BonusComposer & DemeritComposer amount fields** — both had the same bug as the original points field (`setAmount(Math.max(1, Number(e.target.value)))` clamped on every keystroke → couldn't clear, prepended digits like `135`). Now both use `NumberField`.
+- **Refactored TaskFormScreen points** onto `NumberField` too (removed the local `pointsText`/`clampPoints` duplication).
+- **Removed dead code** in DemeritComposer — the `amount > MAX_DEMERIT` cap note could never render once input was clamped.
+- Reviewed all app inputs (audit from prior turn): `ManageRewardsScreen` cost already used the safe string-backed pattern; text/time/date inputs are unaffected.
+- **E2E:** new `e2e/number-fields.spec.ts` (bonus + demerit: clear, overtype, chip sync, clamp on blur); points covered by `phase8.spec.ts`.
+
+**Tests:** 151 unit passing · 21 local E2E passing · 5 production smoke passing.
+
+---
+
 ## 2026.06.24.3 — "What's New" popup + CI action upgrades
 
 **Phase:** 8 — Parent UX refinements

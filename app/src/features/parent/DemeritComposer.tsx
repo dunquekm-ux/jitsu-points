@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
+import NumberField from '../../shared/components/NumberField';
 import { useAppStore } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
 import { useSyncStore } from '../../core/sync/store';
@@ -79,17 +80,15 @@ export default function DemeritComposer() {
             </button>
           ))}
         </div>
-        <input
-          type="number"
-          className={styles.input}
+        <NumberField
           value={amount}
+          onCommit={setAmount}
           min={1}
           max={MAX_DEMERIT}
-          onChange={(e) => setAmount(Math.min(MAX_DEMERIT, Math.max(1, Number(e.target.value))))}
+          fallback={5}
+          className={styles.input}
+          ariaLabel="Demerit amount"
         />
-        {amount > MAX_DEMERIT && (
-          <p className={styles.capNote}>Capped at −{MAX_DEMERIT} pts per the house rules.</p>
-        )}
 
         {/* Reason */}
         <label className={styles.label}>Reason (recommended)</label>

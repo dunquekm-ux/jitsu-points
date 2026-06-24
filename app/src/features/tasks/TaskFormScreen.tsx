@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import ChunkyButton from '../../shared/components/ChunkyButton';
+import NumberField from '../../shared/components/NumberField';
 import { useAppStore, type ScheduleSlot } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
 import { useSyncStore } from '../../core/sync/store';
@@ -121,13 +122,6 @@ const POINTS_MIN = 1;
 const POINTS_MAX = 500;
 const POINTS_DEFAULT = 10;
 
-// Parse + clamp the free-typed points value, falling back when blank/invalid.
-function clampPoints(text: string, fallback: number): number {
-  const n = Number(text);
-  if (text.trim() === '' || Number.isNaN(n)) return fallback;
-  return Math.min(POINTS_MAX, Math.max(POINTS_MIN, Math.floor(n)));
-}
-
 // A one-time slot whose date is already in the past — invalid (would generate a missed instance).
 function isPastOnceSlot(slot: FormSlot, today: string): boolean {
   return slot.recurrence.type === 'once' && slot.recurrence.date < today;
@@ -162,7 +156,6 @@ export default function TaskFormScreen() {
   const [iconInputVal, setIconInputVal] = useState(''); // separate from preset selection
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [points, setPoints] = useState(POINTS_DEFAULT);
-  const [pointsText, setPointsText] = useState(String(POINTS_DEFAULT)); // free-typed; committed on blur
   const [assignedChildIds, setAssignedChildIds] = useState<string[]>([]);
   const [allowEarlyCompletion, setAllowEarlyCompletion] = useState(false);
   const [slots, setSlots] = useState<FormSlot[]>([defaultSlot()]);
@@ -194,7 +187,6 @@ export default function TaskFormScreen() {
         setIconInputVal(t.icon || '');
       }
       setPoints(t.points);
-      setPointsText(String(t.points));
       setAssignedChildIds(t.assignedChildIds ?? []);
       setAllowEarlyCompletion(t.allowEarlyCompletion);
       const schedList = Object.values(taskSchedules).filter((s) => s.taskTemplateId === templateId);
@@ -291,12 +283,11 @@ export default function TaskFormScreen() {
       return;
     }
 
-    const finalPoints = clampPoints(pointsText, points);
     setSaving(true);
     const data = {
       title: title.trim(),
       icon,
-      points: finalPoints,
+      points,
       assignedChildIds,
       allowEarlyCompletion,
       schedules: slots.map(toScheduleSlot),
@@ -382,29 +373,20 @@ export default function TaskFormScreen() {
                 key={v}
                 type="button"
                 className={[styles.chip, points === v ? styles.chipSelected : ''].join(' ')}
-                onClick={() => {
-                  setPoints(v);
-                  setPointsText(String(v));
-                }}
+                onClick={() => setPoints(v)}
               >
                 {v}
               </button>
             ))}
           </div>
-          <input
-            type="number"
-            inputMode="numeric"
-            className={styles.input}
-            value={pointsText}
+          <NumberField
+            value={points}
+            onCommit={setPoints}
             min={POINTS_MIN}
             max={POINTS_MAX}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setPointsText(e.target.value)}
-            onBlur={() => {
-              const clamped = clampPoints(pointsText, points || POINTS_DEFAULT);
-              setPoints(clamped);
-              setPointsText(String(clamped));
-            }}
+            fallback={POINTS_DEFAULT}
+            className={styles.input}
+            ariaLabel="Points to earn"
           />
         </div>
 

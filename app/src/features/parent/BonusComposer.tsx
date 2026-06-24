@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Avatar from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
+import NumberField from '../../shared/components/NumberField';
 import { useAppStore } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
 import { useSyncStore } from '../../core/sync/store';
@@ -77,13 +78,14 @@ export default function BonusComposer() {
             </button>
           ))}
         </div>
-        <input
-          type="number"
-          className={styles.input}
+        <NumberField
           value={amount}
+          onCommit={setAmount}
           min={1}
           max={999}
-          onChange={(e) => setAmount(Math.max(1, Number(e.target.value)))}
+          fallback={10}
+          className={styles.input}
+          ariaLabel="Bonus amount"
         />
 
         {/* Note */}
