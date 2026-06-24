@@ -5,6 +5,20 @@
 
 ---
 
+## 2026.06.24.5 — More visible version number
+
+**Phase:** 8 — Parent UX refinements
+
+**What's in this build:**
+
+- **Version number is now readable on a phone.** The profile-picker stamp was 11px / white @ 35% opacity / bottom-center — nearly invisible on device. Now 13px, white @ 75%, with a subtle rounded pill background and a `v` prefix (`ProfilePicker .buildNum`).
+- **Added a version line in Parent Mode** — `Jitsu Points · v{APP_VERSION}` in the settings section (where a parent naturally looks), using `--color-text-muted`. Selectable text.
+- **E2E:** `parent-flow.spec.ts` now asserts the version line is visible on the dashboard.
+
+**Tests:** 151 unit passing · 22 local E2E passing · 5 production smoke passing.
+
+---
+
 ## 2026.06.24.4 — Shared NumberField; bonus & demerit input fixes
 
 **Phase:** 8 — Parent UX refinements

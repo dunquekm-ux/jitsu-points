@@ -8,6 +8,7 @@ import { calculateStreak, todayISO } from '../../domain';
 import ThemeSwitcher from './ThemeSwitcher';
 import WhatsNewModal from './WhatsNewModal';
 import { shouldShowWhatsNew, markWhatsNewSeen } from '../../core/whatsNew';
+import { APP_VERSION } from '../../version';
 import styles from './ParentDashboard.module.css';
 
 function timeAgo(iso: string): string {
@@ -343,6 +344,7 @@ export default function ParentDashboard() {
           >
             {resetting ? '⏳ Resetting…' : '🔄 Reset / Switch family'}
           </button>
+          <p className={styles.versionLine}>Jitsu Points · v{APP_VERSION}</p>
         </div>
       </div>
 

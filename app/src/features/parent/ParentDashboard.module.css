@@ -403,6 +403,15 @@
   cursor: not-allowed;
 }
 
+.versionLine {
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-family: monospace;
+  color: var(--color-text-muted);
+  user-select: text;
+}
+
 /* Family & Join Code */
 .familyCard {
   background: var(--color-bg-card);

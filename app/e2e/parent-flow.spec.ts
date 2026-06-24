@@ -37,6 +37,15 @@ test('navigate to new task form', async ({ page }) => {
   await expect(page.getByText(/new task/i)).toBeVisible({ timeout: 5000 });
 });
 
+test('app version is visible on parent dashboard', async ({ page }) => {
+  await loadDemoData(page);
+  await page.getByRole('button', { name: /parent mode/i }).click();
+  // A "Jitsu Points · vYYYY.MM.DD.N" line should be readable in settings.
+  await expect(page.getByText(/Jitsu Points · v\d{4}\.\d{2}\.\d{2}\.\d+/)).toBeVisible({
+    timeout: 5000,
+  });
+});
+
 test('theme switcher is visible on parent dashboard', async ({ page }) => {
   await loadDemoData(page);
   await page.getByRole('button', { name: /parent mode/i }).click();

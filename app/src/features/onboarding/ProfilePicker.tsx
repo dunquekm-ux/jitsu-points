@@ -67,7 +67,7 @@ export default function ProfilePicker() {
       <button className={styles.parentBtn} onClick={() => navigate('/parent')}>
         ⚙️ Parent Mode
       </button>
-      <span className={styles.buildNum}>{APP_VERSION}</span>
+      <span className={styles.buildNum}>v{APP_VERSION}</span>
     </div>
   );
 }
