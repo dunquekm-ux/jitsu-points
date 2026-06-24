@@ -238,9 +238,10 @@ export default function ParentDashboard() {
                   <div className={styles.sortToggle}>
                     <button
                       type="button"
-                      className={[styles.sortBtn, sortKey === 'name' ? styles.sortBtnActive : ''].join(
-                        ' ',
-                      )}
+                      className={[
+                        styles.sortBtn,
+                        sortKey === 'name' ? styles.sortBtnActive : '',
+                      ].join(' ')}
                       onClick={() => changeSort('name')}
                     >
                       Name {sortKey === 'name' ? dirArrow : ''}
@@ -260,43 +261,43 @@ export default function ParentDashboard() {
               )}
               <div className={styles.taskList}>
                 {sortedTemplates.map((t) => {
-                const schedCount = Object.values(taskSchedules).filter(
-                  (s) => s.taskTemplateId === t.id,
-                ).length;
-                const assigneeNames =
-                  t.assignedChildIds
-                    .map((id) => profiles.find((p) => p.id === id)?.name)
-                    .filter(Boolean)
-                    .join(', ') || '?';
-                return (
-                  <div key={t.id} className={styles.taskRow} data-testid="parent-task-row">
-                    <span className={styles.taskIcon}>{t.icon || '📋'}</span>
-                    <div className={styles.taskInfo}>
-                      <span className={styles.taskTitle} data-testid="parent-task-title">
-                        {t.title}
-                      </span>
-                      <span className={styles.taskMeta}>
-                        ⭐ {t.points} · {schedCount} schedule{schedCount !== 1 ? 's' : ''} ·{' '}
-                        {assigneeNames}
-                      </span>
+                  const schedCount = Object.values(taskSchedules).filter(
+                    (s) => s.taskTemplateId === t.id,
+                  ).length;
+                  const assigneeNames =
+                    t.assignedChildIds
+                      .map((id) => profiles.find((p) => p.id === id)?.name)
+                      .filter(Boolean)
+                      .join(', ') || '?';
+                  return (
+                    <div key={t.id} className={styles.taskRow} data-testid="parent-task-row">
+                      <span className={styles.taskIcon}>{t.icon || '📋'}</span>
+                      <div className={styles.taskInfo}>
+                        <span className={styles.taskTitle} data-testid="parent-task-title">
+                          {t.title}
+                        </span>
+                        <span className={styles.taskMeta}>
+                          ⭐ {t.points} · {schedCount} schedule{schedCount !== 1 ? 's' : ''} ·{' '}
+                          {assigneeNames}
+                        </span>
+                      </div>
+                      <div className={styles.taskRowActions}>
+                        <button
+                          className={styles.dupBtn}
+                          onClick={() => navigate(`/parent/task/${t.id}/duplicate`)}
+                          title="Duplicate this task"
+                        >
+                          📋 Duplicate
+                        </button>
+                        <button
+                          className={styles.editBtn}
+                          onClick={() => navigate(`/parent/task/${t.id}/edit`)}
+                        >
+                          Edit
+                        </button>
+                      </div>
                     </div>
-                    <div className={styles.taskRowActions}>
-                      <button
-                        className={styles.dupBtn}
-                        onClick={() => navigate(`/parent/task/${t.id}/duplicate`)}
-                        title="Duplicate this task"
-                      >
-                        📋 Duplicate
-                      </button>
-                      <button
-                        className={styles.editBtn}
-                        onClick={() => navigate(`/parent/task/${t.id}/edit`)}
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                );
+                  );
                 })}
               </div>
             </>
