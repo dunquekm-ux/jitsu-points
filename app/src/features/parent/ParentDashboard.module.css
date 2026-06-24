@@ -261,6 +261,65 @@
   flex-shrink: 0;
 }
 
+.taskRowActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.dupBtn {
+  background: none;
+  border: 1.5px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Sort control */
+.sortRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.sortLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sortToggle {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.sortBtn {
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border, var(--color-text-muted));
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  padding: var(--space-1) var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.sortBtnActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-bg-card);
+}
+
 .empty {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);

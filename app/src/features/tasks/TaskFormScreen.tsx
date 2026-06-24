@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore, type ScheduleSlot } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth';
@@ -117,10 +117,29 @@ function isAllDay(startTime: string, endTime: string) {
   return startTime === '00:00' && endTime === '23:59';
 }
 
+const POINTS_MIN = 1;
+const POINTS_MAX = 500;
+const POINTS_DEFAULT = 10;
+
+// Parse + clamp the free-typed points value, falling back when blank/invalid.
+function clampPoints(text: string, fallback: number): number {
+  const n = Number(text);
+  if (text.trim() === '' || Number.isNaN(n)) return fallback;
+  return Math.min(POINTS_MAX, Math.max(POINTS_MIN, Math.floor(n)));
+}
+
+// A one-time slot whose date is already in the past — invalid (would generate a missed instance).
+function isPastOnceSlot(slot: FormSlot, today: string): boolean {
+  return slot.recurrence.type === 'once' && slot.recurrence.date < today;
+}
+
 export default function TaskFormScreen() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { templateId } = useParams<{ templateId?: string }>();
-  const isEdit = !!templateId;
+  const isDuplicate = !!templateId && pathname.endsWith('/duplicate');
+  const isEdit = !!templateId && !isDuplicate;
+  const today = todayISO();
 
   const {
     profiles,
@@ -142,7 +161,8 @@ export default function TaskFormScreen() {
   const [icon, setIcon] = useState('📋');
   const [iconInputVal, setIconInputVal] = useState(''); // separate from preset selection
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
-  const [points, setPoints] = useState(10);
+  const [points, setPoints] = useState(POINTS_DEFAULT);
+  const [pointsText, setPointsText] = useState(String(POINTS_DEFAULT)); // free-typed; committed on blur
   const [assignedChildIds, setAssignedChildIds] = useState<string[]>([]);
   const [allowEarlyCompletion, setAllowEarlyCompletion] = useState(false);
   const [slots, setSlots] = useState<FormSlot[]>([defaultSlot()]);
@@ -154,15 +174,16 @@ export default function TaskFormScreen() {
     if (!isLoaded) load();
   }, [isLoaded, load]);
 
-  // Pre-fill for edit mode
+  // Pre-fill for edit and duplicate modes
   useEffect(() => {
-    if (isEdit && templateId && isLoaded) {
+    if ((isEdit || isDuplicate) && templateId && isLoaded) {
       const t = taskTemplates[templateId];
       if (!t) {
         navigate('/parent');
         return;
       }
-      setTitle(t.title);
+      // Duplicate marks the copy distinct; edit keeps the original title.
+      setTitle(isDuplicate ? `${t.title} (copy)` : t.title);
       // If saved icon is a preset, select it in the grid (clear the text box).
       // If it's a custom emoji, put it in the text box instead.
       if (ICON_PRESETS.includes(t.icon)) {
@@ -173,6 +194,7 @@ export default function TaskFormScreen() {
         setIconInputVal(t.icon || '');
       }
       setPoints(t.points);
+      setPointsText(String(t.points));
       setAssignedChildIds(t.assignedChildIds ?? []);
       setAllowEarlyCompletion(t.allowEarlyCompletion);
       const schedList = Object.values(taskSchedules).filter((s) => s.taskTemplateId === templateId);
@@ -188,13 +210,13 @@ export default function TaskFormScreen() {
           })),
         );
       }
-    } else if (!isEdit && profiles.length > 0 && assignedChildIds.length === 0) {
+    } else if (!isEdit && !isDuplicate && profiles.length > 0 && assignedChildIds.length === 0) {
       // Pre-select all children for new tasks when there's only one child;
       // leave unchecked otherwise so the parent makes an explicit choice.
       if (profiles.length === 1) setAssignedChildIds([profiles[0].id]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEdit, templateId, isLoaded]);
+  }, [isEdit, isDuplicate, templateId, isLoaded]);
 
   function updateSlot(index: number, patch: Partial<FormSlot>) {
     setSlotError(null);
@@ -260,11 +282,21 @@ export default function TaskFormScreen() {
       return;
     }
 
+    // Validate: a one-time slot can't be scheduled in the past (it would generate a missed instance)
+    const pastSlot = slots.find((s) => isPastOnceSlot(s, today));
+    if (pastSlot) {
+      setSlotError(
+        `"${pastSlot.label || 'A slot'}" is set to a date in the past. Pick today or a future date.`,
+      );
+      return;
+    }
+
+    const finalPoints = clampPoints(pointsText, points);
     setSaving(true);
     const data = {
       title: title.trim(),
       icon,
-      points,
+      points: finalPoints,
       assignedChildIds,
       allowEarlyCompletion,
       schedules: slots.map(toScheduleSlot),
@@ -288,10 +320,12 @@ export default function TaskFormScreen() {
     navigate('/parent');
   }
 
+  const hasPastOnceDate = slots.some((s) => isPastOnceSlot(s, today));
   const canSave =
     title.trim().length > 0 &&
     assignedChildIds.length > 0 &&
     slots.length > 0 &&
+    !hasPastOnceDate &&
     !saving &&
     !isOffline;
 
@@ -301,7 +335,9 @@ export default function TaskFormScreen() {
         <button className={styles.backBtn} onClick={() => navigate('/parent')}>
           ← Back
         </button>
-        <h1 className={styles.title}>{isEdit ? '✏️ Edit Task' : '➕ New Task'}</h1>
+        <h1 className={styles.title}>
+          {isDuplicate ? '📋 Duplicate Task' : isEdit ? '✏️ Edit Task' : '➕ New Task'}
+        </h1>
       </div>
 
       <div className={styles.body}>
@@ -346,7 +382,10 @@ export default function TaskFormScreen() {
                 key={v}
                 type="button"
                 className={[styles.chip, points === v ? styles.chipSelected : ''].join(' ')}
-                onClick={() => setPoints(v)}
+                onClick={() => {
+                  setPoints(v);
+                  setPointsText(String(v));
+                }}
               >
                 {v}
               </button>
@@ -354,11 +393,18 @@ export default function TaskFormScreen() {
           </div>
           <input
             type="number"
+            inputMode="numeric"
             className={styles.input}
-            value={points}
-            min={1}
-            max={500}
-            onChange={(e) => setPoints(Math.max(1, Number(e.target.value)))}
+            value={pointsText}
+            min={POINTS_MIN}
+            max={POINTS_MAX}
+            onFocus={(e) => e.target.select()}
+            onChange={(e) => setPointsText(e.target.value)}
+            onBlur={() => {
+              const clamped = clampPoints(pointsText, points || POINTS_DEFAULT);
+              setPoints(clamped);
+              setPointsText(String(clamped));
+            }}
           />
         </div>
 
@@ -520,12 +566,21 @@ export default function TaskFormScreen() {
                   <span className={styles.timeLabel}>On date</span>
                   <input
                     type="date"
-                    className={styles.inputSm}
+                    min={today}
+                    className={[
+                      styles.inputSm,
+                      isPastOnceSlot(slot, today) ? styles.inputError : '',
+                    ].join(' ')}
                     value={slot.recurrence.date}
                     onChange={(e) =>
                       setRecurrence(i, { type: 'once', date: e.target.value || todayISO() })
                     }
                   />
+                  {isPastOnceSlot(slot, today) && (
+                    <span className={styles.dateWarning}>
+                      ⚠️ This date is in the past — pick today or later.
+                    </span>
+                  )}
                 </div>
               )}
 

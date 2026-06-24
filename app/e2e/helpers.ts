@@ -7,6 +7,11 @@ export const DB_NAME = 'jitsu-points';
 
 /** Wipe the IndexedDB so every test starts from a clean slate. */
 export async function clearAppData(page: Page): Promise<void> {
+  // IndexedDB is denied on the initial about:blank context — make sure we're on
+  // the app origin before touching storage.
+  if (!page.url().startsWith('http')) {
+    await page.goto('/');
+  }
   await page.evaluate((dbName) => {
     return new Promise<void>((resolve, reject) => {
       const req = indexedDB.deleteDatabase(dbName);

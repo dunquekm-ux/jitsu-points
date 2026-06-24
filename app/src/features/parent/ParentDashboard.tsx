@@ -51,6 +51,8 @@ export default function ParentDashboard() {
   const { status: syncStatus, lastSyncedAt, triggerSync } = useSync();
   const [codeCopied, setCodeCopied] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [sortKey, setSortKey] = useState<'name' | 'points'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     if (!isLoaded) load();
@@ -97,6 +99,24 @@ export default function ParentDashboard() {
 
   const today = todayISO();
   const templateList = Object.values(taskTemplates);
+  const sortedTemplates = [...templateList].sort((a, b) => {
+    const cmp =
+      sortKey === 'name'
+        ? a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+        : a.points - b.points;
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  // Tap an active key to flip direction; tap an inactive key to switch and reset direction.
+  function changeSort(key: 'name' | 'points') {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'points' ? 'desc' : 'asc'); // points defaults high→low
+    }
+  }
+  const dirArrow = sortDir === 'asc' ? '↑' : '↓';
 
   if (!isLoaded) {
     return (
@@ -211,8 +231,35 @@ export default function ParentDashboard() {
           {templateList.length === 0 ? (
             <p className={styles.empty}>No tasks yet — add one above!</p>
           ) : (
-            <div className={styles.taskList}>
-              {templateList.map((t) => {
+            <>
+              {templateList.length > 1 && (
+                <div className={styles.sortRow}>
+                  <span className={styles.sortLabel}>Sort by</span>
+                  <div className={styles.sortToggle}>
+                    <button
+                      type="button"
+                      className={[styles.sortBtn, sortKey === 'name' ? styles.sortBtnActive : ''].join(
+                        ' ',
+                      )}
+                      onClick={() => changeSort('name')}
+                    >
+                      Name {sortKey === 'name' ? dirArrow : ''}
+                    </button>
+                    <button
+                      type="button"
+                      className={[
+                        styles.sortBtn,
+                        sortKey === 'points' ? styles.sortBtnActive : '',
+                      ].join(' ')}
+                      onClick={() => changeSort('points')}
+                    >
+                      Points {sortKey === 'points' ? dirArrow : ''}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className={styles.taskList}>
+                {sortedTemplates.map((t) => {
                 const schedCount = Object.values(taskSchedules).filter(
                   (s) => s.taskTemplateId === t.id,
                 ).length;
@@ -222,25 +269,37 @@ export default function ParentDashboard() {
                     .filter(Boolean)
                     .join(', ') || '?';
                 return (
-                  <div key={t.id} className={styles.taskRow}>
+                  <div key={t.id} className={styles.taskRow} data-testid="parent-task-row">
                     <span className={styles.taskIcon}>{t.icon || '📋'}</span>
                     <div className={styles.taskInfo}>
-                      <span className={styles.taskTitle}>{t.title}</span>
+                      <span className={styles.taskTitle} data-testid="parent-task-title">
+                        {t.title}
+                      </span>
                       <span className={styles.taskMeta}>
                         ⭐ {t.points} · {schedCount} schedule{schedCount !== 1 ? 's' : ''} ·{' '}
                         {assigneeNames}
                       </span>
                     </div>
-                    <button
-                      className={styles.editBtn}
-                      onClick={() => navigate(`/parent/task/${t.id}/edit`)}
-                    >
-                      Edit
-                    </button>
+                    <div className={styles.taskRowActions}>
+                      <button
+                        className={styles.dupBtn}
+                        onClick={() => navigate(`/parent/task/${t.id}/duplicate`)}
+                        title="Duplicate this task"
+                      >
+                        📋 Duplicate
+                      </button>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => navigate(`/parent/task/${t.id}/edit`)}
+                      >
+                        Edit
+                      </button>
+                    </div>
                   </div>
                 );
-              })}
-            </div>
+                })}
+              </div>
+            </>
           )}
         </section>
 

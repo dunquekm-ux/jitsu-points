@@ -33,6 +33,7 @@ const router = createBrowserRouter([
   { path: '/parent', element: <ParentDashboard /> },
   { path: '/parent/task/new', element: <TaskFormScreen /> },
   { path: '/parent/task/:templateId/edit', element: <TaskFormScreen /> },
+  { path: '/parent/task/:templateId/duplicate', element: <TaskFormScreen /> },
   { path: '/parent/rewards', element: <ManageRewardsScreen /> },
   { path: '/parent/kids', element: <ManageKidsScreen /> },
   { path: '/parent/bonus', element: <BonusComposer /> },

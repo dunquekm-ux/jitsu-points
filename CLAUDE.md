@@ -8,7 +8,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.05.28.2` — All phases complete (0–7). CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.06.24.1` — Phases 0–7 complete; Phase 8 (parent UX refinements) shipped: duplicate task, sortable task list, points input fix. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
@@ -572,3 +572,15 @@ app/public/
 | 7.7 | Security review | ✅ ADR-015 logged — no blockers |
 | 7.8 | Retro + DECISIONS.md — ADR-013 (notifications), ADR-014 (audio), ADR-015 (security) | ✅ |
 | — | **Rive mascot integration** — blocked on `.riv` designer asset; CSS placeholder in place | 🎨 Pending asset |
+
+---
+
+### Phase 8 — Parent UX Refinements
+
+**Goal:** Make the parent task workflow faster and less error-prone. No domain/DB changes.
+
+| # | Task | Status |
+|---|---|---|
+| 8.1 | **Duplicate task** — `📋 Duplicate` button on each dashboard task row → new route `/parent/task/:templateId/duplicate` → `TaskFormScreen` pre-filled in `duplicate` mode (title gets `" (copy)"` suffix, Delete hidden), saves via `createTask` (fresh IDs). Past one-time dates: keep the date, show inline ⚠️ warning + block save until date ≥ today. Playwright: duplicating yields a 2nd template with a distinct ID. | ✅ |
+| 8.2 | **Sortable parent task list** — segmented toggle (Name / Points) above the dashboard task list for findability; default Name A–Z, tap to flip asc/desc. Sort is a UI-only view concern (no persisted field). | ✅ |
+| 8.3 | **Points input fix** — manual points field can't be cleared (backspace snaps to `1`, typing prepends → e.g. `125`). Fix: back the input with transient string state allowing empty, select-all-on-focus for instant overtype, clamp to 1–500 only on blur. Verified broken via Playwright probe (2026.06.24). | ✅ |

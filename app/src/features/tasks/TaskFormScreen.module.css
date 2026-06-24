@@ -379,6 +379,12 @@
   border-color: var(--color-state-missed) !important;
 }
 
+.dateWarning {
+  font-size: var(--font-size-xs);
+  color: var(--color-state-missed);
+  font-weight: var(--font-weight-bold);
+}
+
 /* Recurrence picker */
 .recurrenceRow {
   display: flex;

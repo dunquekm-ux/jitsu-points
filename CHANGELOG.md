@@ -5,6 +5,28 @@
 
 ---
 
+## 2026.06.24.1 — Phase 8: duplicate task, sortable task list, points input fix
+
+**Phase:** 8 — Parent UX refinements
+
+**What's in this build:**
+
+- **8.1 — Duplicate task**
+  - New `📋 Duplicate` button on each Parent Dashboard task row → new route `/parent/task/:templateId/duplicate`.
+  - `TaskFormScreen` gains a third mode (`create | edit | duplicate`): pre-fills from the source template + schedules, appends `" (copy)"` to the title, hides Delete, header reads "Duplicate Task". Saves via `createTask` so the copy gets fresh IDs; the original is untouched.
+  - Past one-time dates: date is kept, an inline ⚠️ warning is shown, the date input gets `min={today}`, and save is blocked until the date is today-or-later (validation applies in all modes).
+
+- **8.2 — Sortable parent task list**
+  - Segmented **Name / Points** toggle above the dashboard task list (shown only when >1 task). Default Name A–Z; tap the active key to flip direction; Points defaults high→low. Pure view-layer state — no persisted field.
+
+- **8.3 — Points input fix**
+  - Manual points field could not be cleared (every keystroke ran `Math.max(1, Number(...))`, so backspace snapped to `1` and further typing prepended digits → e.g. `125`). Confirmed via Playwright probe.
+  - Fix: input backed by transient string state (allows empty while editing), select-all-on-focus for instant overtype, clamp to 1–500 only on blur (empty falls back to the last valid value). Quick-pick chips still set the value.
+
+**Tests:** 151 unit passing · new Playwright suite `e2e/phase8.spec.ts` (4 tests) passing · all 5 parent-flow E2E passing. Hardened shared `clearAppData` E2E helper to navigate before touching IndexedDB.
+
+---
+
 ## 2026.05.28.2 — Icon picker cell sizing fix
 
 **Phase:** Post-launch
