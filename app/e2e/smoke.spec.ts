@@ -12,13 +12,13 @@ test('fresh install → shows welcome screen', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('h1, h2').filter({ hasText: /Jitsu/i })).toBeVisible({ timeout: 8000 });
   // WelcomeScreen has the two action buttons
-  await expect(page.getByRole('button', { name: /set up/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /join/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /set up our family/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /join our family/i })).toBeVisible();
 });
 
 test('welcome screen → navigate to family setup', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: /set up/i }).click();
+  await page.getByRole('button', { name: /set up our family/i }).click();
   // Should land on FamilySetup (/setup route)
   await expect(page).toHaveURL(/\/setup/, { timeout: 5000 });
 });

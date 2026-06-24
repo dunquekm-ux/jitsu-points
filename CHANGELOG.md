@@ -5,6 +5,23 @@
 
 ---
 
+## 2026.06.24.2 — E2E suite repair (stale assertions) + production smoke suite
+
+**Phase:** 8 — Parent UX refinements (test hardening)
+
+**What's in this build:**
+
+- **Fixed pre-existing E2E failures (stale test assertions, not app bugs):**
+  - `smoke.spec.ts`: `/set up/i` matched two buttons (the Join button reads "Already **set up**?"). Tightened to `/set up our family/i` + `/join our family/i`.
+  - `child-flow.spec.ts`: asserted `/child/<id>/home`, but the home route is `/child/:childId` (no `/home` segment). Fixed the URL regexes.
+  - `child-flow.spec.ts`: rewards nav used `getByRole('link')`, but `TabBar` renders `<button>`s. Switched to `button`.
+  - `child-flow.spec.ts`: "complete a task" was time-of-day dependent (task state is recomputed from the clock on load, so morning-window tasks resolved to `missed` outside 07:00–09:00). Pinned a fixed clock (`08:00`) in `beforeEach` for determinism.
+- **New production smoke suite** (`e2e/prod-smoke.spec.ts` + `playwright.prod.config.ts`): non-destructive, read-only checks against the live Cloudflare Pages deployment. Excluded from the default config via `testIgnore`.
+
+**Tests:** 151 unit passing · 17 local E2E passing (smoke 4, child-flow 4, parent-flow 5, phase8 4) · 5 production smoke passing against jitsu-points.pages.dev.
+
+---
+
 ## 2026.06.24.1 — Phase 8: duplicate task, sortable task list, points input fix
 
 **Phase:** 8 — Parent UX refinements

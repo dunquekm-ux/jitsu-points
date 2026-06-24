@@ -11,6 +11,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: /prod-smoke\.spec\.ts/, // prod smoke runs via playwright.prod.config.ts only
   fullyParallel: false, // Tests share stateful browser storage — run sequentially
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

@@ -8,7 +8,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.06.24.1` — Phases 0–7 complete; Phase 8 (parent UX refinements) shipped: duplicate task, sortable task list, points input fix. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.06.24.2` — Phases 0–7 complete; Phase 8 (parent UX refinements) shipped: duplicate task, sortable task list, points input fix. Full E2E suite green (17 local + 5 production smoke). CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|

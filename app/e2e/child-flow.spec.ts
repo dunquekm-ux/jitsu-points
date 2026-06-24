@@ -6,6 +6,10 @@ import { test, expect } from '@playwright/test';
 import { clearAppData, loadDemoData } from './helpers';
 
 test.beforeEach(async ({ page }) => {
+  // Pin the clock inside a morning task window (07:00–09:00). Task state is
+  // recomputed from the current time on load, so without this the demo's
+  // "available" tasks resolve to "missed" outside their window → flaky.
+  await page.clock.install({ time: new Date('2026-06-24T08:00:00') });
   await clearAppData(page);
 });
 
@@ -21,7 +25,7 @@ test('select child → home screen with tasks', async ({ page }) => {
   // Click Emma's profile card
   await page.getByText('Emma').click();
   // Should navigate to home screen
-  await expect(page).toHaveURL(/\/child\/.+\/home/, { timeout: 5000 });
+  await expect(page).toHaveURL(/\/child\/[^/]+$/, { timeout: 5000 });
   // Home screen should show Emma's name / greeting
   await expect(page.getByText('Emma')).toBeVisible({ timeout: 5000 });
 });
@@ -31,7 +35,7 @@ test('complete an available task → celebration overlay appears', async ({ page
   await page.getByText('Emma').click();
 
   // Wait for home screen to load
-  await expect(page).toHaveURL(/\/child\/.+\/home/, { timeout: 5000 });
+  await expect(page).toHaveURL(/\/child\/[^/]+$/, { timeout: 5000 });
 
   // Find an available task and tap it
   const availableTask = page.locator('[data-testid="task-card-available"]').first();
@@ -53,7 +57,7 @@ test('rewards vault shows available rewards', async ({ page }) => {
   await page.getByText('Emma').click();
 
   // Navigate to rewards tab
-  await page.getByRole('link', { name: /reward/i }).click();
+  await page.getByRole('button', { name: /reward/i }).click();
   await expect(page).toHaveURL(/\/rewards/, { timeout: 5000 });
 
   // Should see at least one reward
