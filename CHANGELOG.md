@@ -5,6 +5,23 @@
 
 ---
 
+## 2026.06.24.3 — "What's New" popup + CI action upgrades
+
+**Phase:** 8 — Parent UX refinements
+
+**What's in this build:**
+
+- **"What's New" modal** (`features/parent/WhatsNewModal.tsx`, content/logic in `core/whatsNew/`):
+  - Shows once in **Parent Mode** after the app updates to a new build, summarizing the latest parent-facing enhancements (duplicate task, sortable list, points field).
+  - **Returning users only** — version gated via `localStorage['jitsu-last-seen-version']`. Onboarding completion (`FamilySetup`, `JoinFamily`) and the dev demo-seed call `markWhatsNewSeen()` so freshly set-up families never see notes for features they're already getting.
+  - Dismiss ("Got it") records the current version; won't reappear until the next release with notes.
+  - E2E: `e2e/whats-new.spec.ts` (2 tests) — returning user sees it once then never again; established/seeded family never sees it.
+- **CI: bumped GitHub Actions off deprecated Node 20** — `checkout@v7`, `setup-node@v6`, `upload-artifact@v7`, `download-artifact@v8`; removed the `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` shim. (One residual notice remains from third-party `cloudflare/wrangler-action@v3`.)
+
+**Tests:** 151 unit passing · 19 local E2E passing (smoke 4, child-flow 4, parent-flow 5, phase8 4, whats-new 2) · 5 production smoke passing.
+
+---
+
 ## 2026.06.24.2 — E2E suite repair (stale assertions) + production smoke suite
 
 **Phase:** 8 — Parent UX refinements (test hardening)

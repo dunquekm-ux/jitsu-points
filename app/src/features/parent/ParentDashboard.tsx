@@ -6,6 +6,8 @@ import { useAuthStore } from '../../core/auth/store';
 import { useSync } from '../../core/sync';
 import { calculateStreak, todayISO } from '../../domain';
 import ThemeSwitcher from './ThemeSwitcher';
+import WhatsNewModal from './WhatsNewModal';
+import { shouldShowWhatsNew, markWhatsNewSeen } from '../../core/whatsNew';
 import styles from './ParentDashboard.module.css';
 
 function timeAgo(iso: string): string {
@@ -53,6 +55,12 @@ export default function ParentDashboard() {
   const [resetting, setResetting] = useState(false);
   const [sortKey, setSortKey] = useState<'name' | 'points'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [showWhatsNew, setShowWhatsNew] = useState(() => shouldShowWhatsNew());
+
+  function dismissWhatsNew() {
+    markWhatsNewSeen();
+    setShowWhatsNew(false);
+  }
 
   useEffect(() => {
     if (!isLoaded) load();
@@ -337,6 +345,8 @@ export default function ParentDashboard() {
           </button>
         </div>
       </div>
+
+      {showWhatsNew && <WhatsNewModal onDismiss={dismissWhatsNew} />}
     </div>
   );
 }

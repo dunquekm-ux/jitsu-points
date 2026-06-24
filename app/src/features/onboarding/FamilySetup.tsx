@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Avatar, { AVATAR_CONFIG } from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore } from '../../core/store/appStore';
+import { markWhatsNewSeen } from '../../core/whatsNew';
 import type { AvatarId } from '../../domain';
 import styles from './FamilySetup.module.css';
 
@@ -195,7 +196,10 @@ export default function FamilySetup() {
             variant="primary"
             size="lg"
             fullWidth
-            onClick={() => navigate('/', { replace: true })}
+            onClick={() => {
+              markWhatsNewSeen(); // new family — skip "What's New" for features they're getting fresh
+              navigate('/', { replace: true });
+            }}
           >
             Let's go! 🥷
           </ChunkyButton>
