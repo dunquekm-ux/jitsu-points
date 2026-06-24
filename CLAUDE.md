@@ -586,6 +586,11 @@ app/public/
 | 8.3 | **Points input fix** — manual points field can't be cleared (backspace snaps to `1`, typing prepends → e.g. `125`). Fix: back the input with transient string state allowing empty, select-all-on-focus for instant overtype, clamp to 1–500 only on blur. Verified broken via Playwright probe (2026.06.24). | ✅ |
 | 8.4 | **"What's New" popup** — version-gated release-notes modal in Parent Mode for returning users. Content/logic in `core/whatsNew/`; `WhatsNewModal` on `ParentDashboard`. New families excluded (onboarding + demo-seed call `markWhatsNewSeen()`). E2E `e2e/whats-new.spec.ts`. Shipped 2026.06.24.3. | ✅ |
 | 8.5 | **CI: GitHub Actions → Node 24** — bumped `checkout@v7`, `setup-node@v6`, `upload-artifact@v7`, `download-artifact@v8`; removed `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`. Shipped 2026.06.24.3. | ✅ |
+| 8.6 | **Bump `cloudflare/wrangler-action@v3 → v4`** (deploy job) — clears the last residual Node-20 notice (v4 runs on `node24`). Pinned `wranglerVersion: '3.114.17'` so the deploy behaves identically (v4 otherwise defaults the CLI to Wrangler v4). Shipped (CI-only) 2026.06.24. | ✅ |
 | 8.7 | **Shared `NumberField` + bonus/demerit input fixes** — extracted `shared/components/NumberField.tsx`; fixed the same live-clamp bug in BonusComposer & DemeritComposer; refactored TaskFormScreen points onto it; removed dead demerit cap-note. Input audit done (ManageRewards already safe). E2E `e2e/number-fields.spec.ts`. Shipped 2026.06.24.4. | ✅ |
 
-| 8.6 | **Bump `cloudflare/wrangler-action@v3 → v4`** (deploy job) — clears the last residual Node-20 notice (v4 runs on `node24`). Pinned `wranglerVersion: '3.114.17'` so the deploy behaves identically (v4 otherwise defaults the CLI to Wrangler v4). Shipped (CI-only) 2026.06.24. | ✅ |
+#### Planned — next build
+
+| # | Task | Status |
+|---|---|---|
+| 8.8 | **Make the version/build number more visible** — currently faint and easy to miss on phone (`ProfilePicker.module.css .buildNum`: 11px, monospace, white @ 35% opacity, bottom-center of ProfilePicker only). Improve legibility (contrast/size) and surface it where a parent naturally looks — e.g. in **Parent Mode** near the Family / join-code section — optionally tappable to confirm "You're up to date — v{APP_VERSION}". Keep it unobtrusive but readable. Reported from iPhone (2026.06.24). | ⬜ |
