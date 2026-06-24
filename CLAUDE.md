@@ -584,3 +584,11 @@ app/public/
 | 8.1 | **Duplicate task** — `📋 Duplicate` button on each dashboard task row → new route `/parent/task/:templateId/duplicate` → `TaskFormScreen` pre-filled in `duplicate` mode (title gets `" (copy)"` suffix, Delete hidden), saves via `createTask` (fresh IDs). Past one-time dates: keep the date, show inline ⚠️ warning + block save until date ≥ today. Playwright: duplicating yields a 2nd template with a distinct ID. | ✅ |
 | 8.2 | **Sortable parent task list** — segmented toggle (Name / Points) above the dashboard task list for findability; default Name A–Z, tap to flip asc/desc. Sort is a UI-only view concern (no persisted field). | ✅ |
 | 8.3 | **Points input fix** — manual points field can't be cleared (backspace snaps to `1`, typing prepends → e.g. `125`). Fix: back the input with transient string state allowing empty, select-all-on-focus for instant overtype, clamp to 1–500 only on blur. Verified broken via Playwright probe (2026.06.24). | ✅ |
+| 8.4 | **"What's New" popup** — version-gated release-notes modal in Parent Mode for returning users. Content/logic in `core/whatsNew/`; `WhatsNewModal` on `ParentDashboard`. New families excluded (onboarding + demo-seed call `markWhatsNewSeen()`). E2E `e2e/whats-new.spec.ts`. Shipped 2026.06.24.3. | ✅ |
+| 8.5 | **CI: GitHub Actions → Node 24** — bumped `checkout@v7`, `setup-node@v6`, `upload-artifact@v7`, `download-artifact@v8`; removed `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`. Shipped 2026.06.24.3. | ✅ |
+
+#### Planned — next build
+
+| # | Task | Status |
+|---|---|---|
+| 8.6 | **Bump `cloudflare/wrangler-action@v3 → v4`** (deploy job in `.github/workflows/ci.yml`) — clears the last residual Node-20 deprecation notice. ⚠️ v4 also changes the bundled Wrangler CLI default v3→v4, so **pin `wranglerVersion` to the current v3** (or a known-good v4) to keep deploy behavior identical. Verify the `pages deploy dist --project-name=jitsu-points --commit-dirty=true` invocation still works (flags are v4-compatible) — a bad bump fails `check` before `deploy`, so production is not at risk. No app code change; no version bump required (CI-only). | ⬜ |
