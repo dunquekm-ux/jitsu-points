@@ -69,10 +69,14 @@ jobs:
           path: dist
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # v4 of the action runs on Node 24 (clears the Node-20 deprecation notice).
+          # Pin Wrangler to v3 so the deploy itself behaves exactly as before; v4 of the
+          # action otherwise defaults the CLI to Wrangler v4.
+          wranglerVersion: '3.114.17'
           command: pages deploy dist --project-name=jitsu-points --commit-dirty=true
 
       - name: Smoke-test live URL
