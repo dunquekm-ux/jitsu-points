@@ -1,0 +1,27 @@
+#!/bin/sh
+# Guard the build-number rule: if this commit changes app/src/version.ts, the
+# APP_VERSION date must be TODAY (format YYYY.MM.DD.N, N resets per day).
+# Only fires when version.ts is staged, so docs/CI-only commits are unaffected.
+# Bypass intentionally with: git commit --no-verify
+
+changed=$(git diff --cached --name-only | grep '^app/src/version.ts$')
+[ -z "$changed" ] && exit 0
+
+staged=$(git show :app/src/version.ts 2>/dev/null)
+ver=$(printf '%s' "$staged" | sed -n "s/.*APP_VERSION = '\([0-9][0-9.]*\)'.*/\1/p")
+
+# Can't parse a version → don't block (format may have changed legitimately).
+[ -z "$ver" ] && exit 0
+
+date_part=$(printf '%s' "$ver" | cut -d. -f1-3 | tr '.' '-')
+today=$(date +%Y-%m-%d)
+
+if [ "$date_part" != "$today" ]; then
+  echo "❌ pre-commit: APP_VERSION is '$ver' but today is $today."
+  echo "   Build number format is YYYY.MM.DD.N — use today's date (N resets to 1 on a new day)."
+  echo "   Fix app/src/version.ts (and CHANGELOG.md / CLAUDE.md), then re-commit."
+  echo "   If this is intentional, bypass with: git commit --no-verify"
+  exit 1
+fi
+
+exit 0

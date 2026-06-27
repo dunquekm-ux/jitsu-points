@@ -66,3 +66,13 @@ npm --prefix app exec -- playwright test --config=app/playwright.prod.config.ts
 - It's also human-visible: the ProfilePicker stamp and the Parent Mode settings line.
 
 See `[[build-number-convention]]` in memory for the one-line rule.
+
+## Enforcement hook
+
+A committed `pre-commit` hook (`.githooks/pre-commit`) blocks a commit that changes `app/src/version.ts` to a build number whose date isn't **today**. It only fires when `version.ts` is staged, so docs/CI-only commits are unaffected. Bypass deliberately with `git commit --no-verify`.
+
+Hooks aren't auto-enabled on clone — activate once per clone:
+
+```
+git config core.hooksPath .githooks
+```
