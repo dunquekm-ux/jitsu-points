@@ -5,7 +5,7 @@
 
 ---
 
-## 2026.06.24.6 — Child task-list sorting (8.9)
+## 2026.06.27.1 — Child task-list sorting (8.9)
 
 **Phase:** 8 — Parent UX refinements (child-side parity)
 
@@ -17,6 +17,8 @@
 - **E2E:** new `e2e/child-sort.spec.ts` (clock pinned to a morning window so demo tasks are available; verifies Name/Points ordering within the Available group); `whats-new.spec.ts` updated to the new notes content.
 
 **Tests:** 151 unit passing · 23 local E2E passing · 5 production smoke passing.
+
+> Note: this build was briefly tagged `2026.06.24.6` by mistake (stale date carried over); corrected to `2026.06.27.1` — the first build dated today.
 
 ---
 
