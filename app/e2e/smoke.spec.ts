@@ -3,6 +3,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { clearAppData } from './helpers';
+import { APP_VERSION } from '../src/version';
 
 test.beforeEach(async ({ page }) => {
   await clearAppData(page);
@@ -32,4 +33,11 @@ test('welcome screen → navigate to join family', async ({ page }) => {
 test('page title is correct', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/Jitsu/i, { timeout: 8000 });
+});
+
+test('build version is stamped into the page and matches source', async ({ page }) => {
+  await page.goto('/');
+  const deployed = await page.locator('meta[name="app-version"]').getAttribute('content');
+  expect(deployed).toMatch(/^\d{4}\.\d{2}\.\d{2}\.\d+$/);
+  expect(deployed).toBe(APP_VERSION);
 });

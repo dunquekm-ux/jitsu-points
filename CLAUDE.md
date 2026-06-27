@@ -8,7 +8,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.06.27.1` — Phases 0–7 complete; Phase 8 (parent UX refinements + child-side parity) shipped: duplicate task, sortable parent task list, child task-list sort (8.9), shared `NumberField` (points/bonus/demerit clearable + clamped), "What's New" popup (Parent Mode, version-gated), more-visible version number. Full E2E suite green (23 local + 5 production smoke). CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.06.27.2` — Phases 0–7 complete; Phase 8 (parent UX refinements + child-side parity) shipped: duplicate task, sortable parent task list, child task-list sort (8.9), shared `NumberField` (points/bonus/demerit clearable + clamped), "What's New" popup (Parent Mode, version-gated), more-visible version number. Build version stamped into HTML + verified by smoke tests; release process documented as the `/release` skill. Full E2E suite green (24 local + 6 production smoke). CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
@@ -423,7 +423,7 @@ app/public/
 
 ### Guiding Principles
 
-1. **Build number every commit** — format `YYYY.MM.DD.N`. Visible in UI (bottom corner tooltip). Logged in `CHANGELOG.md`.
+1. **Build number** — format `YYYY.MM.DD.N`, where the date is **today's actual date** and `N` is a **per-day counter that resets to 1 on a new day** (check `date` before bumping; never carry a stale date forward and just increment `N`). Bump for app-facing changes; CI/docs-only commits don't bump. Source of truth is `app/src/version.ts`; mirror in `CHANGELOG.md` + the **Last build** line. Stamped into `index.html` as `<meta name="app-version">` and asserted by smoke tests. Full process: the **`/release`** skill (`.claude/skills/release/`).
 2. **Domain first** — `src/domain/` is pure TypeScript. Zero React. Zero browser APIs. Fully unit-testable.
 3. **CSS custom properties only** — no raw hex or magic numbers in components. All tokens in `src/core/theme/tokens.css`.
 4. **Vitest coverage gate** — domain layer targets 85% before Phase 3 ships.

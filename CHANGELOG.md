@@ -5,6 +5,22 @@
 
 ---
 
+## 2026.06.27.2 — Version smoke checks + `/release` process skill
+
+**Phase:** 8 — Tooling / release process
+
+**What's in this build:**
+
+- **Build version is now machine-checkable.** A Vite plugin (`appVersionMeta` in `app/vite.config.ts`) stamps `<meta name="app-version" content="<APP_VERSION>">` into `index.html` at build time.
+- **Smoke tests verify the version:**
+  - `e2e/smoke.spec.ts` (local) and `e2e/prod-smoke.spec.ts` (live) assert the meta tag matches `APP_VERSION` and the `YYYY.MM.DD.N` format.
+  - The CI **deploy** job's smoke step now greps the version from `dist/index.html` and compares it to the live site (with CDN-propagation retries) — catches stale CDN / no-op deploys, not just non-200s.
+- **Documented the release process as a `/release` skill** (`.claude/skills/release/`): when to bump, the `YYYY.MM.DD.N` rule (today's date; `N` resets per day), files to update, gates, push-to-deploy, and the version smoke verification. Reinforced the build-number rule in `CLAUDE.md` guiding principles.
+
+**Tests:** 151 unit passing · 24 local E2E passing · 6 production smoke passing.
+
+---
+
 ## 2026.06.27.1 — Child task-list sorting (8.9)
 
 **Phase:** 8 — Parent UX refinements (child-side parity)

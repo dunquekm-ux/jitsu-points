@@ -8,11 +8,22 @@
  * Run: npx playwright test --config=playwright.prod.config.ts
  */
 import { test, expect } from '@playwright/test';
+import { APP_VERSION } from '../src/version';
 
 test('app loads and serves the PWA shell', async ({ page }) => {
   const resp = await page.goto('/');
   expect(resp?.status(), 'root should return 2xx').toBeLessThan(400);
   await expect(page).toHaveTitle(/Jitsu/i, { timeout: 10000 });
+});
+
+test('live site serves the expected build version', async ({ page }) => {
+  await page.goto('/');
+  // Build version is stamped into index.html as <meta name="app-version"> at build time.
+  const deployed = await page.locator('meta[name="app-version"]').getAttribute('content');
+  expect(deployed, 'app-version meta tag should be present').toBeTruthy();
+  expect(deployed).toMatch(/^\d{4}\.\d{2}\.\d{2}\.\d+$/);
+  // Confirms the deploy/CDN is serving the build we just shipped (catches stale deploys).
+  expect(deployed).toBe(APP_VERSION);
 });
 
 test('welcome screen renders with both onboarding actions', async ({ page }) => {

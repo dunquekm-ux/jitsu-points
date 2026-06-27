@@ -2,4 +2,4 @@
  * App version — updated manually each build to match CHANGELOG.md entries.
  * Format: YYYY.MM.DD.N
  */
-export const APP_VERSION = '2026.06.27.1';
+export const APP_VERSION = '2026.06.27.2';
