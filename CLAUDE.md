@@ -8,7 +8,7 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.06.24.5` — Phases 0–7 complete; Phase 8 (parent UX refinements) shipped: duplicate task, sortable task list, shared `NumberField` (points/bonus/demerit clearable + clamped), "What's New" popup (Parent Mode, version-gated), more-visible version number. Full E2E suite green (22 local + 5 production smoke). CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.06.24.6` — Phases 0–7 complete; Phase 8 (parent UX refinements + child-side parity) shipped: duplicate task, sortable parent task list, child task-list sort (8.9), shared `NumberField` (points/bonus/demerit clearable + clamped), "What's New" popup (Parent Mode, version-gated), more-visible version number. Full E2E suite green (23 local + 5 production smoke). CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
@@ -589,3 +589,4 @@ app/public/
 | 8.6 | **Bump `cloudflare/wrangler-action@v3 → v4`** (deploy job) — clears the last residual Node-20 notice (v4 runs on `node24`). Pinned `wranglerVersion: '3.114.17'` so the deploy behaves identically (v4 otherwise defaults the CLI to Wrangler v4). Shipped (CI-only) 2026.06.24. | ✅ |
 | 8.7 | **Shared `NumberField` + bonus/demerit input fixes** — extracted `shared/components/NumberField.tsx`; fixed the same live-clamp bug in BonusComposer & DemeritComposer; refactored TaskFormScreen points onto it; removed dead demerit cap-note. Input audit done (ManageRewards already safe). E2E `e2e/number-fields.spec.ts`. Shipped 2026.06.24.4. | ✅ |
 | 8.8 | **Make the version/build number more visible** — ProfilePicker stamp bumped to 13px / white @ 75% with a pill background + `v` prefix; added a readable `Jitsu Points · v{APP_VERSION}` line in Parent Mode settings. E2E asserts it. Shipped 2026.06.24.5. | ✅ |
+| 8.9 | **Child task-list sorting** — child-side parity with 8.2: `Name / Points` segmented toggle on `HomeScreen` (shown when >1 mission), sorting **within** the Available→Locked→Completed→Missed state groups (grouping preserved). View-only, not persisted. What's New content updated to announce it (Parent Mode). E2E `e2e/child-sort.spec.ts`. Shipped 2026.06.24.6. | ✅ |

@@ -23,8 +23,7 @@ test('returning user sees the modal once in Parent Mode, then never again', asyn
   // Modal appears with the release content
   const modal = page.getByRole('dialog', { name: /what's new/i });
   await expect(modal).toBeVisible({ timeout: 5000 });
-  await expect(modal.getByText(/duplicate a task/i)).toBeVisible();
-  await expect(modal.getByText(/sort your task list/i)).toBeVisible();
+  await expect(modal.getByText(/kids can sort/i)).toBeVisible();
 
   // Dismiss
   await modal.getByRole('button', { name: /got it/i }).click();

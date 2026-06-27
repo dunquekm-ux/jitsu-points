@@ -25,22 +25,12 @@ export interface ReleaseNotes {
 /** The notes shown by the modal — update this each release that has user-facing changes. */
 export const LATEST_RELEASE: ReleaseNotes = {
   version: APP_VERSION,
-  headline: 'Parent updates to make setup faster',
+  headline: "What's new for your family",
   items: [
     {
-      icon: '📋',
-      title: 'Duplicate a task in one tap',
-      body: 'Tap Duplicate on any task to get a ready-made copy — points, schedule, icon, and kids already filled in. Tweak it, save it, and your original stays untouched.',
-    },
-    {
       icon: '🔤',
-      title: 'Sort your task list',
-      body: 'New Name / Points buttons above your tasks. Tap to sort, tap again to flip the order — find the right task in seconds.',
-    },
-    {
-      icon: '✏️',
-      title: 'A friendlier points field',
-      body: 'The points box now clears cleanly and lets you type any value. Tap it and the number highlights so you can type straight over it.',
+      title: 'Kids can sort their own mission list',
+      body: "On the child's Home screen there are now Name / Points buttons above the missions — tap to sort, tap again to flip the order. The same handy sort you have in Parent Mode, now for the kids too.",
     },
   ],
 };

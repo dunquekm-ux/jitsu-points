@@ -5,6 +5,21 @@
 
 ---
 
+## 2026.06.24.6 — Child task-list sorting (8.9)
+
+**Phase:** 8 — Parent UX refinements (child-side parity)
+
+**What's in this build:**
+
+- **8.9 — Sort on the child Home screen.** A `Name / Points` segmented toggle above the mission list (shown when >1 mission today), mirroring the Parent dashboard sort. Tap to sort, tap again to flip direction; Points defaults high→low. View-only state, not persisted.
+- **Sorts within the existing state groups** — the Available → Locked → Completed grouping (and Missed-at-bottom) is preserved; the chosen sort only reorders inside each group, so what a kid can do *now* still floats to the top. Logic in `HomeScreen` via a `sortInstances(list, key, dir, templates)` helper.
+- **"What's New" popup updated** to announce this (Parent Mode, per 8.4): `LATEST_RELEASE` now describes the kids' sort. Returning users see it once after this update.
+- **E2E:** new `e2e/child-sort.spec.ts` (clock pinned to a morning window so demo tasks are available; verifies Name/Points ordering within the Available group); `whats-new.spec.ts` updated to the new notes content.
+
+**Tests:** 151 unit passing · 23 local E2E passing · 5 production smoke passing.
+
+---
+
 ## 2026.06.24.5 — More visible version number
 
 **Phase:** 8 — Parent UX refinements

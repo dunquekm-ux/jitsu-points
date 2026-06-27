@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TaskCard from './TaskCard';
 import TabBar from '../../shared/components/TabBar';
@@ -10,7 +10,30 @@ import DemeritOverlay from '../../shared/overlays/DemeritOverlay';
 import { useAppStore, selectChildPoints, selectChildLevel } from '../../core/store/appStore';
 import { useSync } from '../../core/sync';
 import { lifetimeXp, LEVEL_THRESHOLDS, todayISO } from '../../domain';
+import type { TaskInstance, TaskTemplate } from '../../domain';
 import styles from './HomeScreen.module.css';
+
+type SortKey = 'name' | 'points';
+type SortDir = 'asc' | 'desc';
+
+// Sort a single state group (Available / Locked / etc.) — grouping by state is
+// preserved by the caller; this only orders within a group.
+function sortInstances(
+  list: TaskInstance[],
+  key: SortKey,
+  dir: SortDir,
+  templates: Record<string, TaskTemplate>,
+): TaskInstance[] {
+  return [...list].sort((a, b) => {
+    const ta = templates[a.templateId];
+    const tb = templates[b.templateId];
+    const cmp =
+      key === 'name'
+        ? ta.title.localeCompare(tb.title, undefined, { sensitivity: 'base' })
+        : ta.points - tb.points;
+    return dir === 'asc' ? cmp : -cmp;
+  });
+}
 
 export default function HomeScreen() {
   const { childId } = useParams<{ childId: string }>();
@@ -35,6 +58,20 @@ export default function HomeScreen() {
     dismissDemerit,
   } = useAppStore();
   const { triggerSync } = useSync();
+
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  // Tap an active key to flip direction; tap an inactive key to switch (points → high first).
+  function changeSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'points' ? 'desc' : 'asc');
+    }
+  }
+  const dirArrow = sortDir === 'asc' ? '↑' : '↓';
 
   // DEF-006: Filter inline — never use a selector that returns a new array reference.
   // selectTodaysTasks returned a new array on every call, causing useSyncExternalStore
@@ -89,11 +126,12 @@ export default function HomeScreen() {
     );
   }
 
-  // Split tasks by state
-  const available = taskInstances.filter((i) => i.state === 'available');
-  const completed = taskInstances.filter((i) => i.state === 'completed');
-  const locked = taskInstances.filter((i) => i.state === 'locked');
-  const missed = taskInstances.filter((i) => i.state === 'missed');
+  // Split tasks by state, then sort within each group (grouping order is preserved)
+  const sortGroup = (list: TaskInstance[]) => sortInstances(list, sortKey, sortDir, taskTemplates);
+  const available = sortGroup(taskInstances.filter((i) => i.state === 'available'));
+  const completed = sortGroup(taskInstances.filter((i) => i.state === 'completed'));
+  const locked = sortGroup(taskInstances.filter((i) => i.state === 'locked'));
+  const missed = sortGroup(taskInstances.filter((i) => i.state === 'missed'));
 
   const totalToday = taskInstances.length;
   const doneToday = completed.length;
@@ -145,6 +183,31 @@ export default function HomeScreen() {
 
       {/* Task list */}
       <div className={styles.tasks}>
+        {totalToday > 1 && (
+          <div className={styles.sortRow}>
+            <span className={styles.sortLabel}>Sort</span>
+            <div className={styles.sortToggle}>
+              <button
+                type="button"
+                className={[styles.sortBtn, sortKey === 'name' ? styles.sortBtnActive : ''].join(
+                  ' ',
+                )}
+                onClick={() => changeSort('name')}
+              >
+                Name {sortKey === 'name' ? dirArrow : ''}
+              </button>
+              <button
+                type="button"
+                className={[styles.sortBtn, sortKey === 'points' ? styles.sortBtnActive : ''].join(
+                  ' ',
+                )}
+                onClick={() => changeSort('points')}
+              >
+                Points {sortKey === 'points' ? dirArrow : ''}
+              </button>
+            </div>
+          </div>
+        )}
         {totalToday === 0 ? (
           <div className={styles.empty}>
             <span className={styles.emptyIcon}>😴</span>
