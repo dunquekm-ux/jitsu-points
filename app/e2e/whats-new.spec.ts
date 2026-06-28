@@ -23,7 +23,7 @@ test('returning user sees the modal once in Parent Mode, then never again', asyn
   // Modal appears with the release content
   const modal = page.getByRole('dialog', { name: /what's new/i });
   await expect(modal).toBeVisible({ timeout: 5000 });
-  await expect(modal.getByText(/kids can sort/i)).toBeVisible();
+  await expect(modal.getByText('Points history for kids and parents')).toBeVisible();
 
   // Dismiss
   await modal.getByRole('button', { name: /got it/i }).click();

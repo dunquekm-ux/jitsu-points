@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import { useAppStore } from '../../core/store/appStore';
 import { markWhatsNewSeen } from '../../core/whatsNew';
+import { markAllAcksSeen } from '../../core/ackFeed';
 import { isValidJoinCode } from '../../domain';
 import styles from './JoinFamily.module.css';
 
@@ -29,6 +30,8 @@ export default function JoinFamily() {
     try {
       await joinFamily(rawCode);
       markWhatsNewSeen(); // joining device — skip "What's New" for features they're getting fresh
+      // Existing family history just arrived on this device — don't replay it as popups.
+      markAllAcksSeen(useAppStore.getState().pointsEvents);
       navigate('/', { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';

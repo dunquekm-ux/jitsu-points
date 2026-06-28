@@ -85,8 +85,6 @@ interface AppState {
   celebration: CelebrationPayload | null;
   levelUp: { level: number; childName: string } | null;
   redemptionTitle: string | null;
-  pendingBonus: { childId: string; delta: number; note: string } | null;
-  pendingDemerit: { childId: string; delta: number; note: string } | null;
 
   // Actions — child
   load: () => Promise<void>;
@@ -98,8 +96,6 @@ interface AppState {
   dismissCelebration: () => void;
   dismissLevelUp: () => void;
   dismissRedemption: () => void;
-  dismissBonus: () => void;
-  dismissDemerit: () => void;
 
   // Actions — parent tasks
   createTask: (data: NewTaskData) => Promise<string>;
@@ -177,8 +173,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   celebration: null,
   levelUp: null,
   redemptionTitle: null,
-  pendingBonus: null,
-  pendingDemerit: null,
 
   // ─── load ─────────────────────────────────────────────────────────────────
 
@@ -380,10 +374,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   addBonus: async (childId, delta, note) => {
     const absDelta = Math.abs(delta);
     const event = createPointsEvent(childId, absDelta, 'bonus', { note });
-    set((s) => ({
-      pointsEvents: [...s.pointsEvents, event],
-      pendingBonus: { childId, delta: absDelta, note },
-    }));
+    // The child's popup is derived from this persisted event (see core/ackFeed),
+    // not from transient store state — so it survives reloads and reaches other devices.
+    set((s) => ({ pointsEvents: [...s.pointsEvents, event] }));
     await flushToDB([], [event], []);
   },
 
@@ -392,10 +385,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   addDemerit: async (childId, amount, note) => {
     const delta = clampDemerit(amount);
     const event = createPointsEvent(childId, delta, 'demerit', { note });
-    set((s) => ({
-      pointsEvents: [...s.pointsEvents, event],
-      pendingDemerit: { childId, delta, note },
-    }));
+    set((s) => ({ pointsEvents: [...s.pointsEvents, event] }));
     await flushToDB([], [event], []);
   },
 
@@ -416,8 +406,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   dismissLevelUp: () => set({ levelUp: null }),
   dismissRedemption: () => set({ redemptionTitle: null }),
-  dismissBonus: () => set({ pendingBonus: null }),
-  dismissDemerit: () => set({ pendingDemerit: null }),
 
   // ─── createTask ───────────────────────────────────────────────────────────
 

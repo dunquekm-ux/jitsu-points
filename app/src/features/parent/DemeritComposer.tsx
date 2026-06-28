@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Avatar from '../../shared/components/Avatar';
 import ChunkyButton from '../../shared/components/ChunkyButton';
 import NumberField from '../../shared/components/NumberField';
@@ -14,13 +14,15 @@ const MAX_DEMERIT = 20;
 
 export default function DemeritComposer() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { profiles, addDemerit } = useAppStore();
 
   const { status } = useAuthStore();
   const { status: syncStatus } = useSyncStore();
   const isOffline = HAS_WORKER && (status !== 'connected' || syncStatus === 'offline');
 
-  const [childId, setChildId] = useState('');
+  const preselected = (location.state as { childId?: string } | null)?.childId ?? '';
+  const [childId, setChildId] = useState(preselected);
   const [amount, setAmount] = useState(5);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
@@ -31,8 +33,13 @@ export default function DemeritComposer() {
   async function handleSave() {
     if (!childId || amount <= 0) return;
     setSaving(true);
-    await addDemerit(childId, amount, note.trim());
-    navigate('/parent');
+    try {
+      await addDemerit(childId, amount, note.trim());
+      const name = profiles.find((p) => p.id === childId)?.name ?? 'your child';
+      navigate('/parent', { state: { toast: `💙 −${capped} ⭐ demerit applied to ${name}` } });
+    } catch {
+      setSaving(false); // unblock the button so the parent can retry
+    }
   }
 
   return (

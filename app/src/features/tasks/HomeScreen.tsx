@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TaskCard from './TaskCard';
 import TabBar from '../../shared/components/TabBar';
@@ -8,6 +8,7 @@ import LevelUpOverlay from '../../shared/overlays/LevelUpOverlay';
 import BonusOverlay from '../../shared/overlays/BonusOverlay';
 import DemeritOverlay from '../../shared/overlays/DemeritOverlay';
 import { useAppStore, selectChildPoints, selectChildLevel } from '../../core/store/appStore';
+import { getUnseenAcks, markAckSeen } from '../../core/ackFeed';
 import { useSync } from '../../core/sync';
 import { lifetimeXp, LEVEL_THRESHOLDS, todayISO } from '../../domain';
 import type { TaskInstance, TaskTemplate } from '../../domain';
@@ -52,12 +53,25 @@ export default function HomeScreen() {
     levelUp,
     dismissCelebration,
     dismissLevelUp,
-    pendingBonus,
-    pendingDemerit,
-    dismissBonus,
-    dismissDemerit,
   } = useAppStore();
   const { triggerSync } = useSync();
+
+  // Bonus/demerit popups are derived from the persisted points history + a
+  // per-device "seen" set, so each new one shows exactly once — reliably across
+  // reloads and devices (Phase 8.11). One bump of `ackTick` re-evaluates after a
+  // dismiss without needing the store data to change.
+  const [ackTick, setAckTick] = useState(0);
+  const unseenAcks = useMemo(
+    () => (childId ? getUnseenAcks(childId, pointsEvents) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [childId, pointsEvents, ackTick],
+  );
+  const currentAck = unseenAcks[0] ?? null;
+
+  function dismissAck() {
+    if (currentAck && childId) markAckSeen(childId, currentAck.id);
+    setAckTick((t) => t + 1);
+  }
 
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -270,18 +284,18 @@ export default function HomeScreen() {
           onDismiss={dismissLevelUp}
         />
       )}
-      {pendingBonus && pendingBonus.childId === childId && (
+      {currentAck && currentAck.type === 'bonus' && (
         <BonusOverlay
-          delta={pendingBonus.delta}
-          note={pendingBonus.note}
-          onDismiss={dismissBonus}
+          delta={currentAck.delta}
+          note={currentAck.note ?? ''}
+          onDismiss={dismissAck}
         />
       )}
-      {pendingDemerit && pendingDemerit.childId === childId && (
+      {currentAck && currentAck.type === 'demerit' && (
         <DemeritOverlay
-          delta={pendingDemerit.delta}
-          note={pendingDemerit.note}
-          onDismiss={dismissDemerit}
+          delta={currentAck.delta}
+          note={currentAck.note ?? ''}
+          onDismiss={dismissAck}
         />
       )}
     </div>

@@ -21,6 +21,7 @@ export default function TabBar({ childId }: Props) {
     { id: 'rewards', label: 'Rewards', emoji: '🎁', path: `/child/${childId}/rewards` },
     { id: 'streak', label: 'Streak', emoji: '🔥', path: `/child/${childId}/streak` },
     { id: 'trophies', label: 'Trophies', emoji: '🏆', path: `/child/${childId}/achievements` },
+    { id: 'history', label: 'History', emoji: '📜', path: `/child/${childId}/history` },
   ];
 
   return (

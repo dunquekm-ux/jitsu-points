@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../core/store/appStore';
 import { markWhatsNewSeen } from '../../core/whatsNew';
+import { markAllAcksSeen } from '../../core/ackFeed';
 import styles from './WelcomeScreen.module.css';
 
 export default function WelcomeScreen() {
@@ -11,6 +12,7 @@ export default function WelcomeScreen() {
     const { DEMO_FAMILY } = await import('../../dev/demoData');
     await _seedDemo(DEMO_FAMILY);
     markWhatsNewSeen(); // seeded family is treated as established — don't pop "What's New"
+    markAllAcksSeen(DEMO_FAMILY.pointsEvents); // don't replay existing bonuses/demerits as popups
     navigate('/', { replace: true });
   }
 

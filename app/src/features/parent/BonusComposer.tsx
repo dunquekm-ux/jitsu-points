@@ -28,8 +28,13 @@ export default function BonusComposer() {
   async function handleSave() {
     if (!childId || amount <= 0) return;
     setSaving(true);
-    await addBonus(childId, amount, note.trim());
-    navigate('/parent');
+    try {
+      await addBonus(childId, amount, note.trim());
+      const name = profiles.find((p) => p.id === childId)?.name ?? 'your child';
+      navigate('/parent', { state: { toast: `🎉 +${amount} ⭐ bonus given to ${name}` } });
+    } catch {
+      setSaving(false); // unblock the button so the parent can retry
+    }
   }
 
   const selectedProfile = profiles.find((p) => p.id === childId);

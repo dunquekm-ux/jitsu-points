@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Avatar from '../../shared/components/Avatar';
 import { useAppStore, selectChildPoints } from '../../core/store/appStore';
 import { useAuthStore } from '../../core/auth/store';
@@ -38,6 +38,7 @@ const HAS_WORKER = !!import.meta.env.VITE_WORKER_URL;
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     profiles,
     taskTemplates,
@@ -57,11 +58,23 @@ export default function ParentDashboard() {
   const [sortKey, setSortKey] = useState<'name' | 'points'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [showWhatsNew, setShowWhatsNew] = useState(() => shouldShowWhatsNew());
+  const [toast, setToast] = useState<string | null>(null);
 
   function dismissWhatsNew() {
     markWhatsNewSeen();
     setShowWhatsNew(false);
   }
+
+  // Confirmation toast after a bonus/demerit was saved (passed via navigation state).
+  useEffect(() => {
+    const msg = (location.state as { toast?: string } | null)?.toast;
+    if (!msg) return;
+    setToast(msg);
+    // Clear the history state so the toast doesn't reappear on back/refresh.
+    navigate('.', { replace: true, state: {} });
+    const id = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(id);
+  }, [location.state, navigate]);
 
   useEffect(() => {
     if (!isLoaded) load();
@@ -208,13 +221,19 @@ export default function ParentDashboard() {
                 const doneTasks = todayTasks.filter((i) => i.state === 'completed').length;
                 return (
                   <div key={profile.id} className={styles.kidCard}>
-                    <Avatar avatar={profile.avatar} size="md" />
-                    <div className={styles.kidInfo}>
-                      <span className={styles.kidName}>{profile.name}</span>
-                      <span className={styles.kidStats}>
-                        ⭐ {pts} pts · 🔥 {streak} streak · {doneTasks}/{todayTasks.length} today
-                      </span>
-                    </div>
+                    <button
+                      className={styles.kidMain}
+                      onClick={() => navigate(`/parent/child/${profile.id}`)}
+                      title={`View ${profile.name}'s history`}
+                    >
+                      <Avatar avatar={profile.avatar} size="md" />
+                      <div className={styles.kidInfo}>
+                        <span className={styles.kidName}>{profile.name}</span>
+                        <span className={styles.kidStats}>
+                          ⭐ {pts} pts · 🔥 {streak} streak · {doneTasks}/{todayTasks.length} today
+                        </span>
+                      </div>
+                    </button>
                     <button
                       className={styles.bonusQuickBtn}
                       onClick={() => navigate('/parent/bonus', { state: { childId: profile.id } })}
@@ -347,6 +366,12 @@ export default function ParentDashboard() {
           <p className={styles.versionLine}>Jitsu Points · v{APP_VERSION}</p>
         </div>
       </div>
+
+      {toast && (
+        <div className={styles.toast} role="status" data-testid="parent-toast">
+          {toast}
+        </div>
+      )}
 
       {showWhatsNew && <WhatsNewModal onDismiss={dismissWhatsNew} />}
     </div>

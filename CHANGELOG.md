@@ -5,6 +5,23 @@
 
 ---
 
+## 2026.06.27.3 — Bonus reliability + points history (8.10–8.13)
+
+**Phase:** 8 — User feedback (bonus/demerit flow)
+
+**What's in this build:**
+
+- **8.10 — Parent confirmation.** Giving a bonus or demerit now shows a transient confirmation toast on the dashboard (e.g. "🎉 +15 ⭐ bonus given to Emma"), passed via navigation state. Save is wrapped so a failure unblocks the button instead of silently navigating away.
+- **8.11 — Reliable child bonus/demerit popup (root-cause fix).** Replaced the in-memory `pendingBonus`/`pendingDemerit` Zustand state (which only fired on the same session/device and was lost on reload) with a derivation from the **persisted `pointsEvents`** plus a per-child, per-device "seen" set in `localStorage` (`core/ackFeed`). The child now sees each new bonus/demerit exactly once — across reloads and devices. A 7-day recency window bounds the one-time replay on upgrade; demo-seed and join-family mark existing history as already seen (`markAllAcksSeen`) so they never replay. Removed the dead `pending*` store fields and `dismissBonus`/`dismissDemerit` actions.
+- **8.12 — Child points history.** New "History" tab → `My Points Story` (`features/history/ChildHistoryScreen.tsx`): a kid-friendly, newest-first list of every mission, bonus, reward, and check-in with its reason and amount.
+- **8.13 — Parent audit log.** Tapping a child on the dashboard opens `features/parent/ChildAuditScreen.tsx` (`/parent/child/:childId`): the full per-child ledger plus a summary (points, level, bonus/check-in counts) and quick Give-Bonus / Check-in actions. Shared presentational `features/history/PointsHistoryList.tsx` powers both views. `DemeritComposer` now preselects the child from nav state (parity with `BonusComposer`).
+- **"What's New" popup updated** to announce the history + bonus-reliability changes (Parent Mode, per 8.4).
+- **E2E:** new `e2e/bonus-history.spec.ts` (parent toast; bonus reliably re-shows after reload; child + parent history render); `whats-new.spec.ts` updated to the new notes content.
+
+**Tests:** unit + local E2E green (see CI).
+
+---
+
 ## 2026.06.27.2 — Version smoke checks + `/release` process skill
 
 **Phase:** 8 — Tooling / release process

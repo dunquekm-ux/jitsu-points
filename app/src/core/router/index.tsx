@@ -8,7 +8,9 @@ import TaskDetailScreen from '../../features/tasks/TaskDetailScreen';
 import RewardsScreen from '../../features/rewards/RewardsScreen';
 import StreakScreen from '../../features/levels/StreakScreen';
 import AchievementsScreen from '../../features/levels/AchievementsScreen';
+import ChildHistoryScreen from '../../features/history/ChildHistoryScreen';
 import ParentDashboard from '../../features/parent/ParentDashboard';
+import ChildAuditScreen from '../../features/parent/ChildAuditScreen';
 import TaskFormScreen from '../../features/tasks/TaskFormScreen';
 import ManageRewardsScreen from '../../features/rewards/ManageRewardsScreen';
 import ManageKidsScreen from '../../features/profiles/ManageKidsScreen';
@@ -28,9 +30,11 @@ const router = createBrowserRouter([
   { path: '/child/:childId/rewards', element: <RewardsScreen /> },
   { path: '/child/:childId/streak', element: <StreakScreen /> },
   { path: '/child/:childId/achievements', element: <AchievementsScreen /> },
+  { path: '/child/:childId/history', element: <ChildHistoryScreen /> },
 
   // Parent routes
   { path: '/parent', element: <ParentDashboard /> },
+  { path: '/parent/child/:childId', element: <ChildAuditScreen /> },
   { path: '/parent/task/new', element: <TaskFormScreen /> },
   { path: '/parent/task/:templateId/edit', element: <TaskFormScreen /> },
   { path: '/parent/task/:templateId/duplicate', element: <TaskFormScreen /> },
