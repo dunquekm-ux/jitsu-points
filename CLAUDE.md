@@ -8,14 +8,14 @@ Jitsu Points is a **gamified responsibility and rewards app** for children ages 
 
 ## Current State
 
-**Last build:** `2026.06.27.3` — Phases 0–7 complete; Phase 8 (parent UX refinements + child-side parity) shipped: duplicate task, sortable parent task list, child task-list sort (8.9), shared `NumberField` (points/bonus/demerit clearable + clamped), "What's New" popup (Parent Mode, version-gated), more-visible version number. Bonus/demerit feedback fixes (8.10–8.13): parent confirmation toast, reliable child popup derived from persisted `pointsEvents` + per-device "seen" set (`core/ackFeed`, replaces in-memory `pending*`), and points-history audit logs for both child (`History` tab → "My Points Story") and parent (tap a kid → per-child ledger). Build version stamped into HTML + verified by smoke tests; release process documented as the `/release` skill. CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–015 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 17 ADRs. Rive mascot integration pending designer asset.
+**Last build:** `2026.06.27.3` — Phases 0–7 complete; Phase 8 (parent UX refinements + child-side parity) shipped: duplicate task, sortable parent task list, child task-list sort (8.9), shared `NumberField` (points/bonus/demerit clearable + clamped), "What's New" popup (Parent Mode, version-gated), more-visible version number. Bonus/demerit feedback fixes (8.10–8.13): parent confirmation toast, reliable child popup derived from persisted `pointsEvents` + per-device "seen" set (`core/ackFeed`, replaces in-memory `pending*`), and points-history audit logs for both child (`History` tab → "My Points Story") and parent (tap a kid → per-child ledger). Build version stamped into HTML + verified by smoke tests; release process documented as the `/release` skill. CI on Node 24-native actions. CI/deploy pipeline fully operational. DEF-001–016 all closed (no open defects). Google Drive + OAuth replaced with Cloudflare Workers + D1. Multi-child task assignment (`assignedChildIds: string[]`). 18 ADRs. Rive mascot integration pending designer asset.
 
 | Artifact | File | Status |
 |---|---|---|
 | Live interactive prototype | `index.html` | ✅ Complete — open in any browser |
 | Requirements spec | `jitsu_points_requirements.md` | ✅ Complete |
-| Architecture decisions | `DECISIONS.md` | ✅ 17 ADRs logged (ADR-017: multi-child tasks) |
-| Defect log | `DEFECTS.md` | ✅ 15 defects logged (DEF-001–015 all closed) |
+| Architecture decisions | `DECISIONS.md` | ✅ 18 ADRs logged (ADR-018: event-derived bonus/demerit popups) |
+| Defect log | `DEFECTS.md` | ✅ 16 defects logged (DEF-001–016 all closed) |
 | Domain reference | `DOMAIN.md` | ✅ Types, rules, state machine |
 | Changelog | `CHANGELOG.md` | ✅ Build log through 2026.05.28.2 |
 | PWA app — Phase 0 | `app/` | ✅ Vite + React + TS, design tokens, CI pipeline |

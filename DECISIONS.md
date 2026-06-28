@@ -343,3 +343,28 @@ Pre-launch security review of the app's data handling and auth model.
 - CSP header noted as a post-launch improvement (low urgency for a family app with no server-side logic)
 
 ---
+
+## ADR-018 — Child bonus/demerit popups derived from persisted events, not in-memory state
+
+**Date:** 2026-06-27
+**Status:** Accepted
+
+**Context:**
+The child's "surprise bonus" / "let's do better" popups were driven by transient Zustand state (`pendingBonus` / `pendingDemerit`), set inside `addBonus`/`addDemerit` and read by `HomeScreen`. This only worked when the parent action and the child view happened in the **same session on the same device**, with that child active, before any reload. On a separate child tablet (the normal multi-device case) the popup never appeared, and any refresh discarded it — reported by a parent as "sometimes it shows, sometimes it doesn't." There was also no record a child could revisit.
+
+**Decision:**
+Treat the persisted `pointsEvents` (which already carry `type`, `delta`, `note`, `timestamp`) as the single source of truth for what the child should be shown, and track *acknowledgement* separately and locally. A new module `core/ackFeed` exposes:
+- `getUnseenAcks(childId, events)` — bonus/demerit events not yet acknowledged on this device and still recent, oldest first;
+- `markAckSeen(childId, ...ids)` — record popups as the child dismisses them;
+- `markAllAcksSeen(events)` — baseline an entire history as already seen.
+
+"Seen" is stored per-child in `localStorage` (`jitsu-ack-seen`), deliberately **device-local** — a celebration popup is a per-device moment, while the permanent record lives in the audit log (ADR-relevant to 8.12/8.13). The in-memory `pendingBonus`/`pendingDemerit` fields and their dismiss actions were removed.
+
+**Consequences:**
+- The child reliably sees each new bonus/demerit exactly once, surviving reloads and reaching other devices once they sync.
+- A **7-day recency window** bounds the one-time "replay" when an existing family first updates to this build, and avoids surfacing a stale celebration if a child hasn't opened the app in a while.
+- Establishing a device's data (demo seed in `WelcomeScreen`, joining via `JoinFamily`) calls `markAllAcksSeen` so historical bonuses are not replayed as popups on first run — mirroring how `whatsNew` is baselined.
+- "Seen" state does not sync across devices by design; the audit log (8.12/8.13) is the cross-device record.
+- Edge case accepted: a bonus given before a child's very first open on a brand-new device may not pop (it still appears in the audit log).
+
+---

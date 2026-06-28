@@ -383,3 +383,30 @@ Affected files:
 - `app/src/features/profiles/ManageKidsScreen.module.css`
 
 ---
+
+## DEF-016 — Bonus/demerit flow: no parent confirmation, inconsistent child popup, no audit log
+
+**Severity:** High
+**Screen:** BonusComposer, DemeritComposer, child HomeScreen, ParentDashboard
+**Status:** ✅ Closed — Fixed in build 2026.06.27.3
+
+**Steps to reproduce:**
+1. Parent Mode → Give Bonus → pick a child → save.
+2. Observe: no confirmation that the bonus was recorded.
+3. Switch to that child's profile. The celebration popup appears only sometimes (and never on a separate child device).
+4. As either child or parent, try to review past bonuses/demerits — there is no history anywhere.
+
+**Root cause:**
+1. *No confirmation* — `handleSave` in both composers called `addBonus`/`addDemerit` then immediately `navigate('/parent')` with no feedback (and nothing on error).
+2. *Inconsistent popup* — the overlay was driven by in-memory `pendingBonus`/`pendingDemerit` Zustand state, set in the store action and gated in `HomeScreen` by `pending.childId === childId`. It only fired in the same session/device with that child active and was lost on any reload; it never reached a separate child tablet. See ADR-018.
+3. *No audit* — bonuses/demerits were persisted as `pointsEvents` (`type`, `delta`, `note`, `timestamp`) but no screen surfaced them.
+
+**Fix (Phase 8.10–8.13):**
+- **8.10** — Composers navigate with a `toast` in nav state; `ParentDashboard` shows a transient confirmation and clears the history state so it doesn't repeat. Saves are wrapped so a failure re-enables the button.
+- **8.11** — New `core/ackFeed` derives the child popup from persisted `pointsEvents` + a per-child, per-device "seen" set in `localStorage`; removed the in-memory `pending*` fields. Demo-seed and join-family baseline existing history via `markAllAcksSeen`. (ADR-018.)
+- **8.12** — Child "My Points Story" history tab (`features/history/ChildHistoryScreen.tsx`).
+- **8.13** — Parent per-child audit screen (`features/parent/ChildAuditScreen.tsx`, reached by tapping a child on the dashboard), reusing shared `features/history/PointsHistoryList.tsx`.
+
+**Tests:** `app/e2e/bonus-history.spec.ts` — parent toast; bonus survives a reload and stops after dismissal; child + parent history render. Full suite green (28 local E2E).
+
+---
